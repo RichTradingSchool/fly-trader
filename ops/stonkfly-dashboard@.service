@@ -1,0 +1,19 @@
+# Optional: serve the dashboard for fly %i under systemd (user unit).
+# Example ~/.config/stonkfly/dashboard-%i.env:
+#   PORT=8765
+#   HOST=127.0.0.1
+#   STONKFLY_FLIES=BTC fly:8765,PEPE fly:8766
+
+[Unit]
+Description=Stonkfly dashboard for run %i (read-only)
+
+[Service]
+Type=simple
+WorkingDirectory=%h/stonkfly-dashboard
+EnvironmentFile=-%h/.config/stonkfly/dashboard-%i.env
+ExecStart=%h/stonkfly-dashboard/.venv/bin/python dashboard/server.py runs/%i
+Restart=on-failure
+RestartSec=10
+
+[Install]
+WantedBy=default.target

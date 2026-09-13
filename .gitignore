@@ -21,3 +21,8 @@ build/
 coinbase-key.json
 cdp_api_key.json
 *.partial
+
+# dashboard
+dashboard/cache/
+*.log
+*.bak*

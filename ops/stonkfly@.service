@@ -1,0 +1,36 @@
+# Optional: keep a paper fly running under systemd (user unit).
+#
+#   mkdir -p ~/.config/systemd/user
+#   cp ops/stonkfly@.service ~/.config/systemd/user/
+#   # edit WorkingDirectory / ExecStart below to point at your clone
+#   systemctl --user daemon-reload
+#   systemctl --user enable --now stonkfly@btc
+#   loginctl enable-linger "$USER"      # keep running after logout
+#
+# Per-fly settings go in ~/.config/stonkfly/<name>.env (NOT in git), e.g.
+#   FLY_PRODUCT_btc=BTC-USDC
+#   TG_TOKEN=...   TG_CHAT=...          # optional Telegram notices
+
+[Unit]
+Description=Stonkfly paper fly %i (flyguard watchdog)
+StartLimitIntervalSec=0
+
+[Service]
+Type=simple
+WorkingDirectory=%h/stonkfly-dashboard
+Environment=PYTHONUNBUFFERED=1
+EnvironmentFile=-%h/.config/stonkfly/%i.env
+ExecStart=%h/stonkfly-dashboard/ops/flyguard.sh %i
+Restart=always
+RestartSec=30
+RestartSteps=5
+RestartMaxDelaySec=300
+# 75 = flyguard stays down on purpose (STOP file / financial stop / unsettled orders)
+RestartPreventExitStatus=75
+SuccessExitStatus=75
+# SIGINT -> KeyboardInterrupt -> "Stopped; run state preserved."
+KillSignal=SIGINT
+TimeoutStopSec=180
+
+[Install]
+WantedBy=default.target
