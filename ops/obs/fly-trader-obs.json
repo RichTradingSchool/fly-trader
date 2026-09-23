@@ -1,0 +1,80 @@
+{
+  "name": "초파리 트레이딩 방송",
+  "current_scene": "초파리 LIVE",
+  "current_program_scene": "초파리 LIVE",
+  "scene_order": [{"name": "초파리 LIVE"}],
+  "groups": [],
+  "quick_transitions": [],
+  "transitions": [],
+  "transition_duration": 300,
+  "current_transition": "Fade",
+  "preview_locked": false,
+  "scaling_enabled": false,
+  "scaling_level": 0,
+  "scaling_off_x": 0.0,
+  "scaling_off_y": 0.0,
+  "saved_projectors": [],
+  "modules": {},
+  "DesktopAudioDevice1": {
+    "id": "wasapi_output_capture", "versioned_id": "wasapi_output_capture", "name": "데스크탑 오디오",
+    "enabled": true, "muted": true, "volume": 1.0, "mixers": 255, "settings": {"device_id": "default"}
+  },
+  "sources": [
+    {
+      "id": "browser_source",
+      "versioned_id": "browser_source",
+      "name": "초파리 스튜디오",
+      "enabled": true,
+      "muted": true,
+      "volume": 1.0,
+      "mixers": 0,
+      "flags": 0,
+      "settings": {
+        "url": "http://127.0.0.1:8765/room/?stream=1",
+        "is_local_file": false,
+        "width": 1920,
+        "height": 1080,
+        "fps_custom": true,
+        "fps": 30,
+        "reroute_audio": false,
+        "shutdown": false,
+        "restart_when_active": false,
+        "css": "body { background-color: #07090e; margin: 0px auto; overflow: hidden; }"
+      }
+    },
+    {
+      "id": "scene",
+      "versioned_id": "scene",
+      "name": "초파리 LIVE",
+      "enabled": true,
+      "muted": false,
+      "volume": 1.0,
+      "mixers": 0,
+      "flags": 0,
+      "settings": {
+        "custom_size": false,
+        "id_counter": 1,
+        "items": [
+          {
+            "id": 1,
+            "name": "초파리 스튜디오",
+            "visible": true,
+            "locked": true,
+            "align": 5,
+            "pos": {"x": 0.0, "y": 0.0},
+            "rot": 0.0,
+            "scale": {"x": 1.0, "y": 1.0},
+            "bounds_type": 2,
+            "bounds_align": 0,
+            "bounds": {"x": 1920.0, "y": 1080.0},
+            "crop_left": 0, "crop_top": 0, "crop_right": 0, "crop_bottom": 0,
+            "scale_filter": "disable",
+            "blend_method": "default",
+            "blend_type": "normal",
+            "private_settings": {}
+          }
+        ]
+      }
+    }
+  ]
+}

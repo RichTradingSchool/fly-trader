@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="zh-Hant">
+<html lang="ko">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
@@ -12,7 +12,7 @@ try {
   if (t === 'light') document.documentElement.dataset.theme = 'light';
 } catch (e) {}
 </script>
-<title>Stonkfly 神經儀表板</title>
+<title>초파리 트레이딩 챌린지</title>
 <style>
 :root{
   --bg:#060a13;--panel:#0d1422;--panel2:#111a2c;--line:#1c2840;--text:#dde6f6;--mute:#7c89a3;
@@ -21,7 +21,8 @@ try {
 *{box-sizing:border-box}
 :root{color-scheme:dark}
 html,body{background:var(--bg);color:var(--text)}
-body{margin:0;padding-block:16px;padding-inline:16px;font:14px/1.55 system-ui,-apple-system,"Noto Sans TC","PingFang TC","Microsoft JhengHei",sans-serif}
+@font-face{font-family:"Pretendard Variable";src:url("assets/fonts/PretendardVariable.woff2") format("woff2");font-weight:45 920;font-display:swap}
+body{margin:0;padding-block:16px;padding-inline:16px;font:14px/1.55 "Pretendard Variable",Pretendard,system-ui,-apple-system,"Noto Sans KR","Malgun Gothic",sans-serif}
 .wrap{max-width:1440px;margin:0 auto}
 header{display:flex;flex-wrap:wrap;align-items:baseline;gap:8px 20px;margin-bottom:12px}
 h1{font-size:20px;margin:0;letter-spacing:.04em}
@@ -84,6 +85,16 @@ button.accent{border-color:var(--hot);color:var(--hot)}
 .exec{font-size:13px;color:var(--mute);font-variant-numeric:tabular-nums}
 .exec strong{color:var(--text)}
 .bars{margin-top:10px;display:grid;grid-template-columns:auto minmax(0,1fr) auto;gap:6px 10px;align-items:center;font-size:12.5px}
+.poscols{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:8px 10px;margin-top:8px;font-size:12.5px}
+.poscols .k{display:block;color:var(--mute);font-size:11px}
+.poscols strong{font-variant-numeric:tabular-nums;font-size:14px}
+#posSide.LONG{color:var(--buy)}#posSide.SHORT{color:var(--sell)}
+.big.BANKRUPT,.big.LIQ{color:var(--amber)}
+#disclosure{border-top:1px solid var(--line);padding-top:8px}
+#disclosure span{display:inline-block;margin-right:14px}
+/* On the 16:9 stage the disclosure is a strip inside the frame, so it is on camera
+   (spec §7.2 "항상 표시"). The grid above it is flex:1 1 auto and gives up the height. */
+body.staged #disclosure{flex:none;margin:0;padding:6px 10px 0;font-size:12px;line-height:1.3;border-top:1px solid var(--line);max-width:none}
 .bar{height:10px;background:#18223a;border-radius:6px;overflow:hidden}
 .bar>div{height:100%;border-radius:6px;transition:width .9s cubic-bezier(.2,.8,.2,1),background .4s;box-shadow:0 0 10px currentColor}
 .num{font-variant-numeric:tabular-nums;text-align:right;min-width:58px}
@@ -117,7 +128,7 @@ body.staged .grid{flex:1 1 auto;min-height:0;grid-template-columns:970px minmax(
 body.staged .grid > .col:first-child{min-height:0}
 body.staged .grid > .col:first-child > .card{height:100%;box-sizing:border-box;overflow:hidden}
 body.staged .brainbox{width:940px;max-width:none;aspect-ratio:4/3}
-body.staged .grid > .col:last-child{display:grid;min-height:0;grid-template-columns:minmax(0,1fr) minmax(0,1fr);grid-template-rows:auto auto minmax(0,1fr);grid-template-areas:"eye dec" "eye da" "fly fly";gap:14px}
+body.staged .grid > .col:last-child{display:grid;min-height:0;grid-template-columns:minmax(0,1fr) minmax(0,1fr);grid-template-rows:auto auto minmax(0,1fr);grid-template-areas:"eye dec" "pos da" "season fly";gap:14px}
 body.staged #eyeCard{grid-area:eye;display:flex;flex-direction:column}
 body.staged #eyeCard > .tools{margin-top:auto}
 /* Fly card: same card chrome as its neighbours; video left, clip legend right. */
@@ -128,17 +139,24 @@ body.staged #eyeCard > .tools{margin-top:auto}
 body.staged .flybody{flex:1 1 auto;min-height:0;display:flex;gap:14px;container-type:size}
 .flyframe video{border-radius:8px}
 .flylegend{list-style:none;margin:0;padding:0;display:grid;gap:8px;font-size:12.5px}
-body.staged .flylegend{flex:1 1 0;min-width:0;height:100cqh;grid-auto-rows:1fr}
+/* The fly card is half a row wide since the season chart moved in beside it. */
+body.staged .flylegend{flex:1 1 0;min-width:0;height:100cqh;grid-auto-rows:1fr;gap:6px;font-size:11.5px}
+body.staged .flylegend li{padding:3px 8px}
+body.staged .flylegend li b{font-size:12px}
 .flylegend li{display:flex;flex-direction:column;justify-content:center;min-width:0;padding:7px 10px;border:1px solid var(--line);border-left:3px solid var(--line);border-radius:8px;background:var(--panel2);color:var(--mute);text-wrap:pretty;transition:border-color .2s,background-color .2s,color .2s}
 .flylegend li b{color:var(--text);font-size:13px}
 .flylegend li.on{border-color:#2e4064;border-left-color:var(--hot);background:#15203a;color:var(--text)}
 .flylegend li.on b{color:var(--hot)}
 body.staged #daCard{grid-area:da}
+body.staged #posCard{grid-area:pos}
+body.staged #seasonCard{grid-area:season;min-height:0;overflow:hidden}
+/* Off the stage the season chart is just another card in the right column. */
+#seasonCard .sub{margin-bottom:4px}
 /* Stable decision row (vetoed 270 px, hold 297 px) so the cards below do not jump each step. */
 body.staged #decCard{grid-area:dec;overflow:hidden;min-height:300px}
 body.staged #flyCard{grid-area:fly;min-height:0;display:flex;flex-direction:column;overflow:hidden}
-body.staged #flyCard .flygif{margin:0;flex:none;height:100cqh;width:min(calc(100cqh * 1.6), calc(100cqw - 234px))}
-body.staged #flyCard video{width:100%;height:100%}
+body.staged #flyCard .flygif{margin:0;flex:none;height:100cqh;width:min(calc(100cqh * 1.6), calc(100cqw - 160px))}
+body.staged #flyCard video{width:100%;height:100%;object-fit:contain}
 body.staged .charts,body.staged .foot{max-width:1440px;margin-left:auto;margin-right:auto;padding:0 16px;box-sizing:border-box}
 body.staged .foot{margin-bottom:16px}
 /* Web Interface Guidelines pass */
@@ -178,46 +196,50 @@ body.staged #flyCard .flyframe{width:100%;height:100%}
 <div class="wrap">
 <div class="stage-fit" id="stageFit"><div class="stage" id="stage">
 <header>
-  <h1><b translate="no">STONKFLY</b> <span class="coin" translate="no">–</span> 果蠅</h1>
-  <span id="status" class="pill">載入中…</span>
-  <span class="pill" title="這個網頁只讀取交易程式的紀錄，不能下單，也不能改任何狀態"><span aria-hidden="true">🔒</span> 唯讀</span>
-  <span class="stat">第 <strong id="tick">–</strong> 步</span>
-  <span class="stat">模擬淨值 <strong id="equity">–</strong> USDC</span>
+  <h1><b translate="no">STONKFLY</b> <span class="coin" translate="no">–</span> <span id="flyName">초파리</span></h1>
+  <span id="status" class="pill">불러오는 중…</span>
+  <span class="pill" title="이 페이지는 러너 기록을 읽기만 합니다. 주문도, 상태 변경도 못 합니다"><span aria-hidden="true">🔒</span> 읽기 전용</span>
+  <a class="pill" href="room/" style="text-decoration:none;color:inherit" title="책상 앞 3D 초파리 방송 화면"><span aria-hidden="true">🎥</span> 방송 화면</a>
+  <span class="stat">D+<strong id="day">–</strong></span>
+  <span class="stat"><strong id="tick">–</strong>번째 관측</span>
+  <span class="stat">순자산 <strong id="equity">–</strong> USDT <strong id="roi">–</strong></span>
+  <span class="stat">오늘 매매 <strong id="tradesToday">–</strong></span>
+  <span class="stat">다음 펀딩 <strong id="nextFunding">–</strong></span>
   <span class="stat"><span class="coin" translate="no">–</span> <strong id="price">–</strong></span>
-  <span class="stat">下一步 <strong id="next">–</strong></span>
-  <span class="stat">本步模擬耗時 <strong id="compute">–</strong></span>
+  <span class="stat">다음 관측 <strong id="next">–</strong></span>
+  <span class="stat">이번 관측 컴퓨트 <strong id="compute">–</strong></span>
   <nav class="stat" id="flies"></nav>
-  <button class="themebtn" id="themeToggle" type="button" aria-label="切換到白天模式"><span aria-hidden="true">☀️</span> 白天模式</button>
+  <button class="themebtn" id="themeToggle" type="button" aria-label="라이트 모드로 전환"><span aria-hidden="true">☀️</span> 라이트 모드</button>
 </header>
 
 <div class="flow" id="flow">
-  <div class="st"><b>① 價格畫成圖</b>最近 100&nbsp;分鐘的 <span class="coin" translate="no">–</span> 走勢畫成 320×180 彩色圖</div>
-  <div class="st"><b>② 眼睛看圖</b>3,335&nbsp;個感光細胞看亮度、811&nbsp;個看藍/綠色</div>
-  <div class="st"><b>③ 神經傳遞 0.5&nbsp;秒</b>16.6&nbsp;萬神經元、2,560&nbsp;萬條真實連線，逐 0.1&nbsp;ms 模擬放電</div>
-  <div class="st"><b>④ 讀出決策</b>比較左右兩顆 <span translate="no">DNp20</span> 的放電頻率，<span translate="no">DNpe017</span> 當閘門</div>
-  <div class="st"><b>⑤ 下單</b>買／賣／持有；風控只能否決，不能替牠換決定</div>
-  <div class="st fb"><b>↺ 回饋學習</b>賺錢刺激 <span translate="no">PAM11</span> 多巴胺、虧錢刺激 <span translate="no">PPL101</span>，改變蕈狀體 <span translate="no">KC→MBON</span> 突觸強度</div>
+  <div class="st"><b>① 가격을 그림으로</b>최근 100&nbsp;분 <span class="coin" translate="no">–</span> 흐름을 320×180 컬러 차트로</div>
+  <div class="st"><b>② 눈이 본다</b>광수용체 3,335개가 밝기를, 811개가 파랑/초록을 봄</div>
+  <div class="st"><b>③ 신경 전달 0.5&nbsp;초</b>뉴런 16.7만 개·실제 연결 2,558만 개를 0.1&nbsp;ms 단위로 발화 시뮬레이션</div>
+  <div class="st"><b>④ 결정 읽기</b>좌우 <span translate="no">DNp20</span> 발화율을 비교, <span translate="no">DNpe017</span>이 게이트</div>
+  <div class="st"><b>⑤ 주문</b>롱／숏／관망. 리스크 가드는 거부만 할 뿐 결정을 바꾸지 못함</div>
+  <div class="st fb"><b>↺ 피드백 학습</b>수익이면 <span translate="no">PAM11</span> 도파민, 손실이면 <span translate="no">PPL101</span>을 자극해 버섯체 <span translate="no">KC→MBON</span> 시냅스 강도를 바꿈</div>
 </div>
 
 <div class="grid">
   <div class="col">
     <div class="card">
-      <h2><span aria-hidden="true">🧠</span> 大腦＋腹神經索：放電即時動畫</h2>
-      <p class="sub">每個點是一個神經元的細胞體位置（MaleCNS 實測座標）。每一步新資料進來時，訊號從眼睛依真實突觸距離一層層傳進大腦；之後每個神經元依上一步的實際頻率閃爍（慢動作 ×8）。拖曳或方向鍵旋轉、Ctrl＋滾輪或 ＋／－ 縮放、滑鼠移上去看是什麼神經元。</p>
-      <div class="brainbox" id="brainbox" tabindex="0" role="region" aria-label="果蠅大腦與腹神經索的神經元放電動畫（方向鍵旋轉，＋／－縮放）">
+      <h2><span aria-hidden="true">🧠</span> 뇌＋복부신경삭: 실시간 발화 애니메이션</h2>
+      <p class="sub">점 하나가 뉴런 하나의 세포체 위치(MaleCNS 실측 좌표)입니다. 새 관측이 들어오면 신호가 눈에서 실제 시냅스 거리 순으로 뇌로 퍼지고, 그 뒤 각 뉴런은 직전 관측의 실제 발화율로 깜빡입니다(슬로모션 ×8). 드래그·방향키 회전, Ctrl＋휠 또는 ＋／－ 확대, 마우스를 올리면 뉴런 정보.</p>
+      <div class="brainbox" id="brainbox" tabindex="0" role="region" aria-label="초파리 뇌와 복부신경삭 발화 애니메이션(방향키 회전, ＋／－ 확대)">
         <canvas id="brain"></canvas><canvas id="overlay"></canvas><div id="tip"></div>
       </div>
       <div class="tools">
-        <button id="bReplay" class="accent" title="只在瀏覽器重跑動畫，不會下單">▶ 重播動畫（不會下單）</button>
-        <button id="bAuto" class="on" aria-pressed="true">自動旋轉</button>
-        <button id="bFront">正面</button>
-        <button id="bSide">側面</button>
-        <button id="bTop">俯視</button>
-        <button id="bZoomIn" aria-label="放大大腦視圖">＋</button>
-        <button id="bZoomOut" aria-label="縮小大腦視圖">－</button>
-        <button id="bMode">改成：依區域著色</button>
-        <button id="bKC" aria-pressed="false">顯示記憶細胞 KC</button>
-        <button id="bEye" aria-pressed="false">標出感光細胞</button>
+        <button id="bReplay" class="accent" title="브라우저에서 애니메이션만 다시 재생합니다. 주문 없음">▶ 애니메이션 다시 보기(주문 없음)</button>
+        <button id="bAuto" class="on" aria-pressed="true">자동 회전</button>
+        <button id="bFront">정면</button>
+        <button id="bSide">측면</button>
+        <button id="bTop">위에서</button>
+        <button id="bZoomIn" aria-label="뇌 확대">＋</button>
+        <button id="bZoomOut" aria-label="뇌 축소">－</button>
+        <button id="bMode">바꾸기: 영역별 색</button>
+        <button id="bKC" aria-pressed="false">기억세포 KC 표시</button>
+        <button id="bEye" aria-pressed="false">광수용체 표시</button>
       </div>
       <div class="legend" id="legend"></div>
     </div>
@@ -225,63 +247,86 @@ body.staged #flyCard .flyframe{width:100%;height:100%}
 
   <div class="col">
     <div class="card" id="eyeCard">
-      <h2><span aria-hidden="true">👁</span> 果蠅的眼睛</h2>
+      <h2><span aria-hidden="true">👁</span> 초파리의 눈</h2>
       <p class="sub" id="eyeSub"></p>
-      <div class="eyebox"><canvas id="eye" width="640" height="360" role="img" aria-label="果蠅眼睛：價格圖與每個感光細胞看到的亮度"></canvas></div>
-      <div class="tools"><button id="bEyeMode">改成：只看果蠅看到的</button></div>
+      <div class="eyebox"><canvas id="eye" width="640" height="360" role="img" aria-label="초파리 눈: 가격 차트와 광수용체별 밝기"></canvas></div>
+      <div class="tools"><button id="bEyeMode">바꾸기: 초파리가 본 것만</button></div>
     </div>
 
     <div class="card" id="decCard">
-      <h2><span aria-hidden="true">🎯</span> 這一步的決策</h2>
+      <h2><span aria-hidden="true">🎯</span> 이번 관측의 결정</h2>
       <div class="decision"><div class="big" id="side">–</div><div class="exec" id="exec"></div></div>
       <div class="bars" translate="no">
-        <span>DNp20 左</span><div class="bar"><div id="barL" style="background:var(--sell);color:var(--sell)"></div></div><span class="num" id="numL">–</span>
-        <span>DNp20 右</span><div class="bar"><div id="barR" style="background:var(--buy);color:var(--buy)"></div></div><span class="num" id="numR">–</span>
-        <span>右 − 左</span><div class="bar"><div id="barD"></div></div><span class="num" id="numD">–</span>
-        <span>DNpe017 閘門</span><div class="bar"><div id="barG" style="background:var(--hot);color:var(--hot)"></div></div><span class="num" id="numG">–</span>
+        <span>DNp20 좌</span><div class="bar"><div id="barL" style="background:var(--sell);color:var(--sell)"></div></div><span class="num" id="numL">–</span>
+        <span>DNp20 우</span><div class="bar"><div id="barR" style="background:var(--buy);color:var(--buy)"></div></div><span class="num" id="numR">–</span>
+        <span>우 − 좌</span><div class="bar"><div id="barD"></div></div><span class="num" id="numD">–</span>
+        <span>DNpe017 게이트</span><div class="bar"><div id="barG" style="background:var(--hot);color:var(--hot)"></div></div><span class="num" id="numG">–</span>
       </div>
-      <div class="rule">規則（固定、人工設計）：閘門有放電，且 右−左 &gt; 2&nbsp;Hz → <b style="color:var(--buy)">買</b>；&lt; −2&nbsp;Hz → <b style="color:var(--sell)">賣</b>；其他 → 持有。</div>
+      <div class="rule">규칙(고정, 사람이 설계): 게이트가 발화하고 우−좌 &gt; 2&nbsp;Hz → <b style="color:var(--buy)">롱</b>; &lt; −2&nbsp;Hz → <b style="color:var(--sell)">숏</b>; 그 외 → 관망.</div>
+    </div>
+
+    <div class="card" id="posCard">
+      <h2><span aria-hidden="true">📊</span> 포지션 <span class="pill" translate="no" id="posLev">20×</span></h2>
+      <div class="poscols" translate="no">
+        <div><span class="k">방향</span><strong id="posSide">없음</strong></div>
+        <div><span class="k">수량</span><strong id="posQty">–</strong></div>
+        <div><span class="k">진입가</span><strong id="posEntry">–</strong></div>
+        <div><span class="k">마크가</span><strong id="posMark">–</strong></div>
+        <div><span class="k">청산가</span><strong id="posLiq">–</strong></div>
+        <div><span class="k">미실현</span><strong id="posUpnl">–</strong></div>
+        <div><span class="k">누적 실현손익</span><strong id="posRealized">–</strong></div>
+        <div><span class="k">누적 수수료</span><strong id="posFees">–</strong></div>
+        <div><span class="k">누적 펀딩</span><strong id="posFunding">–</strong></div>
+        <div><span class="k">강제청산</span><strong id="posLiqs">0회</strong></div>
+        <div><span class="k">시세 실패</span><strong id="posVeto">0</strong></div>
+      </div>
+    </div>
+
+    <div class="card" id="seasonCard">
+      <h2><span aria-hidden="true">📉</span> 시즌 순자산</h2>
+      <p class="sub">노란선: 페이퍼 순자산, 회색선: BTC 단순 보유(시즌 시작 1,000 USDT 환산). × 강제청산</p>
+      <div id="cSeason"></div>
     </div>
 
     <div class="card" id="daCard">
-      <h2><span aria-hidden="true">💊</span> 回饋刺激</h2>
+      <h2><span aria-hidden="true">💊</span> 피드백 자극</h2>
       <p class="sub" id="reinf">–</p>
       <div class="bars" translate="no">
-        <span>PAM11 獎勵</span><div class="bar"><div id="barRw" style="background:var(--buy);color:var(--buy)"></div></div><span class="num" id="numRw">–</span>
-        <span>PPL101 懲罰</span><div class="bar"><div id="barAv" style="background:var(--sell);color:var(--sell)"></div></div><span class="num" id="numAv">–</span>
-        <span>KC 記憶細胞</span><div class="bar"><div id="barKC" style="background:var(--violet);color:var(--violet)"></div></div><span class="num" id="numKC">–</span>
+        <span>PAM11 보상</span><div class="bar"><div id="barRw" style="background:var(--buy);color:var(--buy)"></div></div><span class="num" id="numRw">–</span>
+        <span>PPL101 처벌</span><div class="bar"><div id="barAv" style="background:var(--sell);color:var(--sell)"></div></div><span class="num" id="numAv">–</span>
+        <span>KC 기억세포</span><div class="bar"><div id="barKC" style="background:var(--violet);color:var(--violet)"></div></div><span class="num" id="numKC">–</span>
       </div>
     </div>
 
     <div class="card flycard" id="flyCard">
-      <h2><span aria-hidden="true">🪰</span> 果蠅交易員動畫 <span class="flynow" id="flyNow" aria-live="polite"></span></h2>
+      <h2><span aria-hidden="true">🪰</span> 초파리 트레이더 <span class="flynow" id="flyNow" aria-live="polite"></span></h2>
       <div class="flybody">
-        <div class="flygif" id="flyBox" hidden><div class="flyframe"><video id="flyVid" muted loop playsinline autoplay preload="auto" aria-hidden="true"></video><button class="flyctl" id="flyToggle" aria-pressed="false" aria-label="暫停果蠅動畫">❚❚ 暫停</button></div></div>
-        <ul class="flylegend" id="flyLegend" aria-label="四種動畫代表的狀態">
-          <li data-anim="buy"><b><span aria-hidden="true">🚀</span> 買進成交</b><span>火箭登月</span></li>
-          <li data-anim="sell_profit"><b><span aria-hidden="true">💸</span> 賣出賺錢</b><span>噴鈔派對</span></li>
-          <li data-anim="sell_loss"><b><span aria-hidden="true">⛺</span> 賣出虧損</b><span>破帳篷躺地</span></li>
-          <li data-anim="hold"><b><span aria-hidden="true">🧼</span> 其他狀態</b><span>觀望、被風控擋下或停機時搓手洗臉</span></li>
+        <div class="flygif" id="flyBox" hidden><div class="flyframe"><video id="flyVid" muted loop playsinline autoplay preload="auto" aria-hidden="true"></video><button class="flyctl" id="flyToggle" aria-pressed="false" aria-label="애니메이션 일시정지">❚❚ 일시정지</button></div></div>
+        <ul class="flylegend" id="flyLegend" aria-label="애니메이션이 뜻하는 상태">
+          <li data-anim="buy"><b><span aria-hidden="true">🚀</span> 진입 체결</b><span>로켓 발사</span></li>
+          <li data-anim="sell_profit"><b><span aria-hidden="true">💸</span> 익절 청산</b><span>돈다발 파티</span></li>
+          <li data-anim="sell_loss"><b><span aria-hidden="true">⛺</span> 손절·강제청산</b><span>텐트 붕괴</span></li>
+          <li data-anim="hold"><b><span aria-hidden="true">🧼</span> 그 외</b><span>관망·거부·정지 중엔 그루밍</span></li>
         </ul>
       </div>
     </div>
   </div>
 </div>
-
+<p class="foot" id="disclosure"></p>
 </div></div><!-- /stage -->
 <div class="charts">
-  <div class="card"><h2><span aria-hidden="true">📈</span> <span class="coin" translate="no">–</span> 價格與模擬淨值</h2><p class="sub">藍線：<span class="coin" translate="no">–</span> 買價；黃線：模擬帳戶淨值（右軸）。▲ 買 ▼ 賣</p><div id="cPrice"></div></div>
-  <div class="card"><h2><span aria-hidden="true">↔</span> 左右 <span translate="no">DNp20</span> 放電差（Hz）</h2><p class="sub">虛線是 ±2&nbsp;Hz 門檻；點的顏色＝當步決策（灰點＝閘門沒開或差距不夠）</p><div id="cDiff"></div></div>
-  <div class="card"><h2><span aria-hidden="true">💊</span> 多巴胺放電</h2><p class="sub">綠：PAM11 獎勵；紅：PPL101 懲罰（受損益刺激時才會高）</p><div id="cDA"></div></div>
-  <div class="card"><h2><span aria-hidden="true">🧬</span> 記憶突觸變化</h2><p class="sub">紫線：已改變的 KC→MBON 突觸數（共 7,835&nbsp;條）；青線：平均強度（1＝原始）</p><div id="cMem"></div></div>
-  <div class="card"><h2><span aria-hidden="true">🗺</span> 各區域平均放電頻率</h2><p class="sub">上一步 0.5&nbsp;秒，每個神經元平均 Hz</p><div class="scbars" id="scbars"></div></div>
-  <div class="card"><h2><span aria-hidden="true">⚖</span> 記憶突觸強度分佈</h2><p class="sub">7,835&nbsp;條 KC→MBON07/11 突觸；1.0＝原始強度，&lt;1＝被多巴胺削弱</p><div id="cHist"></div></div>
+  <div class="card"><h2><span aria-hidden="true">📈</span> <span class="coin" translate="no">–</span> 가격과 순자산</h2><p class="sub">파란선: <span class="coin" translate="no">–</span> 매수호가, 노란선: 페이퍼 순자산(오른쪽 축), 회색선: BTC 단순 보유(시즌 시작 대비, 1,000 USDT 환산). ▲ 롱 ▼ 숏 × 강제청산 ◇ 펀딩 ● 방 이벤트</p><div id="cPrice"></div></div>
+  <div class="card"><h2><span aria-hidden="true">↔</span> 좌우 <span translate="no">DNp20</span> 발화 차이(Hz)</h2><p class="sub">점선은 ±2&nbsp;Hz 문턱. 점 색＝그 관측의 결정(회색＝게이트 안 열림 또는 차이 부족)</p><div id="cDiff"></div></div>
+  <div class="card"><h2><span aria-hidden="true">💊</span> 도파민 발화</h2><p class="sub">초록: PAM11 보상, 빨강: PPL101 처벌(손익 자극이 있을 때만 높아짐)</p><div id="cDA"></div></div>
+  <div class="card"><h2><span aria-hidden="true">🧬</span> 기억 시냅스 변화</h2><p class="sub">보라선: 바뀐 KC→MBON 시냅스 수(총 7,835개), 청록선: 평균 강도(1＝원래)</p><div id="cMem"></div></div>
+  <div class="card"><h2><span aria-hidden="true">🗺</span> 영역별 평균 발화율</h2><p class="sub">직전 관측 0.5&nbsp;초, 뉴런당 평균 Hz</p><div class="scbars" id="scbars"></div></div>
+  <div class="card"><h2><span aria-hidden="true">⚖</span> 기억 시냅스 강도 분포</h2><p class="sub">KC→MBON07/11 시냅스 7,835개. 1.0＝원래 강도, &lt;1＝도파민으로 약해짐</p><div id="cHist"></div></div>
 </div>
 
 <p class="foot">
-資料：<span id="runpath"></span>（paper 模擬交易，唯讀）。每 4&nbsp;秒檢查一次，新的一步出來就播放動畫並更新。<br>
-動畫說明：程式每 0.5&nbsp;秒只記錄「每個神經元放了幾次電」，沒有記錄每次放電的時間。傳遞波的先後是依「離眼睛幾個突觸」排的示意；閃爍頻率是真實的上一步放電頻率（放慢 8&nbsp;倍）。<br>
-注意：「買／賣神經元」與「賺錢／虧錢多巴胺」都是人為指定的介面；連線來自真實果蠅連接體，但神經動力學與學習規則未經生物驗證，也未證明能獲利。
+데이터: <span id="runpath"></span> (페이퍼 트레이딩, 읽기 전용). 4&nbsp;초마다 확인해 새 관측이 나오면 애니메이션을 재생하고 갱신합니다.<br>
+애니메이션 설명: 프로그램은 0.5&nbsp;초마다 "뉴런이 몇 번 발화했는지"만 기록하고 발화 시각은 기록하지 않습니다. 전파 순서는 "눈에서 몇 시냅스 거리인지"로 배열한 시각화이고, 깜빡임 빈도는 직전 관측의 실제 발화율입니다(8&nbsp;배 느리게).<br>
+주의: "롱/숏 뉴런"과 "수익/손실 도파민"은 사람이 정한 인터페이스입니다. 연결은 실제 초파리 커넥톰에서 왔지만 신경 동역학과 학습 규칙은 생물학적으로 검증되지 않았고, 수익성도 입증되지 않았습니다.
 </p>
 </div>
 
@@ -297,19 +342,19 @@ const REDUCED = matchMedia('(prefers-reduced-motion: reduce)');
 let flyPaused = REDUCED.matches;
 
 const ZH = {
-  ENS:'腸神經', ascending_neuron:'上行神經元（身體→腦）', cb_efferent:'中央腦傳出', cb_endocrine:'中央腦內分泌',
-  cb_intrinsic:'中央腦內部', cb_motor:'腦運動神經', cb_sensory:'腦感覺神經', descending_neuron:'下行神經元（腦→身體）',
-  efferent_ascending:'傳出上行', efferent_descending:'傳出下行', ol_intrinsic:'視葉內部', ol_sensory:'眼睛感光細胞',
-  sensory_ascending:'感覺上行', sensory_descending:'感覺下行', visual_centrifugal:'視覺離心', visual_projection:'視覺投射（眼→腦）',
-  vnc_efferent:'腹神經索傳出', vnc_endocrine:'腹神經索內分泌', vnc_intrinsic:'腹神經索內部', vnc_motor:'腹神經索運動',
-  vnc_sensory:'腹神經索感覺', vnc_tbc:'腹神經索（待確認）', unassigned:'未分類'
+  ENS:'장신경', ascending_neuron:'상행 뉴런(몸→뇌)', cb_efferent:'중앙뇌 원심', cb_endocrine:'중앙뇌 내분비',
+  cb_intrinsic:'중앙뇌 내부', cb_motor:'뇌 운동뉴런', cb_sensory:'뇌 감각뉴런', descending_neuron:'하행 뉴런(뇌→몸)',
+  efferent_ascending:'원심 상행', efferent_descending:'원심 하행', ol_intrinsic:'시엽 내부', ol_sensory:'눈 광수용체',
+  sensory_ascending:'감각 상행', sensory_descending:'감각 하행', visual_centrifugal:'시각 원심', visual_projection:'시각 투사(눈→뇌)',
+  vnc_efferent:'복부신경삭 원심', vnc_endocrine:'복부신경삭 내분비', vnc_intrinsic:'복부신경삭 내부', vnc_motor:'복부신경삭 운동',
+  vnc_sensory:'복부신경삭 감각', vnc_tbc:'복부신경삭(미확인)', unassigned:'미분류'
 };
-const zh = s => ZH[s] || (s.endsWith('_tbc') ? (ZH[s.slice(0,-4)] || s.slice(0,-4)) + '（待確認）' : s);
+const zh = s => ZH[s] || (s.endsWith('_tbc') ? (ZH[s.slice(0,-4)] || s.slice(0,-4)) + '(미확인)' : s);
 const FAMS = [
-  {name:'視覺系統', color:[60,200,255]},
-  {name:'中央腦', color:[169,139,255]},
-  {name:'腹神經索（身體）', color:[255,179,71]},
-  {name:'上行／下行', color:[255,122,184]},
+  {name:'시각계', color:[60,200,255]},
+  {name:'중앙뇌', color:[169,139,255]},
+  {name:'복부신경삭(몸)', color:[255,179,71]},
+  {name:'상행／하행', color:[255,122,184]},
 ];
 function famOf(s){
   if (s.startsWith('ol_') || s.startsWith('visual_')) return 0;
@@ -317,15 +362,31 @@ function famOf(s){
   if (s.startsWith('cb_') || s === 'ENS') return 1;
   return 3;
 }
-const EXEC = {FILLED:'已成交（模擬）', VETO:'風控否決', HOLD:'未下單', REJECTED:'被拒'};
+const EXEC = {FILLED:'체결(페이퍼)', VETO:'가드 거부', HOLD:'주문 없음', REJECTED:'거절', BANKRUPT:'파산'};
 const REASON = {
-  'Price moved beyond neural observation tolerance':'神經運算期間價格變動超過容許範圍',
-  'Order cooldown':'下單冷卻中（兩單至少間隔 60&nbsp;秒）',
-  'Insufficient funds/position or below exchange minimum':'資金或持倉不足／低於交易所最小單位',
-  'Daily order limit':'已達每日下單上限', 'Spread limit':'買賣價差過大', 'Loss stop reached':'已達虧損停止線'
+  'Price moved beyond neural observation tolerance':'신경 계산 중 가격이 허용 범위를 벗어남', 'Already positioned':'이미 같은 방향 포지션', 'Below breakeven':'수수료 보합 미만 — 보유 유지', 'Below minimum':'최소 주문 미만', 'Stale or future quote':'시세 지연', 'STOP file present':'STOP 파일', 'Incomplete market snapshot':'시세 불완전', 'Invalid neural proposal':'잘못된 제안', 'market-outage':'시세 장애', 'bankrupt':'파산', 'accounting-error':'회계 오류', 'clock-skew':'시계 어긋남 — 점검 필요', 'Checkpoint integrity':'체크포인트 무결성 오류 — 점검 필요', 'Quote identity mismatch':'시세 종목 불일치', 'SeedUnavailable':'초기 차트 시드 실패',
+  'Order cooldown':'주문 쿨다운(두 주문 사이 최소 60&nbsp;초)',
+  'Insufficient funds/position or below exchange minimum':'자금·포지션 부족 또는 거래소 최소 단위 미만',
+  'Daily order limit':'일일 주문 상한', 'Spread limit':'호가 스프레드 과대', 'Loss stop reached':'손실 정지선 도달'
 };
-const SIDE_ZH = {BUY:'買 BUY', SELL:'賣 SELL', HOLD:'持有 HOLD'};
+const SIDE_ZH = {BUY:'롱 LONG', SELL:'숏 SHORT', HOLD:'관망 HOLD'};
 const SIDE_COL = {BUY:'#2fd18a', SELL:'#ff5d6c', HOLD:'#8f99ad'};
+function sideLabel(e){
+  if (!e) return '–';
+  if (e.execution === 'BANKRUPT') return '파산';
+  if (e.liquidation) return '강제청산';
+  if (e.execution === 'FILLED') return e.action === 'FLIP' ? (e.side === 'BUY' ? '뒤집기 → 롱' : '뒤집기 → 숏') : (e.side === 'BUY' ? '롱 진입' : '숏 진입');
+  if (e.side === 'HOLD') return '관망 HOLD';
+  if (e.reason === 'Already positioned') return e.side === 'BUY' ? '관망 (이미 롱)' : '관망 (이미 숏)';
+  return e.side === 'BUY' ? '롱 신호 (거부)' : '숏 신호 (거부)';
+}
+// U+2212 for the minus everywhere a number is shown, and no sign at all on zero
+// (a "+0.00 USDT" fee line reads as a gain; "−0.00" comes out of Math.abs on -0).
+function fmtUsdt(v){
+  if (!isFinite(v)) return '– USDT';
+  const a = Math.abs(v);
+  return (a < 0.005 ? '' : v > 0 ? '+' : '−') + a.toFixed(2) + ' USDT';
+}
 let FLIES = [];  // filled from /flies.json (STONKFLY_FLIES)
 // Keep ~4 significant digits for sub-cent coins such as PEPE.
 function fmtPrice(v){
@@ -334,7 +395,7 @@ function fmtPrice(v){
   return v.toFixed(Math.min(12, 3 - Math.floor(Math.log10(v))));
 }
 const fmtQty = v => v >= 1000 ? v.toLocaleString(undefined, {maximumFractionDigits: 0}) : String(+v.toFixed(8));
-const STAGES = ['① 眼睛感光細胞看到價格圖', '② 視葉第一層（lamina）', '③ 視葉深層與視覺投射', '④ 中央腦與記憶中樞', '⑤ 遠端：腹神經索', '⑤ 遠端：腹神經索'];
+const STAGES = ['① 광수용체가 가격 차트를 봄', '② 시엽 첫 층(라미나)', '③ 시엽 심층과 시각 투사', '④ 중앙뇌와 기억 중추', '⑤ 원위: 복부신경삭', '⑤ 원위: 복부신경삭'];
 
 /* ---------------- brain view ---------------- */
 const brain = {theta:-0.9, phi:0.35, zoom:1, auto:true, mode:'activity', kc:false, eye:false};
@@ -346,7 +407,8 @@ const fx = {rings:[], parts:[], stim:null, stimT0:-1e9, lastSpawn:0, lastRing:0,
 
 function sizeBrain(){
   const box = $('#brainbox');
-  const w = Math.min(1000, Math.round(box.clientWidth * DPR)), h = Math.round(w * 3 / 4);
+  if (Math.round(box.clientWidth * DPR) < 2) return;  // hidden or not laid out yet: keep the previous buffers, ResizeObserver will call again
+  const w = Math.max(320, Math.min(1000, Math.round(box.clientWidth * DPR))), h = Math.round(w * 3 / 4);  // spec §7.2: 320 px floor
   for (const c of [cv, ov]) { c.width = w; c.height = h; }
   small.width = Math.max(1, w >> 2); small.height = Math.max(1, h >> 2);
   img = ctx.createImageData(w, h); acc = new Float32Array(w * h * 3);
@@ -368,11 +430,11 @@ function prepBrain(){
   sizeBrain(); new ResizeObserver(sizeBrain).observe($('#brainbox'));
   $('#legend').innerHTML =
     FAMS.map(f => `<span><i style="background:rgb(${f.color})"></i>${f.name}</span>`).join('') +
-    `<span><i style="background:#ffe08a;box-shadow:0 0 6px #ffd166"></i>放電中</span>` +
-    `<span><i style="background:var(--sell)"></i>DNp20 左（賣）</span><span><i style="background:var(--buy)"></i>DNp20 右（買）</span>` +
-    `<span><i style="background:var(--hot)"></i>DNpe017 閘門</span>` +
-    `<span><i style="border:2px solid var(--buy);background:none"></i>PAM11 獎勵多巴胺</span>` +
-    `<span><i style="border:2px solid var(--sell);background:none"></i>PPL101 懲罰多巴胺</span>`;
+    `<span><i style="background:#ffe08a;box-shadow:0 0 6px #ffd166"></i>발화 중</span>` +
+    `<span><i style="background:var(--sell)"></i>DNp20 좌(숏)</span><span><i style="background:var(--buy)"></i>DNp20 우(롱)</span>` +
+    `<span><i style="background:var(--hot)"></i>DNpe017 게이트</span>` +
+    `<span><i style="border:2px solid var(--buy);background:none"></i>PAM11 보상 도파민</span>` +
+    `<span><i style="border:2px solid var(--sell);background:none"></i>PPL101 처벌 도파민</span>`;
 }
 
 /* A new tick: replay propagation from the eyes, then fire the decision. */
@@ -405,8 +467,8 @@ function startWave(e, replay = false){
     const fb = document.querySelector('.flow .fb'); fb.classList.remove('lit-reward', 'lit-aversive'); fb.classList.add('lit-' + e.stimulus);
     setTimeout(() => fb.classList.remove('lit-' + e.stimulus), 5000);
     toast(e.stimulus === 'reward'
-      ? `<b>💊 獎勵刺激</b><br>上一步賺了 ${e.pnl.toFixed(4)} USDC → 刺激 15 顆 PAM11 多巴胺 200 ms`
-      : `<b>💊 懲罰刺激</b><br>上一步虧了 ${Math.abs(e.pnl).toFixed(4)} USDC → 刺激 2 顆 PPL101 多巴胺 200 ms`, e.stimulus);
+      ? `<b>💊 보상 자극</b><br>직전 관측 +${e.pnl.toFixed(2)} USDT → PAM11 도파민 15개 200 ms 자극`
+      : `<b>💊 처벌 자극</b><br>직전 관측 −${Math.abs(e.pnl).toFixed(2)} USDT → PPL101 도파민 2개 200 ms 자극`, e.stimulus);
   } else fx.stim = null;
 }
 function lightFlow(k){
@@ -415,8 +477,8 @@ function lightFlow(k){
 function fireDecision(e){
   lightFlow(e.side === 'HOLD' ? 3 : 4);
   setTimeout(() => lightFlow(-1), 3500);
-  fx.banner = {t0: now(), text: SIDE_ZH[e.side], color: SIDE_COL[e.side],
-    sub: (wave.replay ? `⟲ 重播第 ${e.tick} 步 · 當時` : '') + (EXEC[e.execution] || e.execution)};
+  fx.banner = {t0: now(), text: sideLabel(e), color: e.liquidation || e.execution === 'BANKRUPT' ? '#ffb347' : SIDE_COL[e.side],
+    sub: (wave.replay ? `↺ ${e.tick}번째 관측 다시 보기 · 당시` : '') + (EXEC[e.execution] || e.execution)};
   const g = META.groups;
   const origin = e.side === 'SELL' ? g.dnp20_L : e.side === 'BUY' ? g.dnp20_R : [...g.dnp20_L, ...g.dnp20_R];
   const count = e.execution === 'FILLED' ? 90 : 36;
@@ -428,9 +490,9 @@ function fireDecision(e){
   const side = $('#side'); side.classList.remove('pop'); void side.offsetWidth; side.classList.add('pop');
   const card = $('#decCard'); card.classList.remove('glow-BUY', 'glow-SELL', 'glow-HOLD'); void card.offsetWidth; card.classList.add('glow-' + e.side);
   const why = e.reason ? `<br>${REASON[e.reason] || e.reason}` : '';
-  if (e.execution === 'FILLED') toast(`<b>${e.side === 'BUY' ? '🟢 買入成交' : '🔴 賣出成交'}</b>（模擬）<br>${e.product.split('-')[0]} @ ${fmtPrice(+e.bid)}　右−左 ${e.diff_hz >= 0 ? '+' : ''}${e.diff_hz.toFixed(0)} Hz`, e.side);
-  else if (e.execution === 'VETO') toast(`<b>🛡 神經想${e.side === 'BUY' ? '買' : '賣'}，被風控否決</b>${why}`, 'veto');
-  else toast(`<b>⏸ 持有</b><br>右−左 ${e.diff_hz >= 0 ? '+' : ''}${e.diff_hz.toFixed(1)} Hz，閘門 ${e.gate} 次${e.gate ? '' : '（閘門沒開）'}`, 'HOLD');
+  if (e.execution === 'FILLED') toast(`<b>${e.action === 'FLIP' ? '🔁 뒤집기 → ' + (e.side === 'BUY' ? '롱' : '숏') : (e.side === 'BUY' ? '🟢 롱 진입' : '🔴 숏 진입')}</b>(페이퍼)<br>${e.product.split('-')[0]} @ ${fmtPrice(+e.bid)}　우−좌 ${e.diff_hz >= 0 ? '+' : ''}${e.diff_hz.toFixed(0)} Hz`, e.side);
+  else if (e.execution === 'VETO') toast(`<b>🛡 초파리는 ${e.side === 'BUY' ? '롱' : '숏'}을 원했지만 가드가 거부</b>${why}`, 'veto');
+  else toast(`<b>⏸ 관망</b><br>우−좌 ${e.diff_hz >= 0 ? '+' : ''}${e.diff_hz.toFixed(1)} Hz, 게이트 ${e.gate}회${e.gate ? '' : '(게이트 안 열림)'}`, 'HOLD');
 }
 function spark(i){
   const c = special.get(i);
@@ -467,6 +529,7 @@ function update(dt){
 }
 const LOG256 = Math.log(256);
 function renderBrain(){
+  if (!img) return;
   const W = cv.width, H = cv.height, n = META.n;
   acc.fill(0);
   const ct = Math.cos(brain.theta), st = Math.sin(brain.theta), cp = Math.cos(brain.phi), sp = Math.sin(brain.phi);
@@ -575,16 +638,16 @@ function drawOverlay(){
       octx.beginPath(); octx.arc(SX[i], SY[i], (6 + gl * 3) * P, 0, 7);
       octx.fillStyle = gl > .2 ? col : 'rgba(0,0,0,.55)'; octx.fill();
       octx.strokeStyle = col; octx.lineWidth = 2*P; octx.stroke(); octx.restore();
-      lab.push([SX[i], SY[i], `${text} ${COUNTS ? COUNTS[i] : 0} 次`, col]);
+      lab.push([SX[i], SY[i], `${text} ${COUNTS ? COUNTS[i] : 0}회`, col]);
     }
   };
-  big(g.dnp20_L, '#ff5d6c', 'DNp20左'); big(g.dnp20_R, '#2fd18a', 'DNp20右'); big(g.gate, '#ffd166', '閘門');
+  big(g.dnp20_L, '#ff5d6c', 'DNp20 좌'); big(g.dnp20_R, '#2fd18a', 'DNp20 우'); big(g.gate, '#ffd166', '게이트');
   const pr = groupCenter(g.reward), pa = groupCenter(g.aversive), pm = groupCenter(g.mbon);
-  if (pr) lab.push([pr[0], pr[1] - 14*P, 'PAM11 獎勵', '#2fd18a']);
-  if (pa) lab.push([pa[0], pa[1] + 18*P, 'PPL101 懲罰', '#ff5d6c']);
-  if (pm) lab.push([pm[0], pm[1] - 26*P, 'MBON 記憶輸出', '#c9b8ff']);
+  if (pr) lab.push([pr[0], pr[1] - 14*P, 'PAM11 보상', '#2fd18a']);
+  if (pa) lab.push([pa[0], pa[1] + 18*P, 'PPL101 처벌', '#ff5d6c']);
+  if (pm) lab.push([pm[0], pm[1] - 26*P, 'MBON 기억 출력', '#c9b8ff']);
   // Place labels greedily so they never overlap each other or the stage HUD.
-  octx.font = `${11*P}px system-ui, sans-serif`; octx.textBaseline = 'middle';
+  octx.font = `${11*P}px "Pretendard Variable", system-ui, sans-serif`; octx.textBaseline = 'middle';
   const placed = [[0, 0, 330*P, 66*P]];
   const hit = (x0, y0, x1, y1) => placed.some(r => x0 < r[2] && x1 > r[0] && y0 < r[3] && y1 > r[1]);
   for (const [x, y, s, c] of lab) {
@@ -607,32 +670,32 @@ function drawHud(W, H, t){
   if (!wave.done) {
     stage = STAGES[Math.min(STAGES.length - 1, Math.max(0, Math.floor(el / HOP_S)))]; prog = Math.min(1, el / wave.len);
   } else if (el < wave.len + 4 && wave.event) {
-    stage = '⑥ 0.5 秒結束 → 決策：' + SIDE_ZH[wave.event.side]; prog = 1;
-  } else { stage = '等待下一步…神經元依上一步的頻率持續放電'; prog = null; }
-  octx.font = `600 ${13*P}px system-ui, sans-serif`; octx.textBaseline = 'top';
+    stage = '⑥ 0.5초 종료 → 결정: ' + sideLabel(wave.event); prog = 1;
+  } else { stage = '다음 관측 대기 중… 뉴런은 직전 발화율로 계속 발화'; prog = null; }
+  octx.font = `600 ${13*P}px "Pretendard Variable", system-ui, sans-serif`; octx.textBaseline = 'top';
   const w = Math.max(octx.measureText(stage).width, 160 * P) + 20*P;
   octx.fillStyle = 'rgba(4,7,14,.8)'; octx.fillRect(10*P, 10*P, w, prog === null ? 30*P : 52*P);
   octx.fillStyle = '#dde6f6'; octx.fillText(stage, 20*P, 18*P);
   if (prog !== null) {
     octx.fillStyle = '#1c2840'; octx.fillRect(20*P, 40*P, w - 20*P, 4*P);
     octx.fillStyle = '#3cc8ff'; octx.fillRect(20*P, 40*P, (w - 20*P) * prog, 4*P);
-    octx.font = `${11*P}px system-ui, sans-serif`; octx.fillStyle = '#7c89a3';
-    octx.fillText(`放電 ${wave.spikes.toLocaleString()} / ${wave.total.toLocaleString()} 次`, 20*P, 47*P);
+    octx.font = `${11*P}px "Pretendard Variable", system-ui, sans-serif`; octx.fillStyle = '#7c89a3';
+    octx.fillText(`발화 ${wave.spikes.toLocaleString()} / ${wave.total.toLocaleString()}회`, 20*P, 47*P);
   }
-  octx.font = `${11*P}px system-ui, sans-serif`; octx.textBaseline = 'bottom'; octx.textAlign = 'right';
-  octx.fillStyle = 'rgba(124,137,163,.9)'; octx.fillText('慢動作 ×8 · 傳遞順序依突觸距離（示意）', W - 10*P, H - 8*P);
+  octx.font = `${11*P}px "Pretendard Variable", system-ui, sans-serif`; octx.textBaseline = 'bottom'; octx.textAlign = 'right';
+  octx.fillStyle = 'rgba(124,137,163,.9)'; octx.fillText('슬로모션 ×8 · 전파 순서는 시냅스 거리(시각화)', W - 10*P, H - 8*P);
   if (wave.replay && el < wave.len + 4) {
-    octx.textBaseline = 'top'; octx.font = `700 ${13*P}px system-ui, sans-serif`;
-    const s = `⟲ 重播第 ${wave.event.tick} 步 · 僅動畫，不會下單`, w = octx.measureText(s).width + 16*P;
+    octx.textBaseline = 'top'; octx.font = `700 ${13*P}px "Pretendard Variable", system-ui, sans-serif`;
+    const s = `↺ ${wave.event.tick}번째 관측 다시 보기 · 애니메이션만, 주문 없음`, w = octx.measureText(s).width + 16*P;
     octx.fillStyle = 'rgba(40,28,6,.88)'; octx.fillRect(W - w - 10*P, 10*P, w, 24*P);
     octx.fillStyle = '#ffb347'; octx.fillText(s, W - w - 2*P, 15*P);
   }
   octx.textAlign = 'left';
   if (fx.stim && t - fx.stimT0 < 6) {
     const a = Math.max(0, 1 - (t - fx.stimT0) / 6), col = fx.stim === 'reward' ? '47,209,138' : '255,93,108';
-    octx.font = `700 ${15*P}px system-ui, sans-serif`; octx.textBaseline = 'bottom';
+    octx.font = `700 ${15*P}px "Pretendard Variable", system-ui, sans-serif`; octx.textBaseline = 'bottom';
     octx.fillStyle = `rgba(${col},${a})`;
-    octx.fillText(fx.stim === 'reward' ? '💊 獎勵多巴胺注入中' : '💊 懲罰多巴胺注入中', 14*P, H - 10*P);
+    octx.fillText(fx.stim === 'reward' ? '💊 보상 도파민 주입 중' : '💊 처벌 도파민 주입 중', 14*P, H - 10*P);
   }
   if (fx.banner) {
     const p = (t - fx.banner.t0) / 2.6;
@@ -643,9 +706,9 @@ function drawHud(W, H, t){
       octx.save(); octx.translate(W / 2, H / 2); octx.scale(sc, sc); octx.globalAlpha = a;
       octx.textAlign = 'center'; octx.textBaseline = 'middle';
       octx.shadowColor = fx.banner.color; octx.shadowBlur = 30 * P;
-      octx.font = `900 ${54*P}px system-ui, sans-serif`; octx.fillStyle = fx.banner.color;
+      octx.font = `900 ${54*P}px "Pretendard Variable", system-ui, sans-serif`; octx.fillStyle = fx.banner.color;
       octx.fillText(fx.banner.text, 0, 0);
-      octx.shadowBlur = 0; octx.font = `600 ${15*P}px system-ui, sans-serif`; octx.fillStyle = '#dde6f6';
+      octx.shadowBlur = 0; octx.font = `600 ${15*P}px "Pretendard Variable", system-ui, sans-serif`; octx.fillStyle = '#dde6f6';
       octx.fillText(fx.banner.sub, 0, 44 * P);
       octx.restore();
     }
@@ -657,9 +720,9 @@ function hover(e){
   for (let i = 0; i < META.n; i++) { const dx = SX[i] - mx, dy = SY[i] - my, dd = dx*dx + dy*dy; if (dd < bd) { bd = dd; best = i; } }
   const tip = $('#tip');
   if (best < 0) { tip.style.display = 'none'; return; }
-  const c = COUNTS ? COUNTS[best] : 0, ty = META.type_names[TYPE[best]] || '（未命名類型）', h = HOP[best];
-  tip.innerHTML = `<b>${ty}</b> · ${zh(META.superclasses[SC[best]])}<br>上一步放電 <b>${c}</b> 次（${(c / N_MS).toFixed(0)} Hz）` +
-    `<br>離眼睛 ${h === 255 ? '無路徑' : h + ' 個突觸'}`;
+  const c = COUNTS ? COUNTS[best] : 0, ty = META.type_names[TYPE[best]] || '(이름 없는 유형)', h = HOP[best];
+  tip.innerHTML = `<b>${ty}</b> · ${zh(META.superclasses[SC[best]])}<br>직전 관측 발화 <b>${c}</b>회(${(c / N_MS).toFixed(0)} Hz)` +
+    `<br>눈에서 ${h === 255 ? '경로 없음' : h + ' 시냅스'}`;
   tip.style.display = 'block';
   // r is on-screen (after the 16:9 stage scale); the tooltip is positioned in layout px.
   const k = r.width / ov.offsetWidth || 1, bx = (e.clientX - r.left) / k, by = (e.clientY - r.top) / k;
@@ -705,7 +768,7 @@ function bindBrain(){
   $('#bAuto').onclick = () => setAuto(!brain.auto);
   $('#bReplay').onclick = () => startWave(STATE && STATE.events[STATE.events.length - 1], true);
   $('#bMode').onclick = () => { brain.mode = brain.mode === 'activity' ? 'region' : 'activity';
-    $('#bMode').textContent = brain.mode === 'activity' ? '改成：依區域著色' : '改成：顯示放電'; };
+    $('#bMode').textContent = brain.mode === 'activity' ? '바꾸기: 영역별 색' : '바꾸기: 발화 표시'; };
   $('#bKC').onclick = () => { brain.kc = !brain.kc; $('#bKC').classList.toggle('on', brain.kc); $('#bKC').setAttribute('aria-pressed', brain.kc); };
   $('#bEye').onclick = () => { brain.eye = !brain.eye; $('#bEye').classList.toggle('on', brain.eye); $('#bEye').setAttribute('aria-pressed', brain.eye); };
 }
@@ -759,7 +822,7 @@ function drawEye(p){
 /* ---------------- charts ---------------- */
 function chart(el, opt){
   const W = 520, H = 170, L = 40, R = opt.right ? 44 : 10, T = 8, B = 20, iw = W - L - R, ih = H - T - B;
-  const n = opt.n; if (!n) { $(el).innerHTML = '<p class="sub">等待資料…</p>'; return; }
+  const n = opt.n; if (!n) { $(el).innerHTML = '<p class="sub">데이터 대기 중…</p>'; return; }
   const X = i => L + (n === 1 ? iw/2 : i * iw / (n - 1));
   let out = `<svg viewBox="0 0 ${W} ${H}">`;
   const scale = (vals, extra = []) => { let lo = Math.min(...vals, ...extra), hi = Math.max(...vals, ...extra); if (hi - lo < 1e-9) { lo -= 1; hi += 1; } const p = (hi - lo) * .08; return [lo - p, hi + p]; };
@@ -782,20 +845,38 @@ function chart(el, opt){
       const px = X(m.i), py = Y(s.values[m.i]);
       if (m.shape === 'up') out += `<path d="M${px} ${py - 11}l5 8h-10z" fill="${m.color}"/>`;
       else if (m.shape === 'down') out += `<path d="M${px} ${py + 11}l5 -8h-10z" fill="${m.color}"/>`;
+      else if (m.shape === 'x') out += `<path d="M${px-4} ${py-4}l8 8M${px+4} ${py-4}l-8 8" stroke="${m.color}" stroke-width="2" fill="none"/>`;
+      else if (m.shape === 'diamond') out += `<path d="M${px} ${py-4}l4 4-4 4-4-4z" fill="${m.color}"/>`;
       else out += `<circle cx="${px}" cy="${py}" r="3.2" fill="${m.color}"/>`;
     });
   });
   out += `<line x1="${L}" x2="${W - R}" y1="${T + ih}" y2="${T + ih}" stroke="${cssv('--line')}"/>`;
-  if (opt.ticks) out += `<text class="axis" x="${L}" y="${H - 5}">第 ${opt.ticks[0]} 步</text><text class="axis" x="${W - R}" y="${H - 5}" text-anchor="end">第 ${opt.ticks[1]} 步</text>`;
+  if (opt.xlabels) out += `<text class="axis" x="${L}" y="${H - 5}">${opt.xlabels[0]}</text><text class="axis" x="${W - R}" y="${H - 5}" text-anchor="end">${opt.xlabels[1]}</text>`;
+  else if (opt.ticks) out += `<text class="axis" x="${L}" y="${H - 5}">${opt.ticks[0]}번째</text><text class="axis" x="${W - R}" y="${H - 5}" text-anchor="end">${opt.ticks[1]}번째</text>`;
   $(el).innerHTML = out + '</svg>';
 }
 function drawCharts(){
   const ev = STATE.events.slice(-120), n = ev.length, ticks = n ? [ev[0].tick, ev[n - 1].tick] : null;
   const dotCol = {BUY: cssv('--buy'), SELL: cssv('--sell'), HOLD: cssv('--hold')};
-  const trades = ev.map((e, i) => e.execution === 'FILLED' ? {i, shape: e.side === 'BUY' ? 'up' : 'down', color: dotCol[e.side]} : null).filter(Boolean);
+  const trades = ev.flatMap((e, i) => [
+    e.liquidation ? {i, shape: 'x', color: cssv('--amber')} : null,
+    e.funding ? {i, shape: 'diamond', color: cssv('--mute')} : null,
+    (e.room_events || []).length ? {i, shape: 'dot', color: cssv('--hot')} : null,
+    e.execution === 'FILLED' ? {i, shape: e.side === 'BUY' ? 'up' : 'down', color: dotCol[e.side]} : null,
+  ].filter(Boolean));
+  // Benchmark = the initial cash held in BTC since the SEASON started (server: season.seed_bid).
+  // Anchoring it to the first tick of this 120-tick window instead would restate the fly-vs-holding
+  // comparison on every poll and misstate it from D+2 on. It only means anything against the equity
+  // line, so both series share one explicit range (and one axis label).
+  const init0 = +((STATE.ledger || {}).initial_cash || 1000);
+  const b0 = +((STATE.season || {}).seed_bid) || (n ? +ev[0].bid : 0);
+  const eqv = ev.map(e => e.equity), bench = b0 ? ev.map(e => init0 * +e.bid / b0) : eqv;
+  const eqLo = Math.min(...eqv, ...bench), eqHi = Math.max(...eqv, ...bench);
+  const eqPad = eqHi - eqLo < 1e-9 ? 1 : (eqHi - eqLo) * .08, eqRange = [eqLo - eqPad, eqHi + eqPad];
   chart('#cPrice', {n, ticks, right: true, series: [
     {values: ev.map(e => +e.bid), color: cssv('--cyan'), marks: trades, fmt: fmtPrice},
-    {values: ev.map(e => e.equity), color: cssv('--hot'), axis: 'right', fmt: v => v.toFixed(2)},
+    {values: eqv, color: cssv('--hot'), axis: 'right', range: eqRange, fmt: v => v.toFixed(2)},
+    {values: bench, color: cssv('--mute'), range: eqRange, fmt: v => v.toFixed(2)},
   ]});
   chart('#cDiff', {n, ticks, fmt: v => v.toFixed(1), series: [{
     values: ev.map(e => e.diff_hz), color: cssv('--mute'), include: [-3, 3],
@@ -817,12 +898,33 @@ function drawCharts(){
     let s = `<svg viewBox="0 0 ${W} ${H}">`;
     h.forEach((v, i) => {
       const bh = v ? Math.max(1.5, Math.log1p(v) / Math.log1p(hm) * 130) : 0, mid = (ed[i] + ed[i + 1]) / 2;
-      s += `<rect x="${30 + i * bw}" y="${145 - bh}" width="${bw - 1}" height="${bh}" fill="${mid < .98 ? '#ff8a5c' : mid > 1.02 ? '#2fd18a' : '#a98bff'}"><title>${ed[i]}–${ed[i + 1]}：${v} 條</title></rect>`;
+      s += `<rect x="${30 + i * bw}" y="${145 - bh}" width="${bw - 1}" height="${bh}" fill="${mid < .98 ? '#ff8a5c' : mid > 1.02 ? '#2fd18a' : '#a98bff'}"><title>${ed[i]}–${ed[i + 1]}: ${v}개</title></rect>`;
     });
     [0.1, 0.5, 1, 1.5, 2].forEach(v => { const x = 30 + (v - .1) / 1.9 * 480; s += `<text class="axis" x="${x}" y="162" text-anchor="middle">${v}</text>`; });
-    s += `<text class="axis" x="30" y="12">條數（對數刻度）</text>`;
+    s += `<text class="axis" x="30" y="12">개수(로그 눈금)</text>`;
     $('#cHist').innerHTML = s + '</svg>';
   }
+  drawSeason();
+}
+// The whole season at a glance (the 120-tick chart above only covers two hours).
+// STATE.season is sampled server-side — every 10th observation plus every liquidation —
+// so a 7-day run stays a few hundred points.
+function drawSeason(){
+  const s = STATE.season || {}, sp = s.points || [], n = sp.length;
+  if (!n) { chart('#cSeason', {n: 0}); return; }
+  const lg = STATE.ledger || {}, init0 = +(lg.initial_cash || 1000);
+  const seed = +s.seed_bid || +sp[0].bid || 0;
+  const eqv = sp.map(p => p.equity);
+  const bench = seed ? sp.map(p => init0 * (+p.bid || seed) / seed) : eqv;
+  const lo = Math.min(...eqv, ...bench), hi = Math.max(...eqv, ...bench);
+  const pad = hi - lo < 1e-9 ? 1 : (hi - lo) * .08, range = [lo - pad, hi + pad];
+  const marks = sp.map((p, i) => (p.liq || p.bankrupt) ? {i, shape: 'x', color: cssv('--amber')} : null).filter(Boolean);
+  const t0 = +lg.started_at || 0;
+  const label = p => (t0 && p.time ? 'D+' + (Math.floor((p.time - t0) / 86400) + 1) : p.tick + '번째');
+  chart('#cSeason', {n, right: true, xlabels: [label(sp[0]), label(sp[n - 1])], series: [
+    {values: eqv, color: cssv('--hot'), axis: 'right', range, fmt: v => v.toFixed(2), marks},
+    {values: bench, color: cssv('--mute'), range, fmt: v => v.toFixed(2)},
+  ]});
 }
 function drawSuperclass(){
   if (!COUNTS) return;
@@ -831,12 +933,12 @@ function drawSuperclass(){
   const rows = META.superclasses.map((s, j) => ({s, hz: sum[j] / META.superclass_sizes[j] / N_MS, size: META.superclass_sizes[j]}))
     .filter(r => r.size >= 20).sort((a, b) => b.hz - a.hz);
   const mx = Math.max(...rows.map(r => r.hz), 1e-9);
-  $('#scbars').innerHTML = rows.map(r => `<span title="${r.s}，${r.size.toLocaleString()} 個神經元">${zh(r.s)}</span><div class="bar"><div style="width:${r.hz / mx * 100}%;background:rgb(${FAMS[famOf(r.s)].color});color:rgb(${FAMS[famOf(r.s)].color})"></div></div><span class="num">${r.hz.toFixed(1)} Hz</span>`).join('');
+  $('#scbars').innerHTML = rows.map(r => `<span title="${r.s}, 뉴런 ${r.size.toLocaleString()}개">${zh(r.s)}</span><div class="bar"><div style="width:${r.hz / mx * 100}%;background:rgb(${FAMS[famOf(r.s)].color});color:rgb(${FAMS[famOf(r.s)].color})"></div></div><span class="num">${r.hz.toFixed(1)} Hz</span>`).join('');
 }
 
 /* ---------------- panels ---------------- */
 function toast(html, cls){
-  if (wave.replay) html = `<span style="color:var(--amber)">⟲ 重播第 ${wave.event.tick} 步（僅動畫，不會下單）</span><br>` + html;
+  if (wave.replay) html = `<span style="color:var(--amber)">↺ ${wave.event.tick}번째 관측 다시 보기(애니메이션만, 주문 없음)</span><br>` + html;
   const box = $('#toasts'), d = document.createElement('div');
   d.className = 'toast ' + (cls || ''); d.innerHTML = html; box.prepend(d);
   setTimeout(() => d.remove(), 6600);
@@ -846,40 +948,67 @@ function setBar(id, v, max, color){ const el = $(id); el.style.width = Math.min(
 function drawPanels(){
   const ev = STATE.events, e = ev[ev.length - 1], lg = STATE.ledger || {};
   $('#runpath').textContent = STATE.run;
+  $('#disclosure').innerHTML = (STATE.disclosure || []).map(s => `<span>${s}</span>`).join('');
   if (!e) return;
   $('#tick').textContent = e.tick;
   $('#equity').textContent = e.equity.toFixed(2);
+  // Season day from the ledger only: the 400-line tail's first row is not the season start.
+  const t0 = +lg.started_at || 0;
+  $('#day').textContent = t0 ? Math.floor((e.time - t0) / 86400) + 1 : '–';
+  $('#tradesToday').textContent = STATE.orders_today ?? '–';
+  const init = +(lg.initial_cash || 0);
+  $('#roi').textContent = init ? `(${e.equity >= init ? '+' : '−'}${Math.abs((e.equity / init - 1) * 100).toFixed(1)}%)` : '';
+  $('#flyName').textContent = STATE.fly_name || '초파리';
+  const pos = e.position, ps = $('#posSide');  // runner writes position_view(): side, qty, entry, margin, mark, unrealized, liquidation_price, leverage
+  ps.textContent = pos ? (pos.side === 'LONG' ? '롱' : '숏') : '없음'; ps.className = pos ? pos.side : '';
+  $('#posLev').textContent = (pos ? pos.leverage : (STATE.settings || {}).leverage || 20) + '×';
+  $('#posQty').textContent = pos ? fmtQty(+pos.qty) + ' BTC' : '–';
+  $('#posEntry').textContent = pos ? fmtPrice(+pos.entry) : '–';
+  $('#posMark').textContent = pos ? fmtPrice(+pos.mark) : '–';  // flat: there is no mark to speak of
+  $('#posLiq').textContent = pos ? fmtPrice(+pos.liquidation_price) : '–';
+  $('#posUpnl').textContent = pos ? fmtUsdt(+pos.unrealized) + ` (${(+pos.unrealized / +pos.margin * 100).toFixed(1)}%)` : '–';
+  $('#posRealized').textContent = fmtUsdt(+lg.realized_pnl || 0);
+  $('#posFees').textContent = fmtUsdt(-(+lg.fees_paid || 0));
+  $('#posFunding').textContent = fmtUsdt(-(+lg.funding_paid || 0));
+  $('#posLiqs').textContent = (lg.liquidations || 0) + '회';
+  $('#posVeto').textContent = STATE.veto_ticks || 0;
+  const nf = +lg.next_funding || 0, mins = nf ? Math.max(0, Math.round((nf / 1000 - Date.now() / 1000 - SKEW) / 60)) : null;
+  $('#nextFunding').textContent = mins === null ? '–' : `${Math.floor(mins / 60)}시간 ${mins % 60}분 후`;
   const coin = e.product.split('-')[0];
   document.querySelectorAll('.coin').forEach(el => el.textContent = coin);
-  document.title = `Stonkfly ${coin} 果蠅`;
+  document.title = `초파리 트레이딩 챌린지 · ${coin}`;
   $('#price').textContent = fmtPrice(+e.bid);
-  $('#compute').textContent = e.compute.toFixed(1) + ' 秒';
-  $('#side').textContent = SIDE_ZH[e.side]; $('#side').className = 'big ' + e.side + (e.execution === 'VETO' ? ' vetoed' : '');
-  $('#exec').innerHTML = `執行：<strong${e.execution === 'VETO' ? ' class="veto"' : ''}>${EXEC[e.execution] || e.execution}</strong>` + (e.reason ? `<br>${REASON[e.reason] || e.reason}` : '') +
-    `<br>現金 ${(+lg.cash || 0).toFixed(2)} USDC` + (lg.positions && Object.keys(lg.positions).length ? `，持有 ${Object.entries(lg.positions).map(([k, v]) => `${fmtQty(+v)} ${k.split('-')[0]}`).join('、')}` : '');
+  $('#compute').textContent = e.compute.toFixed(1) + '초';
+  $('#side').textContent = sideLabel(e); $('#side').className = 'big ' + e.side + (e.execution === 'VETO' ? ' vetoed' : '');
+  if (e.liquidation) $('#side').classList.add('LIQ'); if (e.execution === 'BANKRUPT') $('#side').classList.add('BANKRUPT');
+  $('#exec').innerHTML = `실행: <strong${e.execution === 'VETO' ? ' class="veto"' : ''}>${EXEC[e.execution] || e.execution}</strong>` + (e.reason ? `<br>${REASON[e.reason] || e.reason}` : '') +
+    `<br>현금 ${(+lg.cash || 0).toFixed(2)} USDT` + (lg.position ? `, ${lg.position.side === 'LONG' ? '롱' : '숏'} ${fmtQty(+lg.position.qty)} BTC` : '');
   const hzMax = Math.max(20, e.left_hz, e.right_hz);
   setBar('#barL', e.left_hz, hzMax); setBar('#barR', e.right_hz, hzMax);
   setBar('#barD', e.diff_hz, Math.max(10, Math.abs(e.diff_hz)), e.diff_hz > 2 ? 'var(--buy)' : e.diff_hz < -2 ? 'var(--sell)' : 'var(--hold)');
   setBar('#barG', e.gate, Math.max(10, e.gate));
   $('#numL').textContent = e.left_hz.toFixed(0) + ' Hz'; $('#numR').textContent = e.right_hz.toFixed(0) + ' Hz';
-  $('#numD').textContent = (e.diff_hz >= 0 ? '+' : '') + e.diff_hz.toFixed(0) + ' Hz'; $('#numG').textContent = e.gate + ' 次';
-  const st = {reward:'✅ 上一步賺錢 → 刺激 PAM11 獎勵多巴胺 200&nbsp;ms', aversive:'⚠️ 上一步虧錢 → 刺激 PPL101 懲罰多巴胺 200&nbsp;ms', none:'損益在 ±0.01&nbsp;USDC 內 → 沒有刺激'}[e.stimulus];
-  $('#reinf').innerHTML = `${st}<br>本步損益 ${e.pnl >= 0 ? '+' : ''}${e.pnl.toFixed(4)} USDC（含手續費）`;
+  $('#numD').textContent = (e.diff_hz >= 0 ? '+' : '') + e.diff_hz.toFixed(0) + ' Hz'; $('#numG').textContent = e.gate + '회';
+  const st = {reward:'✅ 이번 관측 수익 → PAM11 보상 도파민 200&nbsp;ms 자극', aversive:'⚠️ 이번 관측 손실 → PPL101 처벌 도파민 200&nbsp;ms 자극', none:'손익이 ±1&nbsp;USDT 안 → 자극 없음'}[e.stimulus];
+  $('#reinf').innerHTML = `${st}<br>이번 관측 손익 ${e.pnl >= 0 ? '+' : '−'}${Math.abs(e.pnl).toFixed(2)} USDT(수수료·펀딩 포함)`;
   const m = Math.max(10, e.reward_spikes, e.aversive_spikes);
   setBar('#barRw', e.reward_spikes, m); setBar('#barAv', e.aversive_spikes, m); setBar('#barKC', e.kc_spikes, Math.max(100, e.kc_spikes));
-  $('#numRw').textContent = e.reward_spikes + ' 次'; $('#numAv').textContent = e.aversive_spikes + ' 次'; $('#numKC').textContent = e.kc_spikes.toLocaleString() + ' 次';
+  $('#numRw').textContent = e.reward_spikes + '회'; $('#numAv').textContent = e.aversive_spikes + '회'; $('#numKC').textContent = e.kc_spikes.toLocaleString() + '회';
   const age = Date.now() / 1000 + SKEW - e.time, running = !STATE.stopped && !lg.halted && age < 180;
-  $('#status').textContent = STATE.stopped ? '已停止（STOP）' : lg.halted ? '已暫停：' + lg.halted : running ? (lg.mode === 'live' ? '運行中 · LIVE 真實下單' : '運行中 · paper 模擬') : '可能已停止';
+  $('#status').textContent = STATE.stopped ? '정지됨(STOP)' : lg.halted ? (lg.halted === 'bankrupt' ? '파산 — 챌린지 종료' : '일시정지: ' + (REASON[lg.halted] || lg.halted)) : running ? (lg.mode === 'live' ? '실행 중 · LIVE 실주문' : '실행 중 · 페이퍼') : '정지된 듯';
   $('#status').className = 'pill ' + (running ? 'run' : 'stop');
-  // Fly animation: buy fill → rocket; sell fill → party or broken tent by that sell's
-  // realized P&L. Every other step (hold, vetoed proposal, stopped fly) grooms.
+  // Fly animation: liquidation or bankruptcy → broken tent. Those are terminal, so the check
+  // sits OUTSIDE the `running` guard — bankruptcy sets lg.halted, which makes running false,
+  // and the fly would otherwise groom through the moment it went broke.
+  // A FLIP's closing leg → party or tent by its realized P&L; any other fill → rocket.
+  // Hold, vetoed proposal and a stopped fly groom.
   let anim = 'hold';
-  if (running && e.execution === 'FILLED' && e.side === 'BUY') anim = 'buy';
-  else if (running && e.execution === 'FILLED' && e.side === 'SELL') anim = (e.trade_pnl ?? e.pnl) < 0 ? 'sell_loss' : 'sell_profit';
+  if (e.liquidation || e.execution === 'BANKRUPT') anim = 'sell_loss';
+  else if (running && e.execution === 'FILLED') { const closed = (e.fills || []).find(f => f.action === 'FLIP_CLOSE'); anim = closed ? (+closed.realized_net < 0 ? 'sell_loss' : 'sell_profit') : 'buy'; }
   // Card heading says which clip is playing and why; the legend highlights it.
-  const clipName = {buy: '火箭登月', sell_profit: '噴鈔派對', sell_loss: '破帳篷躺地', hold: '搓手洗臉'}[anim];
-  const clipWhy = anim !== 'hold' ? '' : !running ? '果蠅停機' : e.execution === 'VETO' ? '被風控擋下' : '觀望';
-  const nowText = '正在播：' + clipName + (clipWhy ? '（' + clipWhy + '）' : '');
+  const clipName = {buy: '로켓 발사', sell_profit: '돈다발 파티', sell_loss: '텐트 붕괴', hold: '그루밍'}[anim];
+  const clipWhy = e.execution === 'BANKRUPT' ? '파산' : anim !== 'hold' ? '' : !running ? '초파리 정지' : e.execution === 'VETO' ? '가드 거부' : '관망';
+  const nowText = '재생 중: ' + clipName + (clipWhy ? '(' + clipWhy + ')' : '');
   if ($('#flyNow').textContent !== nowText) $('#flyNow').textContent = nowText;
   document.querySelectorAll('#flyLegend li').forEach(li => {
     const on = li.dataset.anim === anim;
@@ -895,12 +1024,12 @@ function drawPanels(){
     // Reduced motion or a manual pause shows the first frame as a still instead of looping.
     if (flyPaused || REDUCED.matches) vid.pause(); else vid.play().catch(() => {});
   }
-  $('#eyeSub').textContent = eye.only ? '果蠅實際「看到」的：每個點是一個感光細胞，白點看亮度（R1–R6），藍／綠點看顏色（R8）。' : '輸入的價格圖（半透明）＋每個感光細胞「看」的位置，亮度＝牠感受到的光。新的一步進來時會從左到右掃描。';
+  $('#eyeSub').textContent = eye.only ? '초파리가 실제로 "본" 것: 점 하나가 광수용체 하나, 흰 점은 밝기(R1–R6), 파랑/초록 점은 색(R8).' : '입력 가격 차트(반투명)＋각 광수용체가 "보는" 위치, 밝기＝느낀 빛. 새 관측이 오면 왼쪽에서 오른쪽으로 스캔.';
 }
 setInterval(() => {
   const e = STATE && STATE.events[STATE.events.length - 1]; if (!e) return;
   const left = Math.round(e.time + 60 - Date.now() / 1000 - SKEW);
-  $('#next').textContent = left > 0 ? `${left} 秒後` : '運算中…';
+  $('#next').textContent = left > 0 ? `${left}초 후` : '계산 중…';
 }, 1000);
 
 // Chrome pauses video-only media in background tabs to save power, and a play() issued
@@ -913,8 +1042,8 @@ document.addEventListener("visibilitychange", () => {
 function setFlyPaused(p){
   flyPaused = p;
   const v = $('#flyVid'), b = $('#flyToggle');
-  b.setAttribute('aria-pressed', p); b.setAttribute('aria-label', p ? '播放果蠅動畫' : '暫停果蠅動畫');
-  b.textContent = p ? '▶ 播放' : '❚❚ 暫停';
+  b.setAttribute('aria-pressed', p); b.setAttribute('aria-label', p ? '애니메이션 재생' : '애니메이션 일시정지');
+  b.textContent = p ? '▶ 재생' : '❚❚ 일시정지';
   if (p) v.pause(); else if (v.dataset.anim) v.play().catch(() => {});
 }
 $('#flyToggle').onclick = () => setFlyPaused(!flyPaused);
@@ -937,8 +1066,21 @@ setFlyPaused(flyPaused);
     stage.style.left = Math.max(0, Math.round((vw - 1920 * k) / 2)) + 'px';
     fit.style.height = Math.round(1080 * k) + 'px';
   }
-  addEventListener('resize', place);
-  wide.addEventListener('change', place);
+  // A `resize` event is not guaranteed for every viewport change (device emulation,
+  // a scrollbar appearing, a late font swap), so watch the body too. Refit synchronously
+  // rather than in a rAF: a hidden or background tab never runs animation frames, and the
+  // stage would stay at the old scale. place() is idempotent, so the observer settles after
+  // one extra round; the flag only stops it re-entering while place() is writing.
+  let placing = false;
+  const refit = () => {
+    if (placing) return;
+    placing = true;
+    try { place(); } finally { placing = false; }
+  };
+  addEventListener('resize', refit);
+  wide.addEventListener('change', refit);
+  new ResizeObserver(refit).observe(document.body);
+  if (document.fonts && document.fonts.ready) document.fonts.ready.then(refit).catch(() => {});
   place();
 })();
 
@@ -948,8 +1090,8 @@ function applyTheme(theme, remember = true){
   if (light) root.dataset.theme = 'light'; else delete root.dataset.theme;
   document.querySelector('meta[name="theme-color"]').content = light ? '#eef2f8' : '#060a13';
   const b = $('#themeToggle');
-  b.innerHTML = light ? '<span aria-hidden="true">🌙</span> 黑夜模式' : '<span aria-hidden="true">☀️</span> 白天模式';
-  b.setAttribute('aria-label', light ? '切換到黑夜模式' : '切換到白天模式');
+  b.innerHTML = light ? '<span aria-hidden="true">🌙</span> 다크 모드' : '<span aria-hidden="true">☀️</span> 라이트 모드';
+  b.setAttribute('aria-label', light ? '다크 모드로 전환' : '라이트 모드로 전환');
   if (remember) {
     try { localStorage.setItem('stonkfly-theme', light ? 'light' : 'dark'); } catch (e) {}
     const url = new URL(location.href);
@@ -974,7 +1116,7 @@ async function poll(){
       drawPanels(); drawCharts(); drawSuperclass();
       startWave(e);
     } else drawPanels();
-  } catch (err) { $('#status').textContent = '連不到伺服器，4 秒後自動重試…'; $('#status').className = 'pill stop'; }
+  } catch (err) { $('#status').textContent = '서버 연결 실패, 4초 후 재시도…'; $('#status').className = 'pill stop'; }
 }
 async function init(){
   const [meta, pos, sc, ty, hop] = await Promise.all([
@@ -987,7 +1129,7 @@ async function init(){
     : `<a style="color:var(--cyan)" href="${location.protocol}//${location.hostname}:${f.port}/">${f.name} →</a>`).join('　');
   prepBrain(); bindBrain();
   if (REDUCED.matches) { setAuto(false); $('#flyVid').removeAttribute('autoplay'); }
-  $('#bEyeMode').onclick = () => { eye.only = !eye.only; $('#bEyeMode').textContent = eye.only ? '改成：疊在原圖上' : '改成：只看果蠅看到的'; drawPanels(); eye.final = false; };
+  $('#bEyeMode').onclick = () => { eye.only = !eye.only; $('#bEyeMode').textContent = eye.only ? '바꾸기: 원본 위에 겹쳐 보기' : '바꾸기: 초파리가 본 것만'; drawPanels(); eye.final = false; };
   await poll(); setInterval(poll, 4000); requestAnimationFrame(loop);
 }
 init();

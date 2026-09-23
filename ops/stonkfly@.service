@@ -2,13 +2,14 @@
 #
 #   mkdir -p ~/.config/systemd/user
 #   cp ops/stonkfly@.service ~/.config/systemd/user/
-#   # edit WorkingDirectory / ExecStart below to point at your clone
+#   # paths below assume the clone at ~/fly-trader/stonkfly-dashboard
 #   systemctl --user daemon-reload
 #   systemctl --user enable --now stonkfly@btc
 #   loginctl enable-linger "$USER"      # keep running after logout
 #
 # Per-fly settings go in ~/.config/stonkfly/<name>.env (NOT in git), e.g.
 #   FLY_PRODUCT_btc=BTC-USDC
+#   FLY_VENUE_s1=orangex-perp    # perpetual paper venue
 #   TG_TOKEN=...   TG_CHAT=...          # optional Telegram notices
 
 [Unit]
@@ -17,10 +18,12 @@ StartLimitIntervalSec=0
 
 [Service]
 Type=simple
-WorkingDirectory=%h/stonkfly-dashboard
+WorkingDirectory=%h/fly-trader/stonkfly-dashboard
 Environment=PYTHONUNBUFFERED=1
 EnvironmentFile=-%h/.config/stonkfly/%i.env
-ExecStart=%h/stonkfly-dashboard/ops/flyguard.sh %i
+# Clock resync: needs util-linux-extra (/usr/sbin/hwclock) + a NOPASSWD sudo rule for the service user; without both, WSL clock skew after suspend/resume is NOT corrected.
+ExecStartPre=-/usr/bin/sudo -n /usr/sbin/hwclock -s
+ExecStart=%h/fly-trader/stonkfly-dashboard/ops/flyguard.sh %i
 Restart=always
 RestartSec=30
 RestartSteps=5

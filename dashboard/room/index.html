@@ -1,0 +1,230 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>초파리 트레이딩 챌린지 · LIVE</title>
+<style>
+@font-face{font-family:"Pretendard Variable";src:url("../assets/fonts/PretendardVariable.woff2") format("woff2");font-weight:45 920;font-display:swap}
+:root{--bg:#07090e;--panel:#0c1018;--line:#2a2f45;--text:#eef0fa;--mute:#8a90a3;--long:#2fd18a;--short:#ff4d5e;--gold:#ffd166;--violet:#bbabfa;--amber:#ffb347}
+*{box-sizing:border-box}
+html,body{margin:0;height:100%;background:var(--bg);color:var(--text);font-family:"Pretendard Variable",Pretendard,system-ui,"Malgun Gothic",sans-serif;overflow:hidden}
+body{display:grid;place-items:center}
+#broadcast{--u:1cqw;width:min(100vw,177.7778vh);height:min(100vh,56.25vw);display:grid;grid-template-columns:71% 29%;grid-template-rows:5.4% 1fr 27% 15.6% 4.4%;background:var(--panel);border:1px solid #34304c;container-type:inline-size;overflow:hidden;position:relative}
+/* header */
+.bh{grid-column:1/3;display:flex;align-items:center;gap:calc(1.6*var(--u));padding:0 calc(1.4*var(--u));background:#131523;border-bottom:1px solid #3d3452;font-size:calc(1.05*var(--u));white-space:nowrap}
+.bh .brand{font-weight:800;letter-spacing:-.01em;display:flex;align-items:center;gap:calc(0.6*var(--u))}
+.bh .brand i{width:calc(0.55*var(--u));height:calc(0.55*var(--u));border-radius:50%;background:#ff3b5c;box-shadow:0 0 calc(0.8*var(--u)) #ff3b5c;animation:blink 1.4s infinite}
+.bh .brand em{font-style:normal;color:var(--violet);font-weight:600;font-size:calc(0.85*var(--u))}
+.bh .meta{display:flex;gap:calc(1.3*var(--u));color:var(--mute);font-size:calc(0.9*var(--u))}.bh .meta b{color:var(--text)}
+.bh .spacer{flex:1}
+.bh a{color:var(--violet);text-decoration:none;font-size:calc(0.8*var(--u))}
+.pill{padding:calc(0.18*var(--u)) calc(0.7*var(--u));border-radius:calc(1*var(--u));font-size:calc(0.78*var(--u));font-weight:700;border:1px solid currentColor}
+.pill.live{color:var(--long)}.pill.warn{color:var(--amber)}.pill.bad{color:var(--short)}
+@keyframes blink{50%{opacity:.35}}
+/* stage */
+.stage{grid-column:1;grid-row:2/4;position:relative;min-height:0;border-right:1px solid #3d3452}
+.stage>canvas{width:100%;height:100%;display:block;touch-action:none}
+.stage::after{content:'';position:absolute;inset:0;pointer-events:none;opacity:0;transition:opacity .4s}
+.stage.alarm::after{opacity:1;box-shadow:inset 0 0 calc(7*var(--u)) rgba(255,40,60,.85);animation:alarm .45s infinite alternate}
+.stage.win::after{opacity:1;box-shadow:inset 0 0 calc(6*var(--u)) rgba(255,209,102,.6)}
+@keyframes alarm{from{opacity:.3}to{opacity:1}}
+.stage-top{position:absolute;top:2.4%;left:2%;right:2%;display:flex;justify-content:space-between;align-items:flex-start;gap:calc(2*var(--u));pointer-events:none}
+.tag{display:flex;align-items:center;gap:calc(0.5*var(--u));font-size:calc(0.72*var(--u));letter-spacing:.14em;color:#c9ccd8;font-weight:700;background:#0c1018aa;padding:calc(0.35*var(--u)) calc(0.7*var(--u));border-radius:calc(0.4*var(--u))}
+.tag i{width:calc(0.45*var(--u));height:calc(0.45*var(--u));border-radius:50%;background:var(--long);box-shadow:0 0 calc(0.6*var(--u)) var(--long)}
+#thought{font-size:calc(0.78*var(--u));color:#dfe2ee;background:#0c1018c8;padding:calc(0.45*var(--u)) calc(0.8*var(--u));border-radius:calc(0.4*var(--u));max-width:62%;text-align:right;line-height:1.45}
+.webcam{position:absolute;left:1.6%;bottom:3%;width:24%;aspect-ratio:4/3;background:#111726;border:2px solid #b2a0ff;border-radius:calc(0.6*var(--u));overflow:hidden;box-shadow:0 calc(1*var(--u)) calc(3*var(--u)) #0009;pointer-events:none}
+.webcam span{position:absolute;top:calc(0.5*var(--u));left:calc(0.7*var(--u));z-index:1;color:#d4ffd4;font:700 calc(0.62*var(--u))/1 monospace;letter-spacing:.1em}
+.webcam canvas{width:100%;height:100%;display:block}
+#banner{position:absolute;left:50%;top:13%;transform:translate(-50%,calc(-0.6*var(--u))) scale(.92);opacity:0;pointer-events:none;text-align:center;transition:opacity .25s,transform .25s;padding:calc(0.9*var(--u)) calc(2.4*var(--u));border-radius:calc(0.9*var(--u));background:#0b0e16e6;border:2px solid currentColor;min-width:26%}
+#banner.show{opacity:1;transform:translate(-50%,0) scale(1)}
+#banner b{display:block;font-size:calc(2.7*var(--u));font-weight:900;letter-spacing:-.02em}
+#banner span{display:block;margin-top:calc(0.3*var(--u));font-size:calc(0.95*var(--u));color:var(--text);font-weight:600}
+#banner.long{color:var(--long)}#banner.short,#banner.bad{color:var(--short)}#banner.good,#banner.gold{color:var(--gold)}
+#toasts{position:absolute;right:1.6%;bottom:3%;width:27%;display:flex;flex-direction:column;gap:calc(0.5*var(--u));pointer-events:none}
+.toast{background:#0b0e16ea;border-left:calc(0.3*var(--u)) solid var(--violet);padding:calc(0.55*var(--u)) calc(0.8*var(--u));border-radius:calc(0.4*var(--u));font-size:calc(0.78*var(--u));line-height:1.4;animation:tin .3s ease-out;transition:opacity .6s,transform .6s}
+.toast b{font-weight:800}.toast.out{opacity:0;transform:translateX(calc(1*var(--u)))}
+.toast.long,.toast.good{border-color:var(--long)}.toast.short,.toast.bad{border-color:var(--short)}.toast.gold{border-color:var(--gold)}
+@keyframes tin{from{opacity:0;transform:translateX(calc(1.5*var(--u)))}}
+#home{position:absolute;left:50%;bottom:2.4%;transform:translateX(-50%);background:#161a24cc;color:#aeb3c2;border:1px solid #353a4b;border-radius:calc(0.4*var(--u));font:600 calc(0.66*var(--u))/1 inherit;padding:calc(0.4*var(--u)) calc(0.8*var(--u));cursor:pointer}
+.choreo{position:absolute;top:9%;left:2%;width:40%;display:flex;flex-wrap:wrap;gap:calc(0.3*var(--u))}
+.choreo button{background:#1a1f2ccc;color:#dfe2ee;border:1px solid #3a4054;border-radius:calc(0.3*var(--u));font:600 calc(0.62*var(--u))/1 inherit;padding:calc(0.35*var(--u)) calc(0.5*var(--u));cursor:pointer}
+/* brain panel */
+.brain-panel{grid-column:2;grid-row:2;min-height:0;display:flex;flex-direction:column;padding:1.3% 4% 1%;background:radial-gradient(ellipse at 50% 38%,#221f36 0%,#12131b 72%);border-bottom:1px solid #3d3452}
+.ptitle{display:flex;justify-content:space-between;align-items:baseline}
+.eyebrow{font-size:calc(0.62*var(--u));letter-spacing:.16em;color:var(--mute);font-weight:700}
+.ptitle span:last-child{font-size:calc(0.62*var(--u));color:#8f89ad}
+.brain-panel h2{margin:calc(0.25*var(--u)) 0 calc(0.1*var(--u));font-size:calc(1.25*var(--u));font-weight:800;letter-spacing:-.02em}.brain-panel h2 em{font-style:normal;color:var(--violet);font-size:calc(0.8*var(--u));font-weight:600}
+#brainNote{font-size:calc(0.6*var(--u));color:#7c8193;margin:0;line-height:1.45}
+#brain{flex:1;min-height:0;width:100%;display:block}
+.meter{display:grid;grid-template-columns:calc(4.6*var(--u)) 1fr calc(2.4*var(--u));gap:calc(0.25*var(--u)) calc(0.5*var(--u));align-items:center;font-size:calc(0.64*var(--u));color:#c6c9d6}
+.meter div{height:calc(0.32*var(--u));background:#2d2b3c;border-radius:calc(0.2*var(--u));overflow:hidden}.meter i{display:block;height:100%;width:0;transition:width .6s}
+.meter .l i{background:var(--short)}.meter .r i{background:var(--long)}.meter .g i{background:var(--gold)}.meter .d i{background:#5ec8ff}
+.meter b{font-weight:700;text-align:right;font-variant-numeric:tabular-nums}
+#verdict{margin-top:calc(0.35*var(--u));font-size:calc(0.72*var(--u));font-weight:700;color:var(--text)}
+/* journal */
+.journal{grid-column:2;grid-row:3;min-height:0;padding:1% 4% 0;background:#0e121b;overflow:hidden}
+.journal h3{margin:calc(0.4*var(--u)) 0 calc(0.3*var(--u));font-size:calc(0.66*var(--u));letter-spacing:.16em;color:#c3aaff;font-weight:700}
+#journal{list-style:none;margin:0;padding:0;font-size:calc(0.68*var(--u));font-variant-numeric:tabular-nums}
+#journal li{display:grid;grid-template-columns:calc(2.6*var(--u)) 1fr calc(4.2*var(--u)) calc(3.6*var(--u));gap:calc(0.4*var(--u));padding:calc(0.32*var(--u)) 0;border-bottom:1px solid #1f2433;align-items:center}
+#journal time{color:#7b8194}#journal span{color:#aab0c2;text-align:right}#journal em{font-style:normal;text-align:right;font-weight:700}
+#journal li.long b{color:var(--long)}#journal li.short b{color:var(--short)}#journal li.good em,#journal li.good b{color:var(--long)}
+#journal li.bad b,#journal li.bad em{color:var(--short)}#journal li.gold b{color:var(--gold)}#journal li.empty{display:block;color:#6d7385;border:0}
+/* info band (the account HUD) */
+.info{grid-column:1/3;grid-row:4;display:grid;grid-template-columns:2.1fr 2.3fr repeat(6,1fr);border-top:1px solid #3d3452;background:linear-gradient(180deg,#131626,#0c0f18)}
+.info>div{padding:calc(1.1*var(--u)) calc(1.1*var(--u)) 0;border-right:1px solid #1f2436;min-width:0}
+.info small{display:block;font-size:calc(0.64*var(--u));letter-spacing:.1em;color:var(--mute);font-weight:700;margin-bottom:calc(0.4*var(--u))}
+.info b{display:block;font-size:calc(1.35*var(--u));font-weight:800;letter-spacing:-.02em;font-variant-numeric:tabular-nums;white-space:nowrap}
+.info .equity strong{display:inline-block;font-size:calc(2.5*var(--u));font-weight:900;letter-spacing:-.03em;font-variant-numeric:tabular-nums}
+.info .equity u{font-size:calc(0.95*var(--u));text-decoration:none;color:var(--mute);margin-left:calc(0.3*var(--u));font-weight:700}
+.info .equity #roi{display:block;font-size:calc(1.05*var(--u));font-weight:800;margin-top:calc(0.2*var(--u))}
+.info #posDetail{display:block;font-size:calc(0.68*var(--u));color:#b7bccb;margin-top:calc(0.35*var(--u));white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.up{color:var(--long)}.down{color:var(--short)}.long{color:var(--long)}.short{color:var(--short)}
+/* credits / disclosure */
+#credits{grid-column:1/3;grid-row:5;display:flex;align-items:center;padding:0 calc(1.4*var(--u));font-size:calc(0.52*var(--u));line-height:1.35;color:#8c92a4;border-top:1px solid #2a3040;background:#090b11}
+/* header buttons, offline notice, about panel */
+.qbtn{background:none;border:1px solid #4a4466;color:#d8d2ff;border-radius:calc(1*var(--u));font:700 calc(0.72*var(--u))/1 inherit;padding:calc(0.3*var(--u)) calc(0.7*var(--u));cursor:pointer}
+.qbtn:hover{border-color:var(--violet)}
+#offline{position:absolute;left:50%;top:calc(3.4*var(--u));transform:translateX(-50%);z-index:3;background:#1d1a0ce8;color:#ffe3a3;border:1px solid #7a6526;border-radius:calc(0.5*var(--u));font-size:calc(0.78*var(--u));padding:calc(0.5*var(--u)) calc(1*var(--u));white-space:nowrap}
+#offline[hidden]{display:none}
+#about{position:absolute;inset:0;z-index:9;background:#06080ee6;display:grid;place-items:center;padding:3%}
+#about[hidden]{display:none}
+#about .card{width:min(100%,calc(62*var(--u)));max-height:100%;overflow:auto;background:#10131d;border:1px solid #3d3452;border-radius:calc(1*var(--u));padding:calc(1.8*var(--u)) calc(2.2*var(--u));font-size:calc(0.9*var(--u));line-height:1.65;color:#d9dcea}
+#about h2{margin:0 0 calc(0.6*var(--u));font-size:calc(1.6*var(--u));color:#fff;letter-spacing:-.02em}
+#about h3{margin:calc(1.2*var(--u)) 0 calc(0.3*var(--u));font-size:calc(1*var(--u));color:var(--violet)}
+#about p{margin:0 0 calc(0.5*var(--u))}#about ul{margin:0;padding-left:1.3em}#about li{margin-bottom:calc(0.25*var(--u))}
+#about b{color:#fff}#about .warn{color:#ffb4a8}
+#about .x{float:right;background:#1d2230;color:#dfe2ee;border:1px solid #3a4054;border-radius:calc(0.4*var(--u));font:700 calc(0.8*var(--u))/1 inherit;padding:calc(0.4*var(--u)) calc(0.8*var(--u));cursor:pointer}
+#about .ladder{display:grid;grid-template-columns:repeat(4,1fr);gap:calc(0.4*var(--u));margin-top:calc(0.4*var(--u))}
+#about .ladder span{background:#171b28;border:1px solid #2a3040;border-radius:calc(0.4*var(--u));padding:calc(0.35*var(--u)) calc(0.5*var(--u));font-size:calc(0.78*var(--u))}
+#about .ladder b{display:block;color:var(--gold)}
+/* livestream capture (OBS browser source): nothing interactive on screen */
+body.stream #home,body.stream .bh a,body.stream .qbtn,body.stream .choreo{display:none}
+body.stream,body.stream canvas{cursor:none}
+/* phones in portrait: one scrolling column, everything scaled up */
+@media (max-aspect-ratio:1/1){
+  html,body{height:auto;overflow-x:hidden;overflow-y:auto}
+  body{display:block}
+  #broadcast{--u:3.3cqw;width:100vw;height:auto;min-height:100vh;display:flex;flex-direction:column;border:0}
+  .bh{order:0;flex-wrap:wrap;row-gap:calc(0.5*var(--u));padding:calc(0.9*var(--u)) calc(1.2*var(--u));white-space:normal}
+  .bh .brand{flex-basis:100%;font-size:calc(1.2*var(--u))}
+  .bh .brand em{font-size:calc(0.8*var(--u))}
+  .bh .meta{font-size:calc(0.95*var(--u))}
+  .pill{font-size:calc(0.85*var(--u))}.qbtn{font-size:calc(0.85*var(--u))}.bh a{font-size:calc(0.85*var(--u))}
+  .stage{order:1;aspect-ratio:1/1.05;flex:none;border-right:0}
+  .info{order:2}
+  .brain-panel{order:3}
+  .journal{order:4}
+  #credits{order:5}
+  .tag{display:none}
+  #thought{max-width:100%;font-size:calc(0.85*var(--u))}
+  .webcam{width:34%}
+  #toasts{width:62%}
+  .toast{font-size:calc(0.9*var(--u))}
+  #banner{min-width:72%}#banner b{font-size:calc(2*var(--u))}#banner span{font-size:calc(0.95*var(--u))}
+  #home{font-size:calc(0.8*var(--u))}
+  .info{grid-template-columns:1fr 1fr}
+  .info>div{padding:calc(0.9*var(--u)) calc(1.1*var(--u));border-bottom:1px solid #1f2436}
+  .info .equity{grid-column:1/3}
+  .info small{font-size:calc(0.8*var(--u))}
+  .info b{font-size:calc(1.3*var(--u))}
+  .info #posDetail{white-space:normal;font-size:calc(0.85*var(--u))}
+  .brain-panel{aspect-ratio:1/1.2;flex:none;padding:calc(1.2*var(--u)) calc(1.4*var(--u))}
+  .eyebrow,.ptitle span:last-child{font-size:calc(0.75*var(--u))}
+  .brain-panel h2{font-size:calc(1.3*var(--u))}.brain-panel h2 em{font-size:calc(0.85*var(--u))}
+  #brainNote{font-size:calc(0.8*var(--u))}
+  .meter{font-size:calc(0.85*var(--u));grid-template-columns:calc(6*var(--u)) 1fr calc(3.4*var(--u))}
+  .meter div{height:calc(0.45*var(--u))}
+  #verdict{font-size:calc(0.9*var(--u))}
+  .journal{padding:calc(1*var(--u)) calc(1.4*var(--u))}
+  .journal h3{font-size:calc(0.85*var(--u))}
+  #journal{font-size:calc(0.92*var(--u))}
+  #journal li{grid-template-columns:calc(3.6*var(--u)) 1fr calc(6*var(--u)) calc(5.4*var(--u));padding:calc(0.45*var(--u)) 0}
+  #credits{padding:calc(1*var(--u)) calc(1.4*var(--u)) calc(2*var(--u));font-size:calc(0.72*var(--u))}
+  #offline{white-space:normal;width:92%;text-align:center;font-size:calc(0.85*var(--u))}
+  #about{position:fixed}
+  #about .card{font-size:calc(0.92*var(--u))}
+  #about h2{font-size:calc(1.5*var(--u))}#about h3{font-size:calc(1.05*var(--u))}
+  #about .ladder{grid-template-columns:repeat(2,1fr)}#about .ladder span{font-size:calc(0.85*var(--u))}
+}
+</style>
+<script type="importmap">{"imports":{"three":"./vendor/three.module.min.js","three/addons/":"./vendor/addons/"}}</script>
+<!--SITE-CONFIG-->
+</head>
+<body>
+<div id="broadcast">
+  <header class="bh">
+    <span class="brand"><i></i><span id="flyName">초파리</span> 트레이딩 챌린지 <em id="seasonTag">시즌 1 · BTC 20배 페이퍼</em></span>
+    <span class="meta"><span>D+<b id="day">–</b></span><span><b id="tick">–</b>번째 관측</span></span>
+    <span id="status" class="pill warn">불러오는 중…</span>
+    <span class="spacer"></span>
+    <button id="aboutBtn" class="qbtn" type="button">이게 뭐예요?</button>
+    <a id="siteHome" href="../" hidden>← 소개</a>
+    <a id="labLink" href="../">연구실 뷰 ↗</a>
+  </header>
+  <section class="stage">
+    <canvas id="studio" aria-label="책상 앞에 앉아 트레이딩하는 3D 초파리"></canvas>
+    <div class="stage-top"><span class="tag"><i></i>초파리의 책상 · LIVE</span><span id="thought"></span></div>
+    <div id="offline" hidden>지금은 라이브 연결이 없어 <b>데모 시즌</b>을 보여 주고 있어요 · 연결되면 자동으로 전환됩니다</div>
+    <div id="banner"></div>
+    <div class="webcam"><span>● FLY CAM</span><canvas id="facecam"></canvas></div>
+    <div id="toasts"></div>
+    <button id="home">시점 초기화</button>
+  </section>
+  <aside class="brain-panel">
+    <div class="ptitle"><span class="eyebrow">머릿속</span><span>MaleCNS v1.0 · FlyEM/Janelia</span></div>
+    <h2>수컷 초파리 뇌 <em>뉴런 166,700개</em></h2>
+    <p id="brainNote">실측 위치의 뉴런 점구름. 차트를 본 눈에서 신호가 퍼지고, 방금 발화한 뉴런이 밝아집니다. 좌·우 DNp20 발화 차이가 롱·숏을 정합니다.</p>
+    <canvas id="brain" aria-label="MaleCNS 뉴런 점구름과 이번 관측의 발화"></canvas>
+    <div class="meter">
+      <span>DNp20 좌</span><div class="l"><i id="barL"></i></div><b id="hzL">–</b>
+      <span>DNp20 우</span><div class="r"><i id="barR"></i></div><b id="hzR">–</b>
+      <span>게이트</span><div class="g"><i id="barG"></i></div><b id="gateN">–</b>
+      <span>도파민</span><div class="d"><i id="barD"></i></div><b id="dopa">–</b>
+    </div>
+    <div id="verdict"></div>
+  </aside>
+  <aside class="journal"><h3>매매 기록</h3><ol id="journal"></ol></aside>
+  <section class="info">
+    <div class="equity"><small>순자산</small><strong id="equity">–</strong><u>USDT</u><span id="roi"></span></div>
+    <div><small>포지션</small><b id="posSide">–</b><span id="posDetail"></span></div>
+    <div><small>미실현 손익</small><b id="upnl">–</b></div>
+    <div><small>실현 손익</small><b id="realized">–</b></div>
+    <div><small>누적 수수료</small><b id="fees" class="down">–</b></div>
+    <div><small>BTC 무기한</small><b id="btc">–</b></div>
+    <div><small>오늘 매매</small><b id="trades">–</b></div>
+    <div><small>다음 펀딩</small><b id="funding">–</b></div>
+  </section>
+  <footer id="credits"></footer>
+  <div id="about" hidden role="dialog" aria-modal="true" aria-labelledby="aboutTitle">
+    <div class="card">
+      <button class="x" type="button" data-close>닫기</button>
+      <h2 id="aboutTitle">초파리 트레이딩 챌린지</h2>
+      <p>실제 초파리 뇌의 연결 지도(<b>MaleCNS v1.0, 뉴런 166,700개</b>)를 컴퓨터로 돌려서, 1분마다 비트코인 차트를 보여 주고 그 반응으로 롱·숏 신호를 만듭니다.
+        신호를 주문으로 바꾸는 <b>매매 규칙은 제작자가 설계</b>했고, 뇌는 그 규칙에 들어갈 신호만 냅니다.</p>
+      <h3>1분마다 일어나는 일</h3>
+      <ul>
+        <li><b>눈</b> — 최근 BTC 가격 차트를 작은 이미지로 그려 광수용체(눈의 세포)에 빛으로 넣습니다. 모니터의 “초파리의 눈”이 그 입력입니다.</li>
+        <li><b>뇌</b> — 신호가 시냅스를 따라 0.5초 동안 퍼집니다. 오른쪽 패널에서 밝아지는 점이 방금 발화한 뉴런입니다.</li>
+        <li><b>결정</b> — 좌·우 하행 뉴런 <b>DNp20</b>의 발화 차이로 방향을 정하고, 게이트 뉴런이 충분히 발화해야 신호가 됩니다.</li>
+        <li><b>보상</b> — 손익에 따라 도파민(보상·처벌) 뉴런을 자극하고, 시냅스 효율이 조금씩 바뀝니다. 이것만으로 “학습했다”고 볼 근거는 없습니다.</li>
+      </ul>
+      <h3>챌린지 규칙</h3>
+      <ul>
+        <li>시작 <b><span class="capital">1,000</span> USDT</b> · BTC 무기한 선물 · <b>격리 <span class="lev">20</span>배</b> · 진입마다 잔고의 <b><span class="margin">33</span>%</b>를 증거금으로</li>
+        <li>반대 신호가 와도 <b>수수료를 빼고 본전 이상일 때만</b> 뒤집습니다. 손절은 없어서 손실 중이면 회복하거나 강제청산까지 들고 갑니다.</li>
+        <li>최소 주문도 낼 수 없는 잔고가 되면 <b>파산</b>으로 챌린지가 끝납니다.</li>
+        <li class="warn">전부 <b>페이퍼 트레이딩</b>입니다. 실제 주문은 나가지 않고, 투자 자문이 아닙니다.</li>
+      </ul>
+      <h3>부자 방 — 순자산에 따라 방이 바뀝니다</h3>
+      <div class="ladder">
+        <span><b>1,200</b>커피머신</span><span><b>1,500</b>듀얼 모니터</span><span><b>2,000</b>금목걸이</span><span><b>3,000</b>트리플 모니터·가죽의자</span>
+        <span><b>5,000</b>고급 세단</span><span><b>10,000</b>요트</span><span><b>20,000</b>금괴 더미</span><span><b>50,000</b>헬기</span>
+      </div>
+      <p style="margin-top:.8em">순자산이 기준 아래로 떨어지면 그 아이템은 <b>압류</b>됩니다. 익절하면 춤을 추고, 강제청산되면 기절합니다.</p>
+    </div>
+  </div>
+</div>
+<script type="module" src="app.js"></script>
+</body>
+</html>

@@ -9,9 +9,9 @@ Description=Stonkfly dashboard for run %i (read-only)
 
 [Service]
 Type=simple
-WorkingDirectory=%h/stonkfly-dashboard
+WorkingDirectory=%h/fly-trader/stonkfly-dashboard
 EnvironmentFile=-%h/.config/stonkfly/dashboard-%i.env
-ExecStart=%h/stonkfly-dashboard/.venv/bin/python dashboard/server.py runs/%i
+ExecStart=%h/fly-trader/stonkfly-dashboard/.venv/bin/python dashboard/server.py runs/%i
 Restart=on-failure
 RestartSec=10
 

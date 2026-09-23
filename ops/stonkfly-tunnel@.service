@@ -1,0 +1,29 @@
+# Optional: publish the dashboard of fly %i through a Cloudflare tunnel (user unit).
+#
+#   cp ops/stonkfly-tunnel@.service ~/.config/systemd/user/
+#   systemctl --user daemon-reload
+#   systemctl --user enable --now stonkfly-tunnel@s1
+#   cat runs/s1/public-url.txt          # the current https://… address
+#
+# Settings go in ~/.config/stonkfly/tunnel-%i.env (NOT in git), e.g.
+#   PORT=8765                            # the dashboard port of this fly
+#   TUNNEL_HOOK=/home/you/bin/update-feed    # run with the new address (quick tunnel)
+#   TUNNEL_NAME=fly  PUBLIC_URL=https://fly.example.com   # fixed address instead of a quick tunnel
+# Needs cloudflared on PATH (see docs/publish-ko.md).
+
+[Unit]
+Description=Stonkfly public tunnel for run %i
+After=network-online.target stonkfly-dashboard@%i.service
+Wants=network-online.target
+
+[Service]
+Type=simple
+WorkingDirectory=%h/fly-trader/stonkfly-dashboard
+Environment=PYTHONUNBUFFERED=1
+EnvironmentFile=-%h/.config/stonkfly/tunnel-%i.env
+ExecStart=%h/fly-trader/stonkfly-dashboard/.venv/bin/python ops/tunnel/tunnel.py runs/%i
+Restart=always
+RestartSec=15
+
+[Install]
+WantedBy=default.target

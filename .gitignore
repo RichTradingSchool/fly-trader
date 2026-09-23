@@ -24,5 +24,7 @@ cdp_api_key.json
 
 # dashboard
 dashboard/cache/
+# web viewer build output (ops/site/build_site.py)
+/site/
 *.log
 *.bak*

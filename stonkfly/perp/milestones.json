@@ -1,0 +1,10 @@
+[
+  {"equity": 1200, "item": "coffee_machine", "label": "커피머신", "slot": "desk_left"},
+  {"equity": 1500, "item": "dual_monitor", "label": "듀얼 모니터", "slot": "desk_monitor_2"},
+  {"equity": 2000, "item": "gold_chain", "label": "금목걸이", "slot": "fly_neck"},
+  {"equity": 3000, "item": "triple_monitor_leather_chair", "label": "트리플 모니터 + 가죽의자", "slot": "desk_monitor_3"},
+  {"equity": 5000, "item": "luxury_sedan", "label": "고급 세단", "slot": "window_car"},
+  {"equity": 10000, "item": "yacht", "label": "요트", "slot": "window_sea"},
+  {"equity": 20000, "item": "gold_bars", "label": "금괴 더미", "slot": "floor_right"},
+  {"equity": 50000, "item": "helicopter", "label": "헬기", "slot": "window_sky"}
+]

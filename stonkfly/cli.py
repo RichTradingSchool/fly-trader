@@ -21,6 +21,12 @@ def main():
     prep.add_argument("--reuse-doomfly", type=Path)
     sub.add_parser("verify")
     run = sub.add_parser("run")
+    run.add_argument(
+        "--venue",
+        choices=["coinbase-spot", "orangex-perp"],
+        default="coinbase-spot",
+        help="coinbase-spot: original USDC spot paper/live; orangex-perp: 20x isolated perpetual paper",
+    )
     run.add_argument("--live", action="store_true")
     run.add_argument(
         "--preflight-only",
@@ -55,10 +61,22 @@ def main():
         default=["BTC-USDC"],
         choices=["BTC-USDC", "ETH-USDC", "SOL-USDC"],
     )
-    run.add_argument("--neural-ms", type=float, default=500)
+    run.add_argument("--neural-ms", type=float, default=500.0)
     status = sub.add_parser("status")
     status.add_argument("--out", type=Path, default=Path("runs/paper"))
     a = p.parse_args()
+    if a.command == "run" and a.venue == "orangex-perp":
+        if a.live:
+            p.error("Live mode is not available on the perpetual venue")
+        if a.fast and not a.fixture:
+            # Mirrors the spot path's live guard: no wait between ticks against the real venue
+            # would hammer the public API and settle funding on a clock nobody is pacing.
+            p.error("Fast replay forbids a real feed; add --fixture")
+        if a.steps < 0:
+            p.error("steps cannot be negative")
+        from .perp.runner import run as run_perp
+
+        return run_perp(a)
     from dotenv import load_dotenv
 
     # Never search parent projects for unrelated account credentials.
@@ -82,12 +100,17 @@ def main():
                     k: meta.get(k)
                     for k in [
                         "mode",
+                        "venue",
                         "tick",
                         "cash",
                         "positions",
+                        "position",
                         "initial_cash",
                         "anchor",
                         "halted",
+                        "liquidations",
+                        "fees_paid",
+                        "funding_paid",
                     ]
                 },
                 indent=2,
@@ -275,8 +298,11 @@ def main():
             count += 1
             if not a.fast and (not a.steps or count < a.steps):
                 until = started + settings.interval_seconds
-                while time.monotonic() < until and not (out / "STOP").exists():
-                    time.sleep(min(1, until - time.monotonic()))
+                while not (out / "STOP").exists():
+                    remaining = until - time.monotonic()
+                    if remaining <= 0:
+                        break
+                    time.sleep(min(1, remaining))
     except KeyboardInterrupt:
         print("Stopped; run state preserved.", flush=True)
     except Exception as e:

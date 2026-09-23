@@ -24,6 +24,7 @@ include = ["stonkfly*"]
 
 [tool.setuptools.package-data]
 "stonkfly.neural" = ["*.cpp", "*.json"]
+"stonkfly.perp" = ["*.json"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
