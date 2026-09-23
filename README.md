@@ -1,228 +1,107 @@
-# Stonkfly Dashboard — watch a fruit-fly brain trade crypto
+# 초파리 트레이딩 챌린지 🪰📈
 
-![Stonkfly dashboard (synthetic fixture run)](docs/images/dashboard.jpg)
+**진짜 초파리 뇌 연결 지도(MaleCNS v1.0, 뉴런 166,700개)를 컴퓨터로 돌려 1분마다 비트코인 차트를 보여 주고,
+그 반응으로 BTC 무기한 선물을 페이퍼 트레이딩합니다.** 책상 앞 3D 초파리가 매매할 때마다 춤추고, 강제청산에
+기절하고, 순자산에 따라 방이 부자가 됐다가 압류당하는 모습을 생중계할 수 있습니다.
 
-A live, read-only web dashboard for **[Stonkfly](https://github.com/nftechie/stonkfly)** — an open-source experiment that
-feeds a crypto price chart into a simulation of the complete male fruit-fly nervous system
-(**MaleCNS v1.0, 166,700 neurons, 25.6 million connections**) and lets the fly's neural output propose buy / sell / hold.
+> 페이퍼 트레이딩 전용입니다. 실제 주문을 내지 않으며, 어떤 내용도 투자 자문이 아닙니다.
+> 매매 규칙은 사람이 설계했고 초파리 뇌는 그 규칙에 들어갈 롱·숏 신호만 만듭니다.
 
-This repository is the upstream Stonkfly code (full git history, MIT) **plus a dashboard** that shows, step by step,
-what the fly saw, how the spikes travelled through its brain, what it decided and what reward or punishment it received.
+![3D 방송 화면](docs/images/room.jpg)
 
-> **Paper trading by default. Not financial advice.** Stonkfly's own README states:
-> *"Profitable learning has not been demonstrated."* See [Disclaimer](#disclaimer).
-
-[繁體中文說明](#繁體中文說明) · [Quick start](#quick-start) · [Dashboard configuration](#dashboard-configuration) · [Credits](#credits)
-
----
-
-## What the dashboard shows
-
-| Panel | What you see |
-|---|---|
-| **Pipeline strip** | Price chart → eyes → 0.5 s neural propagation → readout → order → reinforcement, lighting up as each step happens |
-| **Brain + ventral nerve cord** | Every neuron at its measured MaleCNS soma position; each new step replays the spikes spreading outward from the photoreceptors (rotate / zoom / hover for neuron types) |
-| **The fly's eyes** | The 320×180 price image the fly was shown, overlaid with the 3,335 brightness (R1–R6) and 811 colour (R8) photoreceptor samples |
-| **Decision card** | Left vs right **DNp20** firing rate, their difference, the **DNpe017** gate, and whether the risk guard filled or vetoed the order |
-| **Reinforcement** | Profit stimulates 15 **PAM11** reward dopamine cells, loss stimulates 2 **PPL101** aversive cells; KC memory-cell activity |
-| **Fly trader animation** | A 3D fly at a trading desk: rocket (buy fill), cash party (profitable sell), broken tent (losing sell), grooming (hold / veto / stopped) |
-| **Charts** | Price vs simulated equity with trade markers, DNp20 difference over time, dopamine pulses, KC→MBON synaptic efficacy, firing rate per brain region |
-| **Multiple flies** | Optional links between several dashboards (e.g. a BTC fly and a second fly on another port) |
-| **Day / night theme** | Toggle, remembered per browser; `?theme=light` for screenshots |
-
-The UI text is Traditional Chinese (zh-Hant). The server is read-only: it only reads the run directory and answers `405` to every non-GET request.
-
-<p>
-<img src="docs/images/brain.jpg" width="49%" alt="Brain activity view">
-<img src="docs/images/fly-animation.jpg" width="49%" alt="Fly trader animation">
-</p>
-<p>
-<img src="docs/images/regions.jpg" width="49%" alt="Firing rate per region">
-<img src="docs/images/dnp20-chart.jpg" width="49%" alt="DNp20 left/right difference">
-</p>
-
-## How it works
-
-```
-Coinbase public prices ──► 320×180 RGB chart ──► 3,335 R1–R6 + 811 R8 photoreceptor inputs
-                                                        │
-                                  MaleCNS v1.0 spiking simulation (0.1 ms steps, 0.5 s per decision)
-                                                        │
-                    DNp20 right − left > 2 Hz and DNpe017 gate fired → BUY   (< −2 Hz → SELL, else HOLD)
-                                                        │
-                           Risk guard (limits, cooldown, loss stop) → paper fill or veto
-                                                        │
-          next step: portfolio P&L → PAM11 reward / PPL101 aversive dopamine pulse → KC→MBON plasticity
-```
-
-The decoding rule and the reinforcement signals are **engineered**, not discovered biology. Details and caveats:
-[docs/model.md](docs/model.md), [docs/operations.md](docs/operations.md), [docs/validation.md](docs/validation.md).
-
-## Repository layout
-
-```
-stonkfly/              upstream simulation, market, broker, risk guard (unchanged from nftechie/stonkfly)
-tests/                 upstream tests
-dashboard/
-  server.py            read-only HTTP server (stdlib + numpy/pyarrow)
-  index.html           the whole front end (vanilla JS + canvas, no build step, no CDN)
-  anim/*.mp4           3D fly-trader clips (buy / sell_profit / sell_loss / hold)
-ops/
-  flyguard.sh          optional watchdog for a long-running paper fly
-  stonkfly@.service    optional systemd user unit for the fly
-  stonkfly-dashboard@.service   optional systemd user unit for the dashboard
-docs/                  model / operations / validation notes, upstream README, screenshots
-```
-
-## Requirements
-
-- **Linux or macOS** (the runner uses `fcntl`; on Windows use **WSL2**)
-- **Python 3.11+** and a **C++17 compiler** (`g++`/`clang++`) for the neural kernel
-- **~16 GB RAM** recommended (upstream guidance); the dashboard itself uses well under 100 MB after its first start
-- **~5 GB disk**: `prepare` downloads about 1.1 GB of MaleCNS data and builds derived files
-- A modern browser (Chrome / Edge / Firefox / Safari)
-
-## Quick start
-
-```sh
-git clone https://github.com/Bgihe/stonkfly-dashboard.git
-cd stonkfly-dashboard
-python3.11 -m venv .venv
-source .venv/bin/activate
-pip install -e '.[test]'
-
-# 1. Download and verify the connectome data (≈1.1 GB, once)
-python -m stonkfly prepare
-
-# 2a. Real public BTC-USDC prices, simulated $100 paper account, one decision per minute
-python -m stonkfly run                     # writes runs/paper/, Ctrl-C to stop, same command resumes
-
-# 2b. …or a fast offline demo with a synthetic market (no network needed)
-python -m stonkfly run --fixture --fast --steps 10 --out runs/fixture
-```
-
-In a second terminal (same venv, from the repository root):
-
-```sh
-python dashboard/server.py runs/paper      # or runs/fixture
-# → open http://127.0.0.1:8765
-```
-
-The first dashboard start builds `dashboard/cache/` (neuron positions and hop distances, about a minute);
-later starts are instant. The page refreshes every 4 seconds and animates each new step.
-
-## Dashboard configuration
-
-All settings are environment variables; the only positional argument is the run directory.
-
-| Variable | Default | Meaning |
+| 화면 | 주소 | 설명 |
 |---|---|---|
-| `PORT` | `8765` | HTTP port |
-| `HOST` | `127.0.0.1` | Bind address. Use `0.0.0.0` to view it from other devices on your LAN (read-only, **no authentication** — don't expose it to the internet) |
-| `STONKFLY_RUN` | `runs/paper` | Run directory, if not given as argument |
-| `STONKFLY_ROOT` | repository root | Where the `stonkfly` package lives |
-| `STONKFLY_DATA` | `<root>/data` | Prepared MaleCNS data (same variable the simulator uses) |
-| `STONKFLY_VIZ_CACHE` | `dashboard/cache` | Derived neuron-position cache |
-| `STONKFLY_ANIM` | `dashboard/anim` | Folder with `buy.mp4`, `sell_profit.mp4`, `sell_loss.mp4`, `hold.mp4` |
-| `STONKFLY_FLIES` | *(empty)* | Links between dashboards on the same host, e.g. `BTC fly:8765,ETH fly:8766` |
+| 3D 방송 | `http://127.0.0.1:8765/room/` | 책상 앞 초파리, 뇌 점구름, 잔고 HUD, 매매 기록 |
+| 연구실 뷰 | `http://127.0.0.1:8765/` | 망막 입력·뉴런 발화·시냅스 변화까지 보는 상세 대시보드 |
+| 데모 | `/room/?demo=1` | 2분짜리 가상 시즌(익절 춤·강제청산·파산까지 전부) |
+| 방송용 | `/room/?stream=1` | 버튼·커서 없는 화면 — OBS 브라우저 소스용 |
 
-Two flies side by side:
+## 빠른 시작
 
-```sh
-python -m stonkfly run --products BTC-USDC --out runs/btc &
-python -m stonkfly run --products ETH-USDC --out runs/eth &
-STONKFLY_FLIES="BTC fly:8765,ETH fly:8766" PORT=8765 python dashboard/server.py runs/btc &
-STONKFLY_FLIES="BTC fly:8765,ETH fly:8766" PORT=8766 python dashboard/server.py runs/eth &
+**Windows 10/11** — 저장소를 받아 `install\windows-setup.cmd`를 더블클릭합니다.
+WSL2 우분투 설치 확인 → 프로그램 설치 → 바탕화면 바로가기 → (선택) 무인 운영 설정까지 안내합니다.
+
+**Ubuntu / WSL2 안에서 직접**
+
+```bash
+git clone https://github.com/RichTradingSchool/fly-trader.git ~/fly-trader/stonkfly-dashboard
+cd ~/fly-trader/stonkfly-dashboard
+bash install/install.sh        # 10~30분 (뇌 데이터 약 1.1 GB 다운로드 포함)
+./fly start s1                 # 시즌 s1 시작
+./fly open                     # 3D 방송 화면 열기
 ```
 
-### Running it 24/7 (optional)
+인터넷 없이 먼저 보고 싶으면 `./fly demo`.
 
-`ops/` contains a watchdog and systemd user units. `flyguard.sh` restarts a paper fly after transient
-errors (network drops) but **stays down** on a STOP file, a financial loss stop, or unsettled orders.
-It never passes `--live`. Telegram notices are optional (`TG_TOKEN` / `TG_CHAT` in an env file outside git).
-See the comments at the top of each file.
+## 명령어
 
-## Paper vs live trading
+| 명령 | 하는 일 |
+|---|---|
+| `./fly start s1` | 시즌 시작(러너 + 대시보드). 이미 있으면 이어서 실행 |
+| `./fly status` | 순자산·포지션·관측 수·정지 여부 |
+| `./fly open` | 브라우저로 3D 방송 화면 |
+| `./fly logs s1` | 실시간 로그 |
+| `./fly stop s1` / `./fly resume s1` | 정지(기록 보존) / 재개 |
+| `./fly public s1` | Cloudflare 터널로 공개 주소 만들기 |
+| `./fly site` | 웹 뷰어 정적 파일(`site/`) 빌드 |
 
-- **Paper is the default.** Real public prices, simulated fills with a 0.6 % fee per side, no API key.
-- **Live trading is off unless you do all of this yourself:** a dedicated Coinbase Advanced portfolio with at most 100 USDC,
-  a portfolio-scoped ECDSA key with View + Trade and **no Transfer**, `.env` with `STONKFLY_LIVE=I_ACCEPT_REAL_TRADES`,
-  and the `--live` flag. Start with `--live --preflight-only`.
-- Built-in limits (upstream): $100 max funding, $10 max order incl. fees, 24 attempts/day, ≥ 60 s between orders,
-  no shorts / leverage / transfers, $20 drawdown stops new orders (**it does not liquidate or cap further losses**).
-- Never commit `.env`, `coinbase-key.json` or `runs/` — they are in `.gitignore`.
+## 시즌 설정
 
-Full procedure: [docs/operations.md](docs/operations.md).
+처음 `./fly start s1`을 하면 `~/.config/stonkfly/s1.env`가 생깁니다. **첫 관측 전에만** 바꾸세요.
+시작 후에 바꾸면 설정 서명이 달라져 이어서 실행이 거부됩니다(새 이름의 시즌으로 시작하면 됩니다).
 
-## Disclaimer
-
-This is a science / art experiment, **not a trading strategy and not investment advice**. There is no evidence that the
-fly learns to trade profitably; the upstream authors explicitly say profitable learning has not been demonstrated.
-The "decision" is a fixed, hand-designed readout of simulated neurons; dopamine pulses are engineered inputs, not modeled pain or pleasure.
-Crypto markets are volatile. If you enable live trading you do so entirely at your own risk and may lose all funds you allocate.
-The software is provided "as is", without warranty of any kind.
-
-## Credits
-
-- **[Stonkfly](https://github.com/nftechie/stonkfly)** by Alex Wormuth ([@nftechie](https://github.com/nftechie)) — the simulation,
-  trading environment, execution guard and AgentKit bridge (MIT). Its neural core is adapted from **[DOOMFLY](https://github.com/nftechie/doomfly)**.
-- **[MaleCNS v1.0](https://male-cns.janelia.org/)** connectome — the MaleCNS collaboration (Janelia Research Campus, Google Research and
-  collaborators), **CC BY 4.0**. Downloaded separately by `prepare`; cite the dataset and its paper when publishing results.
-- [Coinbase AgentKit](https://github.com/coinbase/agentkit) and [Coinbase Advanced Python SDK](https://github.com/coinbase/coinbase-advanced-py) (Apache-2.0).
-  Not an official Coinbase product.
-- Dashboard, fly-trader animations and ops scripts: added in this repository.
-
-See [THIRD_PARTY.md](THIRD_PARTY.md).
-
-## License
-
-[MIT](LICENSE). The upstream copyright notice is preserved; the dashboard and ops additions are released under the same MIT terms.
-The MaleCNS data is **not** included and remains under CC BY 4.0.
-
----
-
-## 繁體中文說明
-
-**讓果蠅大腦炒幣的即時儀表板。** 本專案以開源專案 [Stonkfly](https://github.com/nftechie/stonkfly)（作者 Alex Wormuth，MIT）為基礎，
-保留原作者完整 git 歷史與授權，另外加上一個**唯讀網頁儀表板**：即時顯示果蠅眼睛看到的價格圖、訊號在 16.6 萬顆神經元裡傳遞的動畫、
-左右 DNp20 放電差與 DNpe017 閘門、下單結果、多巴胺獎懲，以及 3D 果蠅交易員動畫。
-
-### 功能
-- 大腦＋腹神經索 3D 點雲，每一步重播放電從眼睛擴散的過程（可旋轉、縮放、滑鼠查神經元）
-- 果蠅眼睛：輸入的價格圖＋ 3,335 個亮度感光細胞與 811 個色覺感光細胞的取樣位置
-- 決策卡：DNp20 左／右放電頻率、差值、DNpe017 閘門、風控成交或否決
-- 回饋刺激：賺錢刺激 PAM11 獎勵多巴胺、虧錢刺激 PPL101 懲罰多巴胺
-- 果蠅交易員動畫：買進＝火箭登月、賣出賺錢＝噴鈔派對、賣出虧損＝破帳篷、其他＝搓手洗臉
-- 價格與模擬淨值、DNp20 差值、多巴胺、突觸強度、各腦區放電頻率圖表
-- 多隻果蠅互相連結、白天／黑夜模式
-
-### 快速開始（Linux / macOS；Windows 請用 WSL2）
-```sh
-git clone https://github.com/Bgihe/stonkfly-dashboard.git
-cd stonkfly-dashboard
-python3.11 -m venv .venv && source .venv/bin/activate
-pip install -e '.[test]'
-python -m stonkfly prepare              # 下載神經連結圖資料（約 1.1 GB，只要一次）
-python -m stonkfly run                  # 真實公開 BTC 價格＋ 100 美元模擬帳戶，每分鐘一步
-# 另開一個終端機：
-python dashboard/server.py runs/paper   # 打開 http://127.0.0.1:8765
+```ini
+# 화면에 보이는 이름 (20자 이내)
+FLY_NAME=초파리
+# 격리 레버리지 (1~125)
+FLY_LEVERAGE=20
+# 진입마다 잔고에서 쓰는 증거금 비율
+FLY_MARGIN=0.33
 ```
-沒有網路也能先試：`python -m stonkfly run --fixture --fast --steps 10 --out runs/fixture`，再 `python dashboard/server.py runs/fixture`。
-第一次啟動儀表板會花約一分鐘建立 `dashboard/cache/`。建議 16 GB 記憶體。設定一律用環境變數（見上方 [Dashboard configuration](#dashboard-configuration)），
-想讓區網其他裝置看就設 `HOST=0.0.0.0`（唯讀、沒有登入保護，不要開到公網）。
 
-### 模擬盤與真實交易
-- **預設是 paper（模擬）交易**：用真實公開價格，但成交是模擬的，不需要任何金鑰。
-- 真實下單必須由你自己完成：專用 Coinbase Advanced 子帳戶（最多 100 USDC）、只有 View＋Trade 且**不能轉帳**的金鑰、
-  `.env` 設定 `STONKFLY_LIVE=I_ACCEPT_REAL_TRADES`，再加 `--live` 參數。內建上限：每單最多 10 美元、每天 24 次、
-  兩單至少間隔 60 秒、虧損 20 美元停止下新單（**不會自動平倉**）。
-- `.env`、`coinbase-key.json`、`runs/` 都已排除在 git 之外，千萬不要上傳。
+주석은 반드시 줄 맨 앞에 `#`로 쓰세요(값 뒤에 붙이면 값의 일부가 됩니다).
 
-### 免責聲明
-這是科學／藝術實驗，**不是投資建議，也不是交易策略**。原作者明確表示「尚未證明能學會獲利」。
-「決策」是人工設計的固定讀出規則，多巴胺刺激也是工程上加的訊號，不代表果蠅真的會痛或會學會賺錢。
-若自行開啟真實交易，所有風險與損失由你自行承擔。
+시작 자금은 1,000 USDT로 고정입니다(부자 방 아이템 기준 금액이 1,000 USDT 시작에 맞춰져 있습니다).
 
-### 致謝與授權
-程式基於 [nftechie/stonkfly](https://github.com/nftechie/stonkfly)（MIT）；神經連結圖資料為 [MaleCNS v1.0](https://male-cns.janelia.org/)
-（Janelia Research Campus、Google Research 等合作團隊，CC BY 4.0，需另外下載、發表時請引用）。本專案新增的儀表板、動畫與維運腳本同樣以 MIT 釋出。
+기본 규칙: OrangeX BTC-USDT 무기한 공개 시세 · 1분 관측 · 반대 신호가 와도 수수료를 빼고 본전 이상일 때만
+뒤집기 · 손절 없음(회복 또는 강제청산까지 보유) · 최소 주문도 못 내면 파산으로 종료.
+순자산 1,200 / 1,500 / 2,000 / 3,000 / 5,000 / 10,000 / 20,000 / 50,000 USDT마다 방에 아이템이 생기고,
+다시 떨어지면 압류됩니다.
+
+> ⚠ 시즌 중에는 코드를 업데이트(`git pull`)하지 마세요. 엔진 소스 해시가 바뀌면 재개가 거부됩니다.
+
+## 웹 링크로 공개하기 · 라이브 방송
+
+- **웹 뷰어**: `ops/windows/publish-site.ps1`이 `site/`를 GitHub Pages에 올립니다. 휴대폰 세로 화면도 지원합니다.
+- **실시간 데이터**: `./fly public s1`이 Cloudflare 터널로 대시보드를 공개하고, `ops/windows/set-feed.ps1`이
+  그 주소를 웹 뷰어의 `feed.json`에 반영합니다. 연결이 없으면 웹 뷰어는 데모 시즌을 보여 줍니다.
+- **OBS 생중계**: `ops/obs/fly-trader-obs.json`을 OBS의 장면 모음 → 가져오기로 불러오면 1920×1080 브라우저
+  소스가 준비됩니다. 방송 키는 OBS 설정에 직접 넣으세요.
+
+자세한 절차는 [docs/publish-ko.md](docs/publish-ko.md).
+
+## 요구 사항
+
+- Windows 10(2004+)/11 + WSL2, 또는 Ubuntu 22.04/24.04
+- CPU 4코어 이상 (i5-10400F 기준 관측 1회 약 8초 — 60초 간격 안에 여유 있게 끝남), GPU 불필요
+- RAM 8 GB 이상 (엔진 약 0.9 GB), 여유 디스크 5 GB, 인터넷(공개 시세만 사용 — 거래소 계정·API 키 불필요)
+- 7일 무인 운영: 절전 끄기, WSL 킵얼라이브(설치 도우미가 등록), `loginctl enable-linger`
+
+## 동작 원리
+
+1. **눈** — 최근 가격 차트를 320×180 이미지로 그려 광수용체(R1–R8)에 빛 자극으로 넣습니다.
+2. **뇌** — MaleCNS 연결 지도 위의 스파이킹 신경망을 0.5초 시뮬레이션합니다(C++ 커널).
+3. **결정** — 좌·우 하행 뉴런 DNp20의 평균 발화율 차이(오른쪽 우세 = 롱, 왼쪽 = 숏)와 게이트 뉴런 DNpe017.
+4. **보상** — 손익에 따라 보상(PAM11)·처벌(PPL101) 도파민 뉴런을 자극하고 시냅스 효율이 조금씩 바뀝니다.
+   이것이 시장을 ‘학습’했다는 증거는 아닙니다.
+
+모델 세부: [docs/model.md](docs/model.md) · 검증: [docs/validation.md](docs/validation.md) ·
+운영: [ops/README-perp.md](ops/README-perp.md)
+
+## 크레딧 · 라이선스
+
+- 엔진: [Stonkfly](docs/stonkfly-upstream-README.md) (DOOMFLY 기반, MIT) · 대시보드: [Bgihe/stonkfly-dashboard](https://github.com/Bgihe/stonkfly-dashboard) (MIT, [원본 README](docs/bgihe-dashboard-README.md))
+- 3D 초파리: [Degeneret Fly](https://github.com/Rob-bio4/degeneretfly) (Robillionair OÜ, MIT) · three.js (MIT) · Pretendard (SIL OFL 1.1)
+- 데이터: [MaleCNS v1.0](https://male-cns.janelia.org/) — FlyEM/HHMI Janelia, Univ. Cambridge, MRC LMB, Google Research (Berg et al., Cell 2026), **CC BY 4.0**. `prepare`가 따로 내려받습니다. 결과를 공개할 때 데이터셋과 논문을 인용하세요.
+- 시세: OrangeX 공개 API(BTC-USDT-PERPETUAL), 초기 차트: Bybit 1분봉. 거래소와 제휴한 공식 서비스가 아닙니다.
+- 이 저장소의 코드는 MIT 라이선스입니다([LICENSE](LICENSE)). 제3자 목록: [THIRD_PARTY.md](THIRD_PARTY.md).

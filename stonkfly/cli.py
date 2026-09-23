@@ -65,6 +65,9 @@ def main():
     status = sub.add_parser("status")
     status.add_argument("--out", type=Path, default=Path("runs/paper"))
     a = p.parse_args()
+    if a.command == "run" and a.live:
+        # This distribution is paper trading only, on every venue.
+        p.error("Live trading is disabled in this distribution (페이퍼 트레이딩 전용)")
     if a.command == "run" and a.venue == "orangex-perp":
         if a.live:
             p.error("Live mode is not available on the perpetual venue")

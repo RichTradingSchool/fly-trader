@@ -30,12 +30,49 @@ def source_hashes():
     }
 
 
+# Per-season choices read from the environment (`./fly start <name>` loads ~/.config/stonkfly/<name>.env).
+# They are part of the settings signature: changing one after the first tick makes the run refuse
+# to resume, so a different fly name or leverage means a new run directory (a new season).
+ENV_SETTINGS = {
+    "FLY_NAME": "fly_name",
+    "FLY_LEVERAGE": "leverage",
+    "FLY_MARGIN": "margin_fraction",
+}
+
+
+def env_settings(environ=None):
+    environ = os.environ if environ is None else environ
+    out = {}
+    for var, field in ENV_SETTINGS.items():
+        raw = (environ.get(var) or "").strip()
+        if not raw:
+            continue
+        if field == "fly_name":
+            if len(raw) > 20:
+                raise SystemExit(f"{var} must be at most 20 characters")
+            out[field] = raw
+        elif field == "leverage":
+            if not raw.isdigit():
+                raise SystemExit(f"{var} must be a whole number (1..125)")
+            out[field] = int(raw)
+        else:
+            try:
+                D(raw)
+            except (ValueError, ArithmeticError):
+                raise SystemExit(f"{var} must be a number such as 0.33")
+            out[field] = raw
+    return out
+
+
 def build_settings(a):
     """One settings signature per run directory. `--neural-ms 500` parses to a float while the
     omitted default is an int, and the two hash differently, so a run started with the flag could
     never resume without it. The cast happens here and nowhere else."""
     ms = float(a.neural_ms)
-    return PerpSettings(learning=not a.frozen, neural_ms=ms, pulse_ms=min(200, ms))
+    try:
+        return PerpSettings(learning=not a.frozen, neural_ms=ms, pulse_ms=min(200, ms), **env_settings())
+    except ValueError as err:  # PerpSettings range checks (leverage 1..125, margin in (0, 1], ...)
+        raise SystemExit(f"Invalid season settings: {err}")
 
 
 def make_market(settings, fixture):

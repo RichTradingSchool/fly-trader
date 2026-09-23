@@ -1,0 +1,151 @@
+#!/usr/bin/env bash
+# fly — 초파리 트레이딩 챌린지 운영 명령 (Ubuntu / WSL2)
+#
+#   ./fly start s1        시즌 s1 시작 (페이퍼 트레이딩 + 대시보드 :8765)
+#   ./fly status [s1]     상태: 순자산·포지션·관측 수·유닛
+#   ./fly open [s1]       브라우저로 3D 방송 화면 열기
+#   ./fly logs s1         실시간 로그 (Ctrl-C로 나가기)
+#   ./fly stop s1         정지 (STOP 파일을 만들고 러너를 멈춤; 기록은 그대로 보존)
+#   ./fly resume s1       정지 해제 후 이어서 실행
+#   ./fly demo            인터넷 없이 가짜 시장 3틱으로 동작 확인 + 데모 화면
+#   ./fly public s1       Cloudflare 터널로 공개 주소 만들기 (cloudflared 필요)
+#   ./fly site [--feed URL]   웹 뷰어(site/) 빌드 — GitHub Pages 등에 올리는 정적 파일
+#   ./fly units           systemd 사용자 유닛 설치/갱신 (start가 자동으로 호출)
+#
+# 이 프로그램은 페이퍼 트레이딩 전용입니다. 실제 주문을 내지 않습니다.
+set -euo pipefail
+REPO="$(cd "$(dirname "$(readlink -f "$0")")" && pwd)"
+cd "$REPO"
+PY="$REPO/.venv/bin/python"
+CFG="$HOME/.config/stonkfly"
+UNITS="$HOME/.config/systemd/user"
+
+say() { printf '\033[1;35m[fly]\033[0m %s\n' "$*"; }
+die() { printf '\033[1;31m[fly] %s\033[0m\n' "$*" >&2; exit 1; }
+need_py() { [ -x "$PY" ] || die "먼저 설치하세요: bash install/install.sh"; }
+name_ok() { [[ ${1:-} =~ ^[A-Za-z0-9_-]+$ ]] || die "시즌 이름은 영문·숫자·-·_ 만: 예) s1"; }
+has_systemd() { systemctl --user show-environment >/dev/null 2>&1; }
+port_of() { local p=""; [ -f "$CFG/dashboard-$1.env" ] && p=$(sed -n 's/^PORT=//p' "$CFG/dashboard-$1.env" | tail -1); echo "${p:-8765}"; }
+
+open_url() {
+  local url=$1
+  if grep -qi microsoft /proc/version 2>/dev/null; then
+    (cmd.exe /c start "" "$url" >/dev/null 2>&1 || explorer.exe "$url" >/dev/null 2>&1) || true
+  elif command -v xdg-open >/dev/null; then xdg-open "$url" >/dev/null 2>&1 || true
+  fi
+  say "브라우저 주소: $url"
+}
+
+install_units() {
+  has_systemd || die "systemd가 꺼져 있습니다. WSL이면 /etc/wsl.conf에 [boot] systemd=true 후 'wsl --shutdown'"
+  mkdir -p "$UNITS" "$CFG"
+  for u in stonkfly@.service stonkfly-dashboard@.service stonkfly-tunnel@.service; do
+    sed "s#%h/fly-trader/stonkfly-dashboard#$REPO#g" "ops/$u" >"$UNITS/$u"
+  done
+  systemctl --user daemon-reload
+  if ! loginctl show-user "$USER" -p Linger 2>/dev/null | grep -q yes; then
+    loginctl enable-linger "$USER" 2>/dev/null || sudo loginctl enable-linger "$USER" || say "linger를 켜지 못했습니다(로그아웃하면 멈춤)"
+  fi
+  say "유닛 설치: $UNITS (저장소: $REPO)"
+}
+
+ensure_env() {
+  local n=$1
+  mkdir -p "$CFG"
+  if [ ! -f "$CFG/$n.env" ]; then
+    cat >"$CFG/$n.env" <<EOF
+# 시즌 $n 설정 (git에 올리지 마세요)
+FLY_VENUE_$n=orangex-perp
+FLY_OUT_$n=runs/$n
+# 초파리 이름·레버리지·증거금 비율 (시즌 시작 전에만 바꾸세요. 시작 후 바꾸면 이어서 실행이 거부됩니다)
+FLY_NAME=초파리
+# FLY_LEVERAGE=20
+# FLY_MARGIN=0.33
+# 텔레그램 알림(선택): TG_TOKEN=...  TG_CHAT=...
+EOF
+    say "설정 파일 생성: $CFG/$n.env"
+  fi
+}
+
+cmd=${1:-help}; shift || true
+case "$cmd" in
+  units) install_units ;;
+  start)
+    n=${1:-s1}; name_ok "$n"; need_py
+    [ -f data/graph.npz ] || die "뇌 데이터가 없습니다: .venv/bin/python -m stonkfly prepare"
+    ensure_env "$n"
+    if has_systemd; then
+      install_units
+      rm -f "runs/$n/STOP"
+      systemctl --user enable --now "stonkfly@$n" "stonkfly-dashboard@$n"
+      say "시즌 $n 시작. 첫 관측까지 약 1분 걸립니다."
+    else
+      mkdir -p "runs/$n"
+      set -a; . "$CFG/$n.env"; set +a
+      nohup ops/flyguard.sh "$n" >>"runs/$n/watchdog.log" 2>&1 & echo $! >"runs/$n/.fly.pid"
+      nohup "$PY" dashboard/server.py "runs/$n" >>"runs/$n/dashboard.log" 2>&1 & echo $! >"runs/$n/.dash.pid"
+      say "systemd 없이 백그라운드로 시작했습니다(터미널을 닫아도 계속, PC를 끄면 멈춤)."
+    fi
+    say "3D 방송 화면: http://127.0.0.1:$(port_of "$n")/room/"
+    ;;
+  stop)
+    n=${1:-s1}; name_ok "$n"; mkdir -p "runs/$n"; touch "runs/$n/STOP"
+    if has_systemd; then systemctl --user stop "stonkfly@$n" || true
+    else [ -f "runs/$n/.fly.pid" ] && kill -INT "$(cat "runs/$n/.fly.pid")" 2>/dev/null || true
+    fi
+    say "시즌 $n 정지(기록 보존). 이어서 하려면: ./fly resume $n"
+    ;;
+  resume)
+    n=${1:-s1}; name_ok "$n"; rm -f "runs/$n/STOP" "runs/$n/flyguard.state"; exec "$0" start "$n" ;;
+  status)
+    need_py
+    for d in runs/${1:-*}/; do
+      n=$(basename "$d"); [ -f "$d/ledger.sqlite" ] || continue
+      echo "── 시즌 $n"
+      "$PY" - "$d" <<'PY'
+import json, sqlite3, sys, time
+from pathlib import Path
+run = Path(sys.argv[1])
+db = sqlite3.connect(f"file:{run / 'ledger.sqlite'}?mode=ro", uri=True)
+m = {k: json.loads(v) for k, v in db.execute("SELECT key,value FROM meta")}
+eq, init = float(m.get("equity") or m.get("cash") or 0), float(m.get("initial_cash") or 0)
+pos = m.get("position")
+print(f"  순자산 {eq:,.2f} USDT ({(eq / init - 1) * 100:+.2f}%)" if init else f"  순자산 {eq}")
+print(f"  관측 {m.get('tick')}회 · 포지션 {pos['side'] + ' ' + str(pos['qty']) + ' BTC' if pos else '없음'}"
+      f" · 강제청산 {m.get('liquidations') or 0}회 · 수수료 {float(m.get('fees_paid') or 0):,.2f}")
+if m.get("halted"):
+    print(f"  ⚠ 정지 상태: {m['halted']}")
+ev = run / "events.jsonl"
+if ev.exists():
+    age = time.time() - ev.stat().st_mtime
+    print(f"  마지막 기록 {age:.0f}초 전" + (" (멈춘 것 같습니다: ./fly logs)" if age > 180 else ""))
+if (run / "STOP").exists():
+    print("  STOP 파일 있음: ./fly resume 으로 재개")
+PY
+      has_systemd && systemctl --user --no-pager --plain list-units "stonkfly*@$n.service" | sed -n '2,5p' | sed 's/^/  /'
+    done
+    ;;
+  logs) n=${1:-s1}; name_ok "$n"
+    if has_systemd; then journalctl --user -u "stonkfly@$n" -u "stonkfly-dashboard@$n" -f -o cat; else tail -f "runs/$n/watchdog.log"; fi ;;
+  open) n=${1:-s1}; open_url "http://127.0.0.1:$(port_of "$n")/room/" ;;
+  demo)
+    need_py
+    say "가짜 시장으로 3틱 실행(인터넷 불필요, 약 1분)…"
+    "$PY" -m stonkfly run --venue orangex-perp --fixture --fast --steps 3 --out runs/demo-check
+    PORT=8799 nohup "$PY" dashboard/server.py runs/demo-check >/tmp/fly-demo.log 2>&1 &
+    sleep 3; open_url "http://127.0.0.1:8799/room/?demo=1"
+    say "데모 서버를 끄려면: kill $!"
+    ;;
+  public)
+    n=${1:-s1}; name_ok "$n"; command -v cloudflared >/dev/null || die "cloudflared가 없습니다: docs/publish-ko.md의 설치 절차 참고"
+    has_systemd || die "systemd가 필요합니다(터널을 계속 유지하기 위해)"
+    install_units
+    [ -f "$CFG/tunnel-$n.env" ] || printf 'PORT=%s\n' "$(port_of "$n")" >"$CFG/tunnel-$n.env"
+    systemctl --user enable --now "stonkfly-tunnel@$n"
+    say "공개 주소를 기다리는 중…"
+    for _ in $(seq 1 40); do [ -s "runs/$n/public-url.txt" ] && break; sleep 1; done
+    [ -s "runs/$n/public-url.txt" ] && say "공개 주소: $(cat "runs/$n/public-url.txt")  (3D 화면은 뒤에 /room/)" || say "아직 주소가 없습니다: journalctl --user -u stonkfly-tunnel@$n"
+    ;;
+  site) need_py; exec "$PY" ops/site/build_site.py "$@" ;;
+  help|-h|--help|*) sed -n '2,17p' "$0" | sed 's/^# \{0,1\}//' ;;
+esac
