@@ -36,6 +36,9 @@ const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': 
 
 let STATE = null, lastTick = null, SKEW = 0, overlay = null, FEED = null, V = null, FAILS = 0, OFFLINE = false, POLL = null;
 const eyeImg = new Image();
+// On the web viewer the eye frame comes from the feed's origin. Without a CORS request the 2D monitor
+// canvas it is drawn into becomes tainted and WebGL refuses it as a texture (a black monitor).
+eyeImg.crossOrigin = 'anonymous';
 const mood = { dopamine: 0, octopamine: 0, serotonin: 1, acetylcholine: 0, active: true };
 const liveUrl = name => `${FEED}${name}?v=${V}`;
 
