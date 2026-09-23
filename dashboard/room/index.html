@@ -74,7 +74,7 @@ body{display:grid;place-items:center}
 .info{grid-column:1/3;grid-row:4;display:grid;grid-template-columns:2.1fr 2.3fr repeat(6,1fr);border-top:1px solid #3d3452;background:linear-gradient(180deg,#131626,#0c0f18)}
 .info>div{padding:calc(1.1*var(--u)) calc(1.1*var(--u)) 0;border-right:1px solid #1f2436;min-width:0}
 .info small{display:block;font-size:calc(0.64*var(--u));letter-spacing:.1em;color:var(--mute);font-weight:700;margin-bottom:calc(0.4*var(--u))}
-.info b{display:block;font-size:calc(1.35*var(--u));font-weight:800;letter-spacing:-.02em;font-variant-numeric:tabular-nums;white-space:nowrap}
+.info b{display:block;font-size:calc(1.35*var(--u));font-weight:800;letter-spacing:-.02em;font-variant-numeric:tabular-nums;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .info .equity strong{display:inline-block;font-size:calc(2.5*var(--u));font-weight:900;letter-spacing:-.03em;font-variant-numeric:tabular-nums}
 .info .equity u{font-size:calc(0.95*var(--u));text-decoration:none;color:var(--mute);margin-left:calc(0.3*var(--u));font-weight:700}
 .info .equity #roi{display:block;font-size:calc(1.05*var(--u));font-weight:800;margin-top:calc(0.2*var(--u))}

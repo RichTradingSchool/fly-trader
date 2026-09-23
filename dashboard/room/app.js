@@ -163,9 +163,11 @@ function hud(s) {
   const pos = e?.position;
   const ps = $('#posSide'); ps.textContent = pos ? `${sideKo(pos.side)} ${pos.leverage || 20}×` : '없음'; ps.className = pos ? String(pos.side).toLowerCase() : '';
   $('#posDetail').textContent = pos ? `${num(+pos.qty, 3)} BTC @ ${num(+pos.entry, 1)} · 청산가 ${num(+pos.liquidation_price, 1)}` : '관망 중';
-  const up = pos ? +pos.unrealized : 0, u = $('#upnl'); u.textContent = pos ? `${signed(up)} USDT` : '–'; u.className = up >= 0 ? 'up' : 'down';
-  const rp = +(lg.realized_pnl || 0), rr = $('#realized'); rr.textContent = `${signed(rp)} USDT`; rr.className = rp >= 0 ? 'up' : 'down';
-  const fee = +(lg.fees_paid || 0); $('#fees').textContent = `${fee > .005 ? '−' : ''}${num(fee)} USDT`;
+  // Five-digit amounts drop the cents so a rich season still fits its HUD cell.
+  const cents = v => (Math.abs(v) >= 10000 ? 0 : 2);
+  const up = pos ? +pos.unrealized : 0, u = $('#upnl'); u.textContent = pos ? `${signed(up, cents(up))} USDT` : '–'; u.className = up >= 0 ? 'up' : 'down';
+  const rp = +(lg.realized_pnl || 0), rr = $('#realized'); rr.textContent = `${signed(rp, cents(rp))} USDT`; rr.className = rp >= 0 ? 'up' : 'down';
+  const fee = +(lg.fees_paid || 0); $('#fees').textContent = `${fee > .005 ? '−' : ''}${num(fee, cents(fee))} USDT`;
   $('#btc').textContent = e ? num(+e.bid, 1) : '–';
   $('#trades').textContent = `${s.orders_today ?? 0}회`;
   $('#tick').textContent = e ? e.tick.toLocaleString('ko-KR') : '–';
@@ -219,7 +221,7 @@ function journal(s) {
     for (const r of e.room_events || []) items.push({ t: e.time, k: r.type === 'unlock' ? 'gold' : 'bad', label: `${r.type === 'unlock' ? '획득' : '압류'} · ${esc(r.label)}` });
   }
   $('#journal').innerHTML = items.slice(-11).reverse().map(i =>
-    `<li class="${i.k}"><time>${kst(i.t)}</time><b>${i.label}</b><span>${i.price ? num(i.price, 1) : ''}</span><em>${i.net !== undefined ? `${signed(i.net)}` : ''}</em></li>`).join('')
+    `<li class="${i.k}"><time>${kst(i.t)}</time><b>${i.label}</b><span>${i.price ? num(i.price, 1) : ''}</span><em>${i.net !== undefined ? `${signed(i.net, Math.abs(i.net) >= 10000 ? 0 : 2)}` : ''}</em></li>`).join('')
     || '<li class="empty">아직 체결이 없습니다</li>';
 }
 function mainView() {
