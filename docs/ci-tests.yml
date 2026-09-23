@@ -1,0 +1,20 @@
+# GitHub Actions 테스트 워크플로 (업스트림 원본).
+# 쓰려면 .github/workflows/tests.yml 로 옮겨 커밋하세요. 푸시하는 토큰에 workflow 권한이 필요합니다(gh auth refresh -s workflow).
+name: Tests
+on: [push, pull_request]
+permissions:
+  contents: read
+jobs:
+  unit:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+          cache: pip
+          cache-dependency-path: pyproject.toml
+      - run: pip install -e '.[test]'
+      - run: python -m pytest -q
+        env:
+          OPENBLAS_NUM_THREADS: '1'
