@@ -403,6 +403,7 @@ setInterval(tickClock, 1000);
 FEED = await resolveFeed();
 if (SITE) {
   $('#siteHome').hidden = false;
+  if (/^https:\/\//.test(SITE.community || '')) { const c = $('#community'); c.href = SITE.community; c.hidden = false; }
   if (FEED) $('#labLink').href = FEED; else $('#labLink').hidden = true;
 }
 if (DEMO) { await poll().catch(() => {}); lastTick = null; demo(); }
