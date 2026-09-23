@@ -164,10 +164,10 @@ function hud(s) {
   const ps = $('#posSide'); ps.textContent = pos ? `${sideKo(pos.side)} ${pos.leverage || 20}×` : '없음'; ps.className = pos ? String(pos.side).toLowerCase() : '';
   $('#posDetail').textContent = pos ? `${num(+pos.qty, 3)} BTC @ ${num(+pos.entry, 1)} · 청산가 ${num(+pos.liquidation_price, 1)}` : '관망 중';
   // Five-digit amounts drop the cents so a rich season still fits its HUD cell.
-  const cents = v => (Math.abs(v) >= 10000 ? 0 : 2);
-  const up = pos ? +pos.unrealized : 0, u = $('#upnl'); u.textContent = pos ? `${signed(up, cents(up))} USDT` : '–'; u.className = up >= 0 ? 'up' : 'down';
-  const rp = +(lg.realized_pnl || 0), rr = $('#realized'); rr.textContent = `${signed(rp, cents(rp))} USDT`; rr.className = rp >= 0 ? 'up' : 'down';
-  const fee = +(lg.fees_paid || 0); $('#fees').textContent = `${fee > .005 ? '−' : ''}${num(fee, cents(fee))} USDT`;
+  const cents = v => (Math.abs(v) >= 10000 ? 0 : 2), USDT = '<i class="unit">USDT</i>';
+  const up = pos ? +pos.unrealized : 0, u = $('#upnl'); u.innerHTML = pos ? `${signed(up, cents(up))}${USDT}` : '–'; u.className = up >= 0 ? 'up' : 'down';
+  const rp = +(lg.realized_pnl || 0), rr = $('#realized'); rr.innerHTML = `${signed(rp, cents(rp))}${USDT}`; rr.className = rp >= 0 ? 'up' : 'down';
+  const fee = +(lg.fees_paid || 0); $('#fees').innerHTML = `${fee > .005 ? '−' : ''}${num(fee, cents(fee))}${USDT}`;
   $('#btc').textContent = e ? num(+e.bid, 1) : '–';
   $('#trades').textContent = `${s.orders_today ?? 0}회`;
   $('#tick').textContent = e ? e.tick.toLocaleString('ko-KR') : '–';
