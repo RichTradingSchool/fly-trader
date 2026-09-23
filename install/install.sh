@@ -99,5 +99,5 @@ cat <<'EOF'
   ./fly status        순자산·포지션 확인
   ./fly stop s1       정지 (기록 보존)
 
-초파리 이름·자금은 시즌 시작 전에 ~/.config/stonkfly/s1.env 에서 바꿀 수 있습니다.
+초파리 이름·레버리지는 시즌 시작 전에 ~/.config/stonkfly/s1.env 에서 바꿀 수 있습니다.
 EOF
