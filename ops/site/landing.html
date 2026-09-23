@@ -217,12 +217,19 @@ footer p{margin:0 0 8px}
   const num = (v, d = 2) => Number(v).toLocaleString('ko-KR', { minimumFractionDigits: d, maximumFractionDigits: d });
   const signed = (v, d = 2) => (Math.abs(v) < .005 ? '' : v > 0 ? '+' : '−') + num(Math.abs(v), d);
   const pill = (t, c) => { const p = $('#livePill'); p.textContent = t; p.className = `pill ${c}`; };
-  let feed = null;
-  try { const f = await fetch(`feed.json?t=${Date.now()}`, { cache: 'no-store' }).then(r => r.json()); if (/^https?:\/\//.test(f.feed || '')) feed = f.feed.replace(/\/?$/, '/'); } catch {}
-  if (!feed) { pill('오프라인 · 데모 가능', 'off'); return; }
-  const lab = $('#lab'); lab.href = feed; lab.hidden = false;
-  let v = null;
+  // feed.json names the live dashboard; a quick tunnel moves when it restarts, so it is re-read on failures.
+  const readFeed = async () => {
+    try { const f = await fetch(`feed.json?t=${Date.now()}`, { cache: 'no-store' }).then(r => r.json()); return /^https?:\/\//.test(f.feed || '') ? f.feed.replace(/\/?$/, '/') : null; }
+    catch { return null; }
+  };
+  const lab = $('#lab');
+  let feed = await readFeed(), v = null, fails = 0;
   async function tick() {
+    if (!feed) {
+      feed = await readFeed();
+      if (!feed) { pill('오프라인 · 데모 가능', 'off'); lab.hidden = true; return; }
+    }
+    lab.href = feed; lab.hidden = false;
     try {
       const t = await fetch(`${feed}tick.json`, { cache: 'no-store' }).then(r => r.json());
       if (t.v === v) return; v = t.v;
@@ -240,7 +247,11 @@ footer p{margin:0 0 8px}
       if (lg.halted === 'bankrupt') pill('파산 · 시즌 종료', 'bad');
       else if (s.stopped || lg.halted) pill('일시정지', 'off');
       else pill(age < 180 ? 'LIVE' : '대기 중', age < 180 ? 'on' : 'off');
-    } catch { pill('연결 끊김', 'off'); }
+      fails = 0;
+    } catch {
+      pill('연결 끊김', 'off');
+      if (++fails % 2 === 0) { const f = await readFeed(); if (f !== feed) { feed = f; v = null; } }
+    }
   }
   await tick(); setInterval(tick, 15000);
 })();

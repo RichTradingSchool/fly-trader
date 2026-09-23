@@ -301,6 +301,11 @@ async function poll() {
   } catch (err) {
     FAILS += 1;
     if (SITE && !STATE && FAILS >= 2) return goOffline();
+    if (SITE && FAILS % 3 === 0) {
+      // A quick tunnel gets a new address when it restarts; feed.json follows it, so look again.
+      const f = await resolveFeed();
+      if (f && f !== FEED) { FEED = f; V = null; $('#labLink').href = FEED; }
+    }
     const st = $('#status'); st.textContent = '서버 연결 대기…'; st.className = 'pill warn';
   }
 }
