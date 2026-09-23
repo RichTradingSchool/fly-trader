@@ -1,0 +1,260 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>초파리 트레이딩 챌린지 — 진짜 초파리 뇌가 비트코인 차트를 본다</title>
+<meta name="description" content="실제 초파리 뇌 연결 지도(뉴런 166,700개)를 시뮬레이션해 1분마다 BTC 차트를 보여 주고, 그 반응으로 20배 선물을 페이퍼 트레이딩합니다. 3D 라이브 방송과 프로그램을 공개합니다.">
+<meta property="og:type" content="website">
+<meta property="og:title" content="초파리 트레이딩 챌린지 · LIVE">
+<meta property="og:description" content="진짜 초파리 뇌(뉴런 166,700개)가 비트코인 차트를 보고 롱·숏 신호를 냅니다. 1,000 USDT · 20배 · 7일 페이퍼 챌린지 3D 생중계.">
+<meta property="og:image" content="https://richtradingschool.github.io/fly-trader/og.png">
+<meta property="og:url" content="https://richtradingschool.github.io/fly-trader/">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="theme-color" content="#07090e">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ctext y='.9em' font-size='90'%3E%F0%9F%AA%B0%3C/text%3E%3C/svg%3E">
+<style>
+@font-face{font-family:"Pretendard Variable";src:url("assets/fonts/PretendardVariable.woff2") format("woff2");font-weight:45 920;font-display:swap}
+:root{--bg:#07090e;--panel:#0f131d;--line:#232a3d;--text:#eef0fa;--mute:#9097ab;--long:#2fd18a;--short:#ff4d5e;--gold:#ffd166;--violet:#bbabfa;--amber:#ffb347}
+*{box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{margin:0;background:var(--bg);color:var(--text);font:16px/1.65 "Pretendard Variable",Pretendard,system-ui,"Apple SD Gothic Neo","Malgun Gothic",sans-serif;-webkit-font-smoothing:antialiased}
+a{color:var(--violet)}
+.wrap{max-width:1080px;margin:0 auto;padding:0 20px}
+header.top{position:sticky;top:0;z-index:5;background:#07090ee6;backdrop-filter:blur(8px);border-bottom:1px solid #151a28}
+header.top .wrap{display:flex;align-items:center;gap:12px;height:56px}
+.logo{font-weight:800;letter-spacing:-.02em;display:flex;align-items:center;gap:8px;text-decoration:none;color:var(--text)}
+.logo i{width:9px;height:9px;border-radius:50%;background:#ff3b5c;box-shadow:0 0 10px #ff3b5c;animation:blink 1.4s infinite}
+@keyframes blink{50%{opacity:.35}}
+header.top nav{margin-left:auto;display:flex;gap:18px;font-size:14px}
+header.top nav a{color:var(--mute);text-decoration:none}header.top nav a:hover{color:var(--text)}
+.hero{padding:56px 0 36px;background:radial-gradient(ellipse at 70% 0%,#2a2048 0%,transparent 60%),radial-gradient(ellipse at 10% 30%,#0f2a2a 0%,transparent 55%)}
+.hero .grid{display:grid;grid-template-columns:1.15fr .85fr;gap:36px;align-items:center}
+.kicker{display:inline-block;font-size:13px;font-weight:700;letter-spacing:.14em;color:var(--violet);border:1px solid #3d3452;border-radius:99px;padding:4px 12px;margin-bottom:18px}
+h1{font-size:clamp(34px,5.4vw,58px);line-height:1.12;letter-spacing:-.035em;margin:0 0 18px;font-weight:900}
+h1 em{font-style:normal;background:linear-gradient(90deg,#8ff0c6,#bbabfa);-webkit-background-clip:text;background-clip:text;color:transparent}
+.lead{font-size:18px;color:#c9cde0;margin:0 0 26px;max-width:560px}
+.btns{display:flex;flex-wrap:wrap;gap:12px}
+.btn{display:inline-flex;align-items:center;gap:8px;padding:13px 20px;border-radius:12px;font-weight:800;text-decoration:none;font-size:16px;border:1px solid transparent}
+.btn.main{background:linear-gradient(135deg,#2fd18a,#27a7c9);color:#04110b;box-shadow:0 8px 30px #2fd18a33}
+.btn.ghost{border-color:#3a4260;color:var(--text);background:#121726}
+.btn.ghost:hover{border-color:var(--violet)}
+.btn[hidden]{display:none}
+.note{margin-top:14px;font-size:13px;color:var(--mute)}
+.live{background:linear-gradient(180deg,#131826,#0d111b);border:1px solid var(--line);border-radius:18px;padding:22px;box-shadow:0 20px 60px #0008}
+.live .row{display:flex;justify-content:space-between;align-items:center;margin-bottom:10px}
+.live small{color:var(--mute);font-size:13px;font-weight:700;letter-spacing:.08em}
+.pill{font-size:12px;font-weight:800;border:1px solid currentColor;border-radius:99px;padding:2px 10px}
+.pill.on{color:var(--long)}.pill.off{color:var(--amber)}.pill.bad{color:var(--short)}
+.eq{font-size:44px;font-weight:900;letter-spacing:-.03em;font-variant-numeric:tabular-nums;line-height:1.1}
+.eq u{text-decoration:none;font-size:16px;color:var(--mute);margin-left:6px;font-weight:700}
+.roi{font-size:18px;font-weight:800;margin-top:4px}
+.up{color:var(--long)}.down{color:var(--short)}
+.stats{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:18px}
+.stats div{background:#0b0f18;border:1px solid #1b2133;border-radius:12px;padding:10px 12px}
+.stats b{display:block;font-size:17px;font-variant-numeric:tabular-nums}
+.stats span{font-size:12px;color:var(--mute)}
+.shot{display:block;margin:10px 0 0;border-radius:16px;overflow:hidden;border:1px solid var(--line);box-shadow:0 30px 80px #000a}
+.shot img{display:block;width:100%;height:auto}
+section{padding:54px 0;border-top:1px solid #121726}
+h2{font-size:clamp(24px,3.4vw,34px);letter-spacing:-.03em;margin:0 0 10px}
+.sub{color:var(--mute);margin:0 0 26px}
+.steps{display:grid;grid-template-columns:repeat(4,1fr);gap:14px}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:16px;padding:18px}
+.card .n{font-size:13px;font-weight:800;color:var(--violet);letter-spacing:.1em}
+.card h3{margin:6px 0 6px;font-size:19px}
+.card p{margin:0;color:#c3c8da;font-size:15px}
+.rules{display:grid;grid-template-columns:repeat(3,1fr);gap:14px}
+.rules .card b{font-size:26px;letter-spacing:-.02em;display:block}
+.ladder{display:grid;grid-template-columns:repeat(4,1fr);gap:10px}
+.ladder div{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:14px}
+.ladder b{display:block;color:var(--gold);font-size:20px;font-variant-numeric:tabular-nums}
+.ladder span{color:#d7dbea}
+.dl{display:grid;grid-template-columns:1.2fr .8fr;gap:18px;align-items:start}
+.dl ol{margin:0;padding-left:20px;color:#c9cde0}.dl li{margin-bottom:6px}
+code{background:#151a28;border:1px solid #232a3d;border-radius:6px;padding:1px 6px;font-size:14px}
+.req{font-size:14px;color:var(--mute)}
+details{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:14px 18px;margin-bottom:10px}
+summary{cursor:pointer;font-weight:800}
+details p{margin:10px 0 0;color:#c9cde0}
+.ref{background:linear-gradient(135deg,#231709,#120d06);border:1px solid #5a3a1a;border-radius:18px;padding:26px;margin:0 20px}
+.btn.tg{background:linear-gradient(135deg,#2aabee,#1f8fd0);color:#fff;box-shadow:0 8px 30px #2aabee33}
+.btn.tg.big{padding:16px 26px;font-size:18px;white-space:nowrap;flex:none}
+#community{border-top:0;padding:28px 0 20px}
+.tgcard{display:flex;gap:28px;align-items:center;justify-content:space-between;background:linear-gradient(135deg,#0f2233,#0b1422);border:1px solid #1f4461;border-radius:20px;padding:28px 30px}
+.tgcard h2{margin:6px 0 8px}
+.tgcard .sub{margin:0 0 14px}
+.kicker.tgk{color:#7cc8ff;border-color:#1f4461;margin-bottom:10px}
+.tglist{margin:0;padding:0;list-style:none;display:flex;flex-wrap:wrap;gap:8px 20px;color:#cfe6f7;font-size:15px}
+.ref h2{color:#ffc58a}
+footer{padding:36px 0 60px;color:var(--mute);font-size:13px;border-top:1px solid #121726}
+footer p{margin:0 0 8px}
+@media (max-width:860px){
+  .hero{padding-top:34px}
+  .hero .grid,.dl{grid-template-columns:1fr}
+  .tgcard{flex-direction:column;align-items:flex-start;padding:22px}
+  .steps{grid-template-columns:1fr 1fr}
+  .rules{grid-template-columns:1fr 1fr}
+  .ladder{grid-template-columns:1fr 1fr}
+  header.top nav{display:none}
+  .lead{font-size:16px}
+}
+@media (max-width:420px){.steps,.rules{grid-template-columns:1fr}.eq{font-size:38px}}
+</style>
+</head>
+<body>
+<header class="top"><div class="wrap">
+  <a class="logo" href="./"><i></i>초파리 트레이딩 챌린지</a>
+  <nav><a href="#how">작동 원리</a><a href="#rules">규칙</a><a href="#download">직접 돌려 보기</a><a href="#faq">FAQ</a><a href="https://t.me/+opoYiGB_H9kwMzZl" target="_blank" rel="noopener">커뮤니티</a></nav>
+</div></header>
+
+<div class="hero"><div class="wrap grid">
+  <div>
+    <span class="kicker">166,700 NEURONS · BTC 20× · PAPER</span>
+    <h1>진짜 초파리 뇌가<br><em>비트코인 차트</em>를 본다</h1>
+    <p class="lead">실제 초파리의 뇌 연결 지도를 컴퓨터로 돌려서 1분마다 BTC 차트를 보여 주고, 그 반응으로 롱·숏 신호를 만듭니다.
+      책상 앞 3D 초파리가 매매할 때마다 춤추고, 기절하고, 방이 부자가 됐다가 압류당합니다.</p>
+    <div class="btns">
+      <a class="btn main" href="room/">🎥 3D 라이브 보기</a>
+      <a class="btn ghost" id="lab" href="#" target="_blank" rel="noopener" hidden>🔬 연구실 뷰</a>
+      <a class="btn ghost" href="#download">💾 프로그램 받기</a>
+      <a class="btn tg" href="https://t.me/+opoYiGB_H9kwMzZl" target="_blank" rel="noopener">💬 텔레그램 커뮤니티</a>
+    </div>
+    <p class="note">전부 페이퍼 트레이딩입니다. 실제 주문은 나가지 않으며 투자 자문이 아닙니다.</p>
+  </div>
+  <div class="live" aria-live="polite">
+    <div class="row"><small id="liveName">초파리 · 시즌 1</small><span id="livePill" class="pill off">연결 확인 중…</span></div>
+    <div class="eq"><span id="eq">–</span><u>USDT</u></div>
+    <div id="roi" class="roi">&nbsp;</div>
+    <div class="stats">
+      <div><span>포지션</span><b id="pos">–</b></div>
+      <div><span>진행</span><b id="day">–</b></div>
+      <div><span>실현 손익</span><b id="real">–</b></div>
+      <div><span>BTC 무기한</span><b id="btc">–</b></div>
+    </div>
+  </div>
+</div>
+<div class="wrap"><a class="shot" href="room/"><img src="og.png" alt="3D 방송 화면: 책상 앞 초파리, 뇌 점구름, 계좌 잔고" loading="lazy" onerror="this.parentElement.remove()"></a></div>
+</div>
+
+<section id="community"><div class="wrap"><div class="tgcard"><div class="tgtext"><span class="kicker tgk">TELEGRAM COMMUNITY</span><h2>실시간 경제뉴스 · 제작 파일 자료실</h2><p class="sub">시장을 움직이는 경제뉴스를 실시간으로 받아 보고, 초파리 챌린지 제작 파일과 업데이트 소식을 한곳에서 챙길 수 있는 텔레그램 커뮤니티입니다.</p><ul class="tglist"><li>📰 실시간 경제뉴스 · 지표 발표 알림</li><li>📁 제작 파일 자료실 · 가이드 · 방송 장면</li><li>🪰 초파리 시즌 소식 · 하이라이트</li></ul></div><a class="btn tg big" href="https://t.me/+opoYiGB_H9kwMzZl" target="_blank" rel="noopener">텔레그램 입장하기 ↗</a></div></div></section>
+
+<section id="how"><div class="wrap">
+  <h2>1분마다 일어나는 일</h2>
+  <p class="sub">신호를 주문으로 바꾸는 매매 규칙은 제작자가 설계했습니다. 초파리 뇌는 그 규칙에 들어갈 신호만 만듭니다.</p>
+  <div class="steps">
+    <div class="card"><div class="n">01 · 눈</div><h3>차트를 빛으로</h3><p>최근 BTC 가격 차트를 작은 이미지로 그려 초파리 눈의 광수용체에 넣습니다.</p></div>
+    <div class="card"><div class="n">02 · 뇌</div><h3>166,700개 뉴런</h3><p>FlyEM이 전자현미경으로 복원한 수컷 초파리 연결 지도(MaleCNS v1.0)에서 신호가 0.5초 동안 퍼집니다.</p></div>
+    <div class="card"><div class="n">03 · 결정</div><h3>좌·우 DNp20</h3><p>오른쪽이 더 세게 발화하면 롱, 왼쪽이면 숏. 게이트 뉴런이 발화하지 않으면 관망합니다.</p></div>
+    <div class="card"><div class="n">04 · 보상</div><h3>도파민 자극</h3><p>손익에 따라 보상·처벌 뉴런을 자극하고 시냅스 효율이 조금씩 바뀝니다. 이것만으로 ‘학습’이라 할 근거는 없습니다.</p></div>
+  </div>
+</div></section>
+
+<section id="rules"><div class="wrap">
+  <h2>챌린지 규칙</h2>
+  <p class="sub">시세는 OrangeX BTC 무기한 선물 공개 API, 초기 차트는 Bybit 1분봉으로 채웁니다.</p>
+  <div class="rules">
+    <div class="card"><b>1,000 USDT</b><p>가상 시작 자금, 7일 시즌</p></div>
+    <div class="card"><b>격리 20배</b><p>진입마다 잔고의 33%를 증거금으로</p></div>
+    <div class="card"><b>본전 이상에서만</b><p>반대 신호가 와도 수수료를 빼고 본전 이상일 때만 뒤집습니다</p></div>
+    <div class="card"><b>손절 없음</b><p>손실 중이면 회복하거나 강제청산까지 들고 갑니다</p></div>
+    <div class="card"><b>파산 = 종료</b><p>최소 주문도 낼 수 없는 잔고가 되면 끝</p></div>
+    <div class="card"><b>60초 관측</b><p>1분 사이의 순간 급등락은 반영되지 않습니다</p></div>
+  </div>
+  <h2 style="margin-top:44px">부자 방</h2>
+  <p class="sub">순자산이 기준을 넘으면 방에 아이템이 생기고, 다시 떨어지면 압류됩니다.</p>
+  <div class="ladder">
+    <div><b>1,200</b><span>커피머신</span></div><div><b>1,500</b><span>듀얼 모니터</span></div>
+    <div><b>2,000</b><span>금목걸이</span></div><div><b>3,000</b><span>트리플 모니터·가죽의자</span></div>
+    <div><b>5,000</b><span>고급 세단</span></div><div><b>10,000</b><span>요트</span></div>
+    <div><b>20,000</b><span>금괴 더미</span></div><div><b>50,000</b><span>헬기</span></div>
+  </div>
+</div></section>
+
+
+
+<section id="download"><div class="wrap dl">
+  <div>
+    <h2>내 PC에서 직접 돌려 보기</h2>
+    <p class="sub">프로그램 전체가 오픈소스(MIT)입니다. 내 초파리로 나만의 시즌을 열 수 있습니다.</p>
+    <ol>
+      <li>Windows 10/11이면 <b>WSL2(우분투)</b>를 켭니다 — 설치 스크립트가 안내합니다</li>
+      <li>저장소를 받아 <code>install/install.sh</code>를 실행합니다(뇌 데이터 약 1.1 GB 자동 다운로드)</li>
+      <li><code>./fly start s1</code> → 브라우저에서 <code>http://127.0.0.1:8765/room/</code></li>
+    </ol>
+    <p class="req">권장: 4코어 이상 CPU · RAM 8 GB 이상(엔진이 약 0.9 GB 사용) · 여유 디스크 5 GB · 인터넷(공개 시세). GPU는 필요 없습니다.</p>
+    <div class="btns" style="margin-top:18px">
+      <a class="btn main" href="https://github.com/RichTradingSchool/fly-trader" target="_blank" rel="noopener">GitHub에서 받기 ↗</a>
+      <a class="btn ghost" id="guideBtn" href="guide.pdf" target="_blank" rel="noopener">📖 제작 가이드 PDF</a>
+    </div>
+  </div>
+  <div class="card">
+    <div class="n">방송하기</div>
+    <h3>OBS로 유튜브·치지직 생중계</h3>
+    <p>OBS 브라우저 소스에 <code>http://127.0.0.1:8765/room/?stream=1</code>을 1920×1080으로 넣으면 버튼 없이 깨끗한 방송 화면이 됩니다. 저장소의 OBS 장면 파일을 가져오기만 하면 됩니다.</p>
+  </div>
+</div></section>
+
+<section id="faq"><div class="wrap">
+  <h2>자주 묻는 질문</h2>
+  <details><summary>진짜 초파리인가요?</summary><p>살아 있는 초파리가 아니라, 실제 초파리 한 마리의 뇌를 전자현미경으로 스캔해 복원한 연결 지도(뉴런 166,700개와 그 시냅스)를 컴퓨터에서 시뮬레이션한 것입니다.</p></details>
+  <details><summary>초파리가 스스로 매매하나요?</summary><p>아닙니다. 롱·숏 신호는 뇌 시뮬레이션에서 나오지만, 언제 진입하고 뒤집을지·레버리지·증거금 같은 매매 규칙은 제작자가 정했습니다.</p></details>
+  <details><summary>따라 하면 돈을 벌 수 있나요?</summary><p>이 챌린지는 재미와 과학 콘텐츠를 위한 페이퍼 트레이딩입니다. 결과는 우연에 크게 좌우되며, 어떤 투자 권유도 아닙니다. 20배 레버리지는 가격이 약 5%만 반대로 움직여도 증거금을 모두 잃습니다.</p></details>
+  <details><summary>초파리가 학습하나요?</summary><p>손익에 따라 도파민 뉴런을 자극하고 시냅스 효율이 바뀌도록 만들었지만, 그것이 시장을 ‘배웠다’는 증거는 아닙니다. 방송에서도 학습이라고 단정하지 않습니다.</p></details>
+  <details><summary>화면이 ‘데모’라고 나와요</summary><p>방송 PC와 연결이 끊겼을 때는 미리 만든 데모 시즌을 보여 주고, 연결되면 자동으로 라이브로 바뀝니다.</p></details>
+</div></section>
+
+<footer><div class="wrap">
+  <p>데이터: MaleCNS v1.0 (FlyEM/HHMI Janelia, Univ. Cambridge, MRC LMB, Google Research; Berg et al., Cell 2026), CC BY 4.0 · 엔진: Stonkfly (MIT) · 대시보드: Bgihe/stonkfly-dashboard (MIT) · 초파리 3D 모델: Degeneret Fly (Robillionair OÜ, MIT) · three.js (MIT) · Pretendard (OFL)</p>
+  <p>시세: OrangeX BTC 무기한 공개 API · 초기 차트: Bybit 1분봉. 거래소와 제휴한 공식 서비스가 아닙니다.</p>
+  <p>페이퍼 트레이딩 · 실거래 없음 · 투자 자문 아님 · 빌드 2026-09-23</p>
+</div></footer>
+
+<script>
+(async () => {
+  const $ = s => document.querySelector(s);
+  const guide = $('#guideBtn'); if (!guide.getAttribute('href')) guide.hidden = true;
+  const num = (v, d = 2) => Number(v).toLocaleString('ko-KR', { minimumFractionDigits: d, maximumFractionDigits: d });
+  const signed = (v, d = 2) => (Math.abs(v) < .005 ? '' : v > 0 ? '+' : '−') + num(Math.abs(v), d);
+  const pill = (t, c) => { const p = $('#livePill'); p.textContent = t; p.className = `pill ${c}`; };
+  // feed.json names the live dashboard; a quick tunnel moves when it restarts, so it is re-read on failures.
+  const readFeed = async () => {
+    try { const f = await fetch(`feed.json?t=${Date.now()}`, { cache: 'no-store' }).then(r => r.json()); return /^https?:\/\//.test(f.feed || '') ? f.feed.replace(/\/?$/, '/') : null; }
+    catch { return null; }
+  };
+  const lab = $('#lab');
+  let feed = await readFeed(), v = null, fails = 0;
+  async function tick() {
+    if (!feed) {
+      feed = await readFeed();
+      if (!feed) { pill('오프라인 · 데모 가능', 'off'); lab.hidden = true; return; }
+    }
+    lab.href = feed; lab.hidden = false;
+    try {
+      const t = await fetch(`${feed}tick.json`, { cache: 'no-store' }).then(r => r.json());
+      if (t.v === v) return; v = t.v;
+      const s = await fetch(`${feed}live.json?v=${t.v}`).then(r => r.json());
+      const ev = s.events || [], e = ev[ev.length - 1], lg = s.ledger || {}, init = +(lg.initial_cash || 1000);
+      const eq = e ? e.equity : +(lg.equity || init), roi = (eq / init - 1) * 100;
+      $('#liveName').textContent = `${s.fly_name || '초파리'} · 시즌 ${String(s.run || '1').replace(/^s/, '')}`;
+      $('#eq').textContent = num(eq); const r = $('#roi'); r.textContent = `${signed(roi)}% (시작 ${num(init, 0)})`; r.className = `roi ${roi >= 0 ? 'up' : 'down'}`;
+      const p = e?.position; $('#pos').textContent = p ? `${p.side === 'LONG' ? '롱' : '숏'} ${p.leverage || 20}×` : '관망';
+      $('#pos').className = p ? (p.side === 'LONG' ? 'up' : 'down') : '';
+      const t0 = +lg.started_at; $('#day').textContent = t0 ? `D+${Math.floor((t.now - t0) / 86400) + 1} · ${num(e?.tick || 0, 0)}번째 관측` : '–';
+      const rp = +(lg.realized_pnl || 0); $('#real').textContent = `${signed(rp)} USDT`; $('#real').className = rp >= 0 ? 'up' : 'down';
+      $('#btc').textContent = e ? num(+e.bid, 1) : '–';
+      const age = t.now - (e?.time || 0);
+      if (lg.halted === 'bankrupt') pill('파산 · 시즌 종료', 'bad');
+      else if (s.stopped || lg.halted) pill('일시정지', 'off');
+      else pill(age < 180 ? 'LIVE' : '대기 중', age < 180 ? 'on' : 'off');
+      fails = 0;
+    } catch {
+      pill('연결 끊김', 'off');
+      if (++fails % 2 === 0) { const f = await readFeed(); if (f !== feed) { feed = f; v = null; } }
+    }
+  }
+  await tick(); setInterval(tick, 15000);
+})();
+</script>
+</body>
+</html>
