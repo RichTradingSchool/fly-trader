@@ -9,6 +9,8 @@
 
 ![3D 방송 화면](docs/images/room.jpg)
 
+📖 **제작 가이드 PDF(설치·운영·웹 공개·방송·콘텐츠 팁, 16쪽): [docs/guide-ko.pdf](docs/guide-ko.pdf)**
+
 | 화면 | 주소 | 설명 |
 |---|---|---|
 | 3D 방송 | `http://127.0.0.1:8765/room/` | 책상 앞 초파리, 뇌 점구름, 잔고 HUD, 매매 기록 |
