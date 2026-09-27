@@ -28,7 +28,12 @@ $vbs = Join-Path $startup "fly-trader-guard.vbs"
 function Stop-Guards {
     Get-CimInstance Win32_Process -Filter "Name='powershell.exe'" |
         Where-Object { $_.CommandLine -match 'fly-guard\.ps1|set-feed\.ps1' -and $_.ProcessId -ne $PID } |
-        ForEach-Object { Invoke-CimMethod -InputObject $_ -MethodName Terminate | Out-Null }
+        ForEach-Object {
+            # its keepalive session goes too (the replacement guard starts a new one within seconds)
+            Get-CimInstance Win32_Process -Filter "Name='wsl.exe' AND ParentProcessId=$($_.ProcessId)" |
+                ForEach-Object { Invoke-CimMethod -InputObject $_ -MethodName Terminate | Out-Null }
+            Invoke-CimMethod -InputObject $_ -MethodName Terminate | Out-Null
+        }
 }
 
 if ($Uninstall) {
@@ -79,8 +84,11 @@ function Publish-Feed([string]$feed) {
     $a = @("api", "-X", "PUT", "repos/$Owner/$Repo/contents/feed.json", "-f", "message=feed: $feed", "-f", "content=$b64", "-f", "branch=gh-pages")
     if ($sha) { $a += @("-f", "sha=$sha") }
     & gh @a --jq ".commit.sha" 2>$null | Out-Null
-    if ($LASTEXITCODE -eq 0) { Log "feed.json -> $feed" } else { Log "feed.json update failed ($LASTEXITCODE)" }
+    return $LASTEXITCODE
 }
+# Log a feed status line only when it changes (the check runs every minute).
+$script:feedNote = ""
+function Note([string]$m) { if ($m -ne $script:feedNote) { Log $m; $script:feedNote = $m } }
 
 Log "guard started (pid $PID)"
 $keep = $null
@@ -95,8 +103,14 @@ while ($true) {
         $local = Read-RunUrl
         if ($local -match '^https://') {
             $remote = Get-RemoteFeed
-            if ($local -ne $remote) { Publish-Feed $local }
+            if ($local -eq $remote) { Note "feed ok: $local" }
+            else {
+                $code = Publish-Feed $local
+                if ($code -eq 0) { Note "feed.json -> $local" }
+                elseif ($code -eq 4) { Note "feed sync paused: gh is not logged in for this Windows user (run 'gh auth login' once in a normal terminal)" }
+                else { Note "feed.json update failed (gh exit $code)" }
+            }
         }
-    } catch { Log "feed check: $($_.Exception.Message)" }
+    } catch { Note "feed check: $($_.Exception.Message)" }
     Start-Sleep -Seconds 60
 }
