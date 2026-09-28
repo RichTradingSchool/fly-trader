@@ -2,9 +2,11 @@
 
     python ops/site/build_site.py [--out site] [--run runs/s1] [--feed URL]
                                   [--repo-url URL] [--guide PATH] [--ref-url URL] [--community-url URL]
+                                  [--files-url URL] [--apply-url URL]
 
-Defaults for the repository, the site address and the community link come from ops/site/site.json;
-command-line flags override them (an empty value turns the community link off).
+Defaults for the repository, the site address, the community link, the download (files) link and the
+challenge sign-up link come from ops/site/site.json; command-line flags override them (an empty value
+turns a link off). The program is handed out through the files link (a Telegram archive), not the site.
 
 The site mirrors the dashboard's URL layout, so the 3D studio page is byte-for-byte the
 dashboard's except for one injected line that tells it to read feed.json:
@@ -54,8 +56,18 @@ def main():
     p.add_argument("--community-url", default=cfg.get("community_url", ""),
                    help="community (e.g. Telegram) link on the landing page and the studio header")
     p.add_argument("--community-title", default=cfg.get("community_title", "커뮤니티"))
+    p.add_argument("--files-url", default=cfg.get("files_url", ""),
+                   help="where visitors download the program, guide and OBS scene (default: the community link, "
+                        "then the repository)")
+    p.add_argument("--apply-url", default=cfg.get("apply_url", ""),
+                   help="challenge sign-up link shown under the live board and in the header (empty hides it)")
+    p.add_argument("--apply-title", default=cfg.get("apply_title", "챌린지 참가 신청"))
+    p.add_argument("--apply-text", default=cfg.get("apply_text", "초파리와 함께하는 트레이딩 챌린지에 참가하고 싶다면 지금 신청하세요."))
+    p.add_argument("--apply-button", default=cfg.get("apply_button", "챌린지 신청하기"))
     a = p.parse_args()
     community = https_or_empty(a.community_url, "--community-url")
+    apply = https_or_empty(a.apply_url, "--apply-url")
+    files = https_or_empty(a.files_url, "--files-url") or community or a.repo_url
 
     out = Path(a.out).resolve()
     if out.exists():
@@ -105,35 +117,51 @@ def main():
         shutil.copyfile(a.guide, out / "guide.pdf")
         guide = "guide.pdf"
     landing = (HERE / "landing.html").read_text(encoding="utf-8")
+    icon = lambda name: f'<svg class="i"><use href="#i-{name}"/></svg>'  # symbols live in landing.html
     ref_block = ""
     if a.ref_url:
         u = html.escape(a.ref_url, quote=True)
-        ref_block = (f'<section class="ref"><h2>실전은 선물거래소에서</h2><p>이 프로그램은 BTC 무기한 선물(OrangeX 공개 시세)을 기준으로 '
-                     f'만들었습니다. 아래 링크로 가입하면 전용 이벤트와 혜택이 적용됩니다.</p>'
-                     f'<a class="btn ghost" href="{u}" target="_blank" rel="noopener">OrangeX 가입하기 ↗</a></section>')
+        ref_block = (f'<section class="ref-sec"><div class="wrap"><div class="ref"><div><span class="eyebrow">EXCHANGE</span>'
+                     f'<h2>실전은 선물거래소에서</h2><p class="sub">이 프로그램은 BTC 무기한 선물(OrangeX 공개 시세)을 기준으로 '
+                     f'만들었습니다. 아래 링크로 가입하면 전용 이벤트와 혜택이 적용됩니다.</p></div>'
+                     f'<a class="btn ghost lg" href="{u}" target="_blank" rel="noopener">OrangeX 가입하기{icon("arrow")}</a>'
+                     f'</div></div></section>')
     nav = btn = section = ""
     if community:
         c, title = html.escape(community, quote=True), html.escape(a.community_title)
         nav = f'<a href="{c}" target="_blank" rel="noopener">커뮤니티</a>'
-        btn = f'<a class="btn tg" href="{c}" target="_blank" rel="noopener">💬 텔레그램 커뮤니티</a>'
+        btn = f'<a class="textlink" href="{c}" target="_blank" rel="noopener">{icon("send")}텔레그램 커뮤니티 입장{icon("arrow")}</a>'
         section = (
-            f'<section id="community"><div class="wrap"><div class="tgcard">'
-            f'<div class="tgtext"><span class="kicker tgk">TELEGRAM COMMUNITY</span>'
+            f'<section id="community" class="tg-sec"><div class="wrap"><div class="tgc">'
+            f'<div class="tg-text"><span class="eyebrow">TELEGRAM COMMUNITY</span>'
             f'<h2>{title}</h2>'
             f'<p class="sub">시장을 움직이는 경제뉴스를 실시간으로 받아 보고, 초파리 챌린지 제작 파일과 업데이트 소식을 한곳에서 챙길 수 있는 '
             f'텔레그램 커뮤니티입니다.</p>'
-            f'<ul class="tglist"><li>📰 실시간 경제뉴스 · 지표 발표 알림</li><li>📁 제작 파일 자료실 · 가이드 · 방송 장면</li>'
-            f'<li>🪰 초파리 시즌 소식 · 하이라이트</li></ul></div>'
-            f'<a class="btn tg big" href="{c}" target="_blank" rel="noopener">텔레그램 입장하기 ↗</a></div></div></section>')
+            f'<ul class="tg-list"><li>{icon("news")}실시간 경제뉴스 · 지표 발표 알림</li>'
+            f'<li>{icon("folder")}제작 파일 자료실 · 가이드 · 방송 장면</li>'
+            f'<li>{icon("fly")}초파리 시즌 소식 · 하이라이트</li></ul></div>'
+            f'<a class="btn tg xl" href="{c}" target="_blank" rel="noopener">{icon("send")}텔레그램 입장하기</a></div></div></section>')
+    top_cta = f'<a class="btn sm gold top-cta" href="room/">{icon("play")}3D 라이브</a>'
+    apply_block = ""
+    if apply:
+        u = html.escape(apply, quote=True)
+        top_cta = f'<a class="btn sm gold top-cta" href="{u}" target="_blank" rel="noopener">챌린지 신청{icon("arrow")}</a>'
+        apply_block = (
+            f'<div class="apply" id="apply"><div class="apply-text"><span class="eyebrow">JOIN THE CHALLENGE</span>'
+            f'<h3>{html.escape(a.apply_title)}</h3><p>{html.escape(a.apply_text)}</p></div>'
+            f'<a class="btn gold xl" href="{u}" target="_blank" rel="noopener">{html.escape(a.apply_button)}{icon("arrow")}</a></div>')
     for key, value in {
         "{{SITE_URL}}": html.escape(a.site_url.rstrip("/") + "/", quote=True),
         "{{REPO_URL}}": html.escape(a.repo_url, quote=True),
+        "{{FILES_URL}}": html.escape(files, quote=True),
         "{{GUIDE_URL}}": guide,
         "{{BUILT}}": time.strftime("%Y-%m-%d"),
         "<!--REF-->": ref_block,
         "<!--COMMUNITY-NAV-->": nav,
         "<!--COMMUNITY-BTN-->": btn,
         "<!--COMMUNITY-->": section,
+        "<!--TOP-CTA-->": top_cta,
+        "<!--APPLY-->": apply_block,
     }.items():
         landing = landing.replace(key, value)
     (out / "index.html").write_text(landing, encoding="utf-8")

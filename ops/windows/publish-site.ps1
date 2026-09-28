@@ -2,9 +2,9 @@
 #
 #   powershell -ExecutionPolicy Bypass -File ops\windows\publish-site.ps1 -Owner <깃허브 계정> [-Repo fly-trader]
 #   옵션: -Feed https://xxxx.trycloudflare.com   공개 대시보드 주소 (생략하면 WSL의 runs/<FeedRun>/public-url.txt)
-#         -Guide /home/<you>/…/guide.pdf         사이트에 함께 올릴 PDF (생략하면 저장소의 docs/guide-ko.pdf가 있으면 사용)
+#         -Guide /home/<you>/…/guide.pdf         사이트에 PDF를 함께 올릴 때만 (기본: 올리지 않음 — 가이드는 자료실에서 배포)
 #         -RefUrl https://…                      랜딩 페이지에 거래소 가입 링크를 넣을 때만
-#         커뮤니티 링크·사이트 주소 기본값은 ops/site/site.json
+#         커뮤니티·자료실·신청 링크, 사이트 주소 기본값은 ops/site/site.json
 #
 # 1) WSL에서 site/ 빌드  2) gh-pages 브랜치로 강제 푸시  3) Pages 켜기
 # 결과 주소: https://<owner>.github.io/<repo>/
@@ -31,11 +31,6 @@ if (-not $Feed) {
     $Feed = ((& wsl.exe -d $Distro -- bash -lc "cat ~/$SeasonDir/runs/$FeedRun/public-url.txt 2>/dev/null") -join "").Trim()
     if ($Feed) { Write-Host "공개 대시보드 주소: $Feed" } else { Write-Host "공개 주소가 없어 데모로 올립니다 (나중에 set-feed.ps1)" -ForegroundColor Yellow }
 }
-if (-not $Guide) {
-    $has = ((& wsl.exe -d $Distro -- bash -lc "test -f ~/$RepoDir/docs/guide-ko.pdf && echo yes") -join "").Trim()
-    if ($has -eq "yes") { $Guide = "docs/guide-ko.pdf" }
-}
-
 Write-Host "▶ 1/3 사이트 빌드 (WSL)" -ForegroundColor Magenta
 $siteArgs = "--out site --repo-url $repoUrl --site-url $siteUrl --run ~/$SeasonDir/runs/$FeedRun"
 if ($Feed) { $siteArgs += " --feed $Feed" }
