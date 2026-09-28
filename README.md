@@ -9,7 +9,9 @@
 
 ![3D 방송 화면](docs/images/room.jpg)
 
-📖 **제작 가이드 PDF(설치·운영·웹 공개·방송·콘텐츠 팁, 16쪽): [docs/guide-ko.pdf](docs/guide-ko.pdf)**
+📖 **제작 가이드 PDF(설치·운영·웹 공개·방송·콘텐츠 팁): [docs/guide-ko.pdf](docs/guide-ko.pdf)**
+
+📁 **최신 버전·업데이트·질문: 텔레그램 자료실 <https://t.me/+opoYiGB_H9kwMzZl>**
 
 | 화면 | 주소 | 설명 |
 |---|---|---|
@@ -20,14 +22,18 @@
 
 ## 빠른 시작
 
-**Windows 10/11** — 저장소를 받아 `install\windows-setup.cmd`를 더블클릭합니다.
-WSL2 우분투 설치 확인 → 프로그램 설치 → 바탕화면 바로가기 → (선택) 무인 운영 설정까지 안내합니다.
+**Windows 10/11** — 받은 zip의 압축을 **모두** 풀고, 그 폴더 안의 `install\windows-setup.cmd`를 더블클릭합니다.
+WSL2 우분투 설치 확인 → 프로그램을 우분투로 복사·설치 → 바탕화면 바로가기 → (선택) 무인 운영 설정까지 안내합니다.
+Windows 보안 경고(“PC 보호”)가 뜨면 **추가 정보 → 실행**을 누르세요.
 
-**Ubuntu / WSL2 안에서 직접**
+**Ubuntu / WSL2 안에서 직접** (zip을 `~/Downloads`에 받았다면)
 
 ```bash
-git clone https://github.com/RichTradingSchool/fly-trader.git ~/fly-trader/stonkfly-dashboard
-cd ~/fly-trader/stonkfly-dashboard
+sudo apt install -y unzip             # 처음 한 번
+mkdir -p ~/fly-trader && cd ~/fly-trader
+unzip ~/Downloads/fly-trader-v1.0.zip  # → ~/fly-trader/fly-trader
+mv fly-trader stonkfly-dashboard && cd stonkfly-dashboard
+chmod +x fly install/install.sh ops/flyguard.sh
 bash install/install.sh        # 10~30분 (뇌 데이터 약 1.1 GB 다운로드 포함)
 ./fly start s1                 # 시즌 s1 시작
 ./fly open                     # 3D 방송 화면 열기
@@ -70,7 +76,7 @@ FLY_MARGIN=0.33
 순자산 1,200 / 1,500 / 2,000 / 3,000 / 5,000 / 10,000 / 20,000 / 50,000 USDT마다 방에 아이템이 생기고,
 다시 떨어지면 압류됩니다.
 
-> ⚠ 시즌 중에는 코드를 업데이트(`git pull`)하지 마세요. 엔진 소스 해시가 바뀌면 재개가 거부됩니다.
+> ⚠ 시즌 중에는 새 버전으로 덮어쓰지 마세요. 엔진 소스 해시가 바뀌면 그 시즌은 이어서 실행할 수 없습니다.
 
 ## 웹 링크로 공개하기 · 라이브 방송
 
@@ -106,4 +112,4 @@ FLY_MARGIN=0.33
 - 3D 초파리: [Degeneret Fly](https://github.com/Rob-bio4/degeneretfly) (Robillionair OÜ, MIT) · three.js (MIT) · Pretendard (SIL OFL 1.1)
 - 데이터: [MaleCNS v1.0](https://male-cns.janelia.org/) — FlyEM/HHMI Janelia, Univ. Cambridge, MRC LMB, Google Research (Berg et al., Cell 2026), **CC BY 4.0**. `prepare`가 따로 내려받습니다. 결과를 공개할 때 데이터셋과 논문을 인용하세요.
 - 시세: OrangeX 공개 API(BTC-USDT-PERPETUAL), 초기 차트: Bybit 1분봉. 거래소와 제휴한 공식 서비스가 아닙니다.
-- 이 저장소의 코드는 MIT 라이선스입니다([LICENSE](LICENSE)). 제3자 목록: [THIRD_PARTY.md](THIRD_PARTY.md).
+- 이 프로그램의 코드는 MIT 라이선스입니다([LICENSE](LICENSE)). 제3자 목록: [THIRD_PARTY.md](THIRD_PARTY.md).

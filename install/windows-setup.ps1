@@ -1,15 +1,17 @@
 ﻿# 초파리 트레이딩 챌린지 — Windows 설치 도우미
 #
 # 1) WSL2 + Ubuntu 24.04 확인 (없으면 설치 명령 실행: 관리자 권한과 재부팅이 필요할 수 있음)
-# 2) 우분투 안에 저장소를 받고 install/install.sh 실행
+# 2) 압축을 푼 이 프로그램 폴더를 우분투 안(~/fly-trader/stonkfly-dashboard)으로 복사하고 install/install.sh 실행
+#    (-Repo <git 주소>를 주면 복사 대신 git clone)
 # 3) 바탕화면에 "초파리 방송 보기" 바로가기 생성
 # 4) (선택) 7일 무인 운영용 킵얼라이브 작업 등록 (관리자 권한 필요)
 #
-# 실행: install\windows-setup.cmd 를 더블클릭 (또는 PowerShell에서 이 파일 실행)
+# 실행: 텔레그램 자료실에서 받은 zip의 압축을 모두 푼 뒤, 그 안의 install\windows-setup.cmd 를 더블클릭
 param(
-    [string]$Repo = "https://github.com/RichTradingSchool/fly-trader.git",
+    [string]$Repo = "",
     [string]$Distro = "Ubuntu-24.04",
-    [string]$Dir = "fly-trader/stonkfly-dashboard"
+    [string]$Dir = "fly-trader/stonkfly-dashboard",
+    [switch]$CopyOnly   # 점검용: 복사까지만 하고 설치 스크립트는 건너뜀
 )
 $ErrorActionPreference = "Stop"
 function Step($t) { Write-Host "`n▶ $t" -ForegroundColor Magenta }
@@ -41,11 +43,38 @@ if ($sysd -notmatch "on") {
     Start-Sleep -Seconds 3
 }
 
-Step "2/4 저장소 받기 + 설치 (약 10~30분, 대부분 1.1 GB 데이터 다운로드)"
-$cmd = "set -e; mkdir -p ~/fly-trader; if [ -d ~/$Dir/.git ]; then cd ~/$Dir && git pull --ff-only; else git clone $Repo ~/$Dir; fi; cd ~/$Dir && bash install/install.sh"
-& wsl.exe -d $Distro -- bash -lc $cmd
-if ($LASTEXITCODE -ne 0) { throw "설치가 실패했습니다. 위 메시지를 확인하세요." }
-Ok "설치 완료"
+Step "2/4 프로그램 복사 + 설치 (약 10~30분, 대부분 1.1 GB 데이터 다운로드)"
+$install = if ($CopyOnly) { "echo '(점검용: 설치 스크립트 건너뜀)'" } else { "bash install/install.sh" }
+$pkg = Split-Path -Parent $PSScriptRoot
+if ($Repo) {
+    $cmd = "set -e; mkdir -p ~/fly-trader; if [ -d ~/$Dir/.git ]; then cd ~/$Dir && git pull --ff-only; else git clone $Repo ~/$Dir; fi; cd ~/$Dir && $install"
+} elseif ((Test-Path (Join-Path $pkg "install\install.sh")) -and (Test-Path (Join-Path $pkg "fly"))) {
+    $src = ((& wsl.exe -d $Distro -- wslpath -a "$pkg") -join "").Trim()
+    if (-not $src) { throw "우분투에서 이 폴더 경로를 찾지 못했습니다: $pkg" }
+    $q = $src -replace "'", "'\''"
+    $had = ((& wsl.exe -d $Distro -- bash -lc "test -e ~/$Dir/fly && echo yes") -join "").Trim()
+    if ($had -eq "yes") {
+        Warn "우분투에 이미 설치된 프로그램이 있습니다 (~/$Dir)."
+        Warn "시즌이 돌아가는 중이면 덮어쓰지 마세요 — 엔진 파일이 바뀌면 그 시즌은 이어서 실행할 수 없습니다."
+        $ans = Read-Host "이 버전으로 덮어쓸까요? 시즌 기록(runs/)·설정·뇌 데이터는 그대로 둡니다 (y/N)"
+        if ($ans -notmatch '^[yY]') { $install = $null }
+    }
+    if ($null -ne $install) {
+        # Files unpacked on Windows carry no Unix permissions: copy with default modes, then mark the scripts executable.
+        $cmd = "set -e; mkdir -p ~/$Dir; cp -r --no-preserve=mode,ownership '$q'/. ~/$Dir/; cd ~/$Dir; chmod +x fly install/install.sh ops/flyguard.sh; $install"
+    }
+} else {
+    Warn "설치 파일을 찾지 못했습니다. 텔레그램 자료실에서 받은 zip의 압축을 모두 푼 뒤, 그 폴더 안의 install\windows-setup.cmd 를 실행하세요."
+    Read-Host "Enter를 누르면 닫힙니다"; exit 1
+}
+if ($cmd -and $null -ne $install) {
+    & wsl.exe -d $Distro -- bash -lc $cmd
+    if ($LASTEXITCODE -ne 0) { throw "설치가 실패했습니다. 위 메시지를 확인하세요." }
+    Ok "설치 완료"
+} else {
+    Ok "기존 설치를 그대로 둡니다"
+}
+if ($CopyOnly) { exit 0 }
 
 Step "3/4 바탕화면 바로가기"
 $desk = [Environment]::GetFolderPath("Desktop")
