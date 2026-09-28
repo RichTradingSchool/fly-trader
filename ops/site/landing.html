@@ -401,7 +401,9 @@ details p{margin:0 4px 24px;color:var(--text-2);max-width:760px}
 .rail.ready{opacity:1;transform:none}
 .rail-card{display:flex;flex-direction:column;min-height:0;overflow:hidden;border-radius:22px;background:linear-gradient(180deg,#111726,#080b13);border:1px solid var(--line);box-shadow:0 30px 80px -30px #000,inset 0 1px 0 rgba(255,255,255,.05)}
 .rail-l .rail-card{border-color:rgba(247,201,72,.28)}
-.rail-body{overflow-y:auto;scrollbar-width:none;padding:16px 16px 14px}
+.rail-body{flex:1;min-height:0;overflow-y:auto;scrollbar-width:none;padding:16px 16px 14px}
+.rail-foot{padding:12px 16px 14px;border-top:1px solid rgba(255,255,255,.06)}
+.rail-foot .rail-cta{margin-top:0}
 .rail-body::-webkit-scrollbar{display:none}
 .rail-head{display:flex;align-items:center;gap:9px;padding:14px 16px 12px;border-bottom:1px solid rgba(255,255,255,.06);font-size:13px}
 .rail-head b{font-weight:850;letter-spacing:-.01em}
@@ -449,8 +451,6 @@ details p{margin:0 4px 24px;color:var(--text-2);max-width:760px}
 .teaser .i{color:#7fcaf5}
 #chatRail.teasing .live{display:none}
 @keyframes chatIn{from{opacity:0;transform:translateY(10px)}}
-.rail-r .rail-body{flex:1;min-height:0}
-.rail-r .rail-foot{padding:0 16px 14px}
 .dock{display:none}
 @media (max-width:1819px){
   .rail{top:auto;bottom:calc(76px + env(safe-area-inset-bottom));width:min(340px,calc(100vw - 24px));max-height:min(72vh,620px);transform:translateY(16px) scale(.98);pointer-events:none}
@@ -573,9 +573,9 @@ footer .flogo{display:flex;align-items:center;gap:10px;color:var(--text-2);font-
       <span class="gain" id="rGain"></span>
       <div class="rt-rooms" id="rRooms"></div>
       <div class="rt-recent"><span class="lbl">최근 체결 · 익절·손절 모두</span><ul id="rRecent"></ul></div>
-      <a class="btn gold rail-cta" id="rApply" href="{{APPLY_URL}}" target="_blank" rel="noopener">챌린지 신청하기<svg class="i"><use href="#i-arrow"/></svg></a>
-      <p class="rail-note" id="rNote"></p>
     </div>
+    <div class="rail-foot"><a class="btn gold rail-cta" id="rApply" href="{{APPLY_URL}}" target="_blank" rel="noopener">챌린지 신청하기<svg class="i"><use href="#i-arrow"/></svg></a>
+      <p class="rail-note" id="rNote"></p></div>
   </div>
 </aside>
 <aside class="rail rail-r" id="chatRail" hidden aria-label="커뮤니티 소통방">
