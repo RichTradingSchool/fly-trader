@@ -37,6 +37,9 @@ PORT = int(os.environ.get("PORT", "8765"))
 # Localhost by default. Set HOST=0.0.0.0 to open it to your LAN (read-only, no auth).
 HOST = os.environ.get("HOST", "127.0.0.1")
 CACHE = Path(os.environ.get("STONKFLY_VIZ_CACHE", HERE / "cache"))
+# Extra JSON documents for the web viewer's side panels, written by another process (for example a
+# trading room's status board) and served read-only as /ext/<name>.json. Missing folder = no panels.
+EXT_DIR = Path(os.environ.get("STONKFLY_EXT", Path.home() / "fly-trader" / "ext"))
 ANIM_DIR = Path(os.environ.get("STONKFLY_ANIM", HERE / "anim"))
 # Optional links to other dashboards, e.g. "BTC fly:8765,PEPE fly:8766".
 FLIES = [
@@ -531,6 +534,10 @@ class Handler(BaseHTTPRequestHandler):
         m = re.fullmatch(r"/anim/(buy|sell_profit|sell_loss|hold)\.mp4", route)
         if m and (ANIM_DIR / f"{m.group(1)}.mp4").is_file():
             return self.send_range(ANIM_DIR / f"{m.group(1)}.mp4", "video/mp4")
+        x = re.fullmatch(r"/ext/([a-z0-9_-]{1,40})\.json", route)
+        if x and (EXT_DIR / f"{x.group(1)}.json").is_file():
+            body = (EXT_DIR / f"{x.group(1)}.json").read_bytes()
+            return self.send(body, "application/json; charset=utf-8", False, gzip.compress(body, 5) if self.accepts_gzip() else None)
         self.send_error(404)
 
     do_HEAD = do_GET

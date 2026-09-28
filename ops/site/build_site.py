@@ -154,6 +154,8 @@ def main():
         "{{SITE_URL}}": html.escape(a.site_url.rstrip("/") + "/", quote=True),
         "{{REPO_URL}}": html.escape(a.repo_url, quote=True),
         "{{FILES_URL}}": html.escape(files, quote=True),
+        "{{APPLY_URL}}": html.escape(apply, quote=True),
+        "{{COMMUNITY_URL}}": html.escape(community, quote=True),
         "{{GUIDE_URL}}": guide,
         "{{BUILT}}": time.strftime("%Y-%m-%d"),
         "<!--REF-->": ref_block,

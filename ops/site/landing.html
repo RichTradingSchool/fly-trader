@@ -393,6 +393,76 @@ summary:hover{color:#fff}
 summary:focus-visible{outline:2px solid var(--gold);outline-offset:2px;border-radius:8px}
 details p{margin:0 4px 24px;color:var(--text-2);max-width:760px}
 
+/* side rails: a trading room's live board (left) and its community chat (right), fed by /ext/*.json.
+   Wide screens keep them fixed beside the content column; narrower ones open them from a bottom dock. */
+.rail{position:fixed;z-index:40;top:calc(var(--chrome-h) + 22px);width:272px;max-height:calc(100vh - var(--chrome-h) - 44px);display:flex;flex-direction:column;opacity:0;transition:top .5s var(--ease),opacity .6s var(--ease),transform .8s var(--ease)}
+.rail-l{left:calc(50% - 590px - 20px - 272px);transform:translateX(-28px)}
+.rail-r{left:calc(50% + 590px + 20px);transform:translateX(28px)}
+.rail.ready{opacity:1;transform:none}
+.rail-card{display:flex;flex-direction:column;min-height:0;overflow:hidden;border-radius:22px;background:linear-gradient(180deg,rgba(17,23,38,.94),rgba(8,11,19,.96));border:1px solid var(--line);box-shadow:0 30px 80px -30px #000,inset 0 1px 0 rgba(255,255,255,.05)}
+.rail-l .rail-card{border-color:rgba(247,201,72,.28)}
+.rail-body{overflow-y:auto;scrollbar-width:none;padding:16px 16px 14px}
+.rail-body::-webkit-scrollbar{display:none}
+.rail-head{display:flex;align-items:center;gap:9px;padding:14px 16px 12px;border-bottom:1px solid rgba(255,255,255,.06);font-size:13px}
+.rail-head b{font-weight:850;letter-spacing:-.01em}
+.rail-head .live{margin-left:auto;font-size:10.5px;font-weight:850;letter-spacing:.1em;color:var(--long)}
+.rail-head .dot{background:var(--long);animation:ping 1.8s infinite}
+.rail-x{display:none;margin-left:6px;width:28px;height:28px;border-radius:9px;border:1px solid var(--line-2);background:transparent;color:var(--mute);cursor:pointer;font-size:16px;line-height:1}
+.rt-total .lbl{font-size:12px}
+.rt-eq{margin-top:4px;font-size:30px;font-weight:900;letter-spacing:-.04em;font-variant-numeric:tabular-nums;line-height:1.1;white-space:nowrap}
+.rt-eq small{font-size:12px;color:var(--mute);font-weight:750;margin-left:5px;letter-spacing:0}
+.rt-sub{display:flex;align-items:center;gap:8px;margin-top:6px;font-size:12px;color:var(--mute);font-weight:650}
+.rt-sub .roi{margin:0;font-size:13px;padding:3px 8px}
+.rt-rooms{display:grid;gap:8px;margin-top:14px}
+.rt-room{padding:11px 12px 10px;border-radius:14px;background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.06)}
+.rt-room .top{display:flex;justify-content:space-between;align-items:baseline;gap:8px;font-size:13px}
+.rt-room .top b{font-weight:800}
+.rt-room .top em{font-style:normal;font-weight:900;font-size:15px;font-variant-numeric:tabular-nums}
+.rt-room .meta{display:flex;justify-content:space-between;gap:8px;margin-top:3px;font-size:11.5px;color:var(--mute);font-variant-numeric:tabular-nums}
+.rt-room svg{display:block;width:100%;height:30px;margin-top:6px;overflow:visible}
+.rt-room .hold{display:flex;align-items:center;gap:6px;margin-top:6px;font-size:11.5px;color:var(--text-2);font-weight:650}
+.rt-room .hold .dot{width:6px;height:6px;background:var(--cyan);box-shadow:0 0 8px var(--cyan)}
+.rt-recent{margin-top:14px}
+.rt-recent .lbl{font-size:12px}
+.rt-recent ul{list-style:none;margin:8px 0 0;padding:0;display:grid;gap:5px}
+.rt-recent li{display:grid;grid-template-columns:auto 1fr auto;gap:8px;align-items:center;font-size:12px;padding:6px 8px;border-radius:10px;background:rgba(255,255,255,.02);font-variant-numeric:tabular-nums}
+.rt-recent li b{font-weight:800;font-size:11px;color:var(--text-2)}
+.rt-recent li span{color:var(--mute);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.rt-recent li em{font-style:normal;font-weight:850}
+.rt-recent li.new{animation:fu 1.6s ease-out}
+.rail-cta{width:100%;margin-top:14px}
+.rail-note{margin:10px 2px 0;font-size:10.5px;line-height:1.5;color:var(--faint)}
+.gain{position:absolute;right:16px;top:58px;font-size:13px;font-weight:900;color:var(--long);pointer-events:none;opacity:0}
+.gain.go{animation:gain 2.2s var(--ease)}
+@keyframes gain{0%{opacity:0;transform:translateY(10px)}15%{opacity:1}100%{opacity:0;transform:translateY(-26px)}}
+.chat{list-style:none;margin:0;padding:0;display:grid;gap:10px}
+.chat li{display:grid;grid-template-columns:28px 1fr;gap:9px;align-items:start}
+.chat .av{width:28px;height:28px;border-radius:50%;display:grid;place-items:center;font-size:12px;font-weight:850;color:#0b0f19}
+.chat .who{display:flex;gap:6px;align-items:baseline;font-size:11.5px;color:var(--mute)}
+.chat .who b{color:var(--text-2);font-weight:800}
+.chat .msg{margin-top:2px;padding:7px 10px;border-radius:4px 12px 12px 12px;background:rgba(255,255,255,.05);font-size:13px;line-height:1.5;color:var(--text);overflow-wrap:anywhere}
+.chat li.new{animation:chatIn .6s var(--ease)}
+@keyframes chatIn{from{opacity:0;transform:translateY(10px)}}
+.rail-r .rail-body{flex:1;min-height:0}
+.rail-r .rail-foot{padding:0 16px 14px}
+.dock{display:none}
+@media (max-width:1819px){
+  .rail{top:auto;bottom:calc(76px + env(safe-area-inset-bottom));width:min(340px,calc(100vw - 24px));max-height:min(72vh,620px);transform:translateY(16px) scale(.98);pointer-events:none}
+  .rail-l{left:12px}
+  .rail-r{left:auto;right:12px}
+  .rail.ready{opacity:0;transform:translateY(16px) scale(.98)}
+  .rail.open{opacity:1;transform:none;pointer-events:auto;z-index:45}
+  .rail-x{display:inline-grid;place-items:center}
+  .dock{position:fixed;z-index:42;left:12px;right:12px;bottom:calc(14px + env(safe-area-inset-bottom));display:flex;justify-content:space-between;gap:10px;pointer-events:none}
+  .dock[hidden]{display:none}
+  .dock .pill{pointer-events:auto;height:44px;padding:0 16px 0 13px;font-size:13px;color:var(--text);background:rgba(11,15,25,.92);-webkit-backdrop-filter:blur(12px);backdrop-filter:blur(12px);box-shadow:0 12px 30px -8px rgba(0,0,0,.8);cursor:pointer;opacity:0;transform:translateY(12px);transition:opacity .5s var(--ease),transform .6s var(--ease)}
+  .dock .pill.ready{opacity:1;transform:none}
+  .dock .pill b{font-variant-numeric:tabular-nums}
+  .dock .pill.rich{border-color:rgba(247,201,72,.4)}
+  .dock .pill .i{width:16px;height:16px}
+}
+html:not(.motion) .rail,html:not(.motion) .dock .pill{transition:none}
+
 footer{padding:56px 0 72px;color:var(--faint);font-size:13px;border-top:1px solid var(--line)}
 footer p{margin:0 0 8px}
 footer .flogo{display:flex;align-items:center;gap:10px;color:var(--text-2);font-weight:800;margin-bottom:18px;font-size:15px}
@@ -488,6 +558,32 @@ footer .flogo{display:flex;align-items:center;gap:10px;color:var(--text-2);font-
 </defs></svg>
 
 <div class="progress" id="progress" aria-hidden="true"></div>
+<aside class="rail rail-l" id="richRail" hidden aria-label="트레이딩 룸 실전 현황">
+  <div class="rail-card">
+    <div class="rail-head"><span class="dot"></span><b id="rTitle">트레이딩 룸</b><span class="live">LIVE</span><button class="rail-x" type="button" data-close aria-label="닫기">×</button></div>
+    <div class="rail-body" style="position:relative">
+      <div class="rt-total"><span class="lbl" id="rTotLbl">방 합산 잔고</span><div class="rt-eq"><span id="rTotEq">–</span><small>USDT</small></div>
+        <div class="rt-sub"><span class="roi" id="rTotRoi">–</span><span id="rTotStart"></span></div></div>
+      <span class="gain" id="rGain"></span>
+      <div class="rt-rooms" id="rRooms"></div>
+      <div class="rt-recent"><span class="lbl">최근 체결 · 익절·손절 모두</span><ul id="rRecent"></ul></div>
+      <a class="btn gold rail-cta" id="rApply" href="{{APPLY_URL}}" target="_blank" rel="noopener">챌린지 신청하기<svg class="i"><use href="#i-arrow"/></svg></a>
+      <p class="rail-note" id="rNote"></p>
+    </div>
+  </div>
+</aside>
+<aside class="rail rail-r" id="chatRail" hidden aria-label="커뮤니티 소통방">
+  <div class="rail-card" style="max-height:inherit">
+    <div class="rail-head"><span class="dot"></span><b id="cTitle">커뮤니티 소통방</b><span class="live">LIVE</span><button class="rail-x" type="button" data-close aria-label="닫기">×</button></div>
+    <div class="rail-body" id="cBody"><ul class="chat" id="cList"></ul></div>
+    <div class="rail-foot"><a class="btn tg rail-cta" id="cJoin" href="{{COMMUNITY_URL}}" target="_blank" rel="noopener"><svg class="i"><use href="#i-send"/></svg>소통방 입장하기</a>
+      <p class="rail-note">닉네임은 첫 글자만 보이고, 링크·연락처는 가려서 보여 줍니다.</p></div>
+  </div>
+</aside>
+<div class="dock" id="dock" hidden>
+  <button class="pill rich" type="button" id="dRich" data-open="richRail" hidden><span class="dot" style="background:var(--gold)"></span><span id="dRichName">실전 현황</span><b id="dRoi">–</b></button>
+  <button class="pill" type="button" id="dChat" data-open="chatRail" hidden><svg class="i"><use href="#i-send"/></svg>소통방 LIVE</button>
+</div>
 <div class="chrome" id="chrome">
   <header class="top"><div class="wrap">
     <a class="logo" href="#top"><span class="mark"><svg class="i"><use href="#i-fly"/></svg></span><span class="logo-t">초파리 트레이딩 챌린지</span></a>
@@ -1216,6 +1312,93 @@ if (FINE) document.addEventListener('pointermove', ev => {
   c.style.setProperty('--mx', `${ev.clientX - r.left}px`); c.style.setProperty('--my', `${ev.clientY - r.top}px`);
 }, { passive: true });
 
+// ---- side rails: the trading room's live board and its community chat (/ext/*.json on the feed) -----------
+const railRich = $('#richRail'), railChat = $('#chatRail'), dock = $('#dock');
+const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+const usd = (v, d = 0) => `$${fmt(v, d)}`;
+const R = { recent: null, chat: null };
+['#rApply', '#cJoin'].forEach(id => { if (!$(id).getAttribute('href')) $(id).hidden = true; });
+function showRail(el, pill) {
+  if (!el.hidden) return;
+  el.hidden = false; pill.hidden = false; dock.hidden = false;
+  requestAnimationFrame(() => requestAnimationFrame(() => { el.classList.add('ready'); pill.classList.add('ready'); }));
+}
+function hideRail(el, pill) {
+  el.hidden = true; el.classList.remove('ready', 'open'); pill.hidden = true;
+  if ($('#dRich').hidden && $('#dChat').hidden) dock.hidden = true;
+}
+$$('[data-open]').forEach(b => b.addEventListener('click', () => {
+  const el = $(`#${b.dataset.open}`);
+  (el === railRich ? railChat : railRich).classList.remove('open');
+  el.classList.toggle('open');
+  if (el === railChat) $('#cBody').scrollTop = $('#cBody').scrollHeight;
+}));
+$$('.rail [data-close]').forEach(b => b.addEventListener('click', () => b.closest('.rail').classList.remove('open')));
+addEventListener('keydown', ev => { if (ev.key === 'Escape') $$('.rail.open').forEach(r => r.classList.remove('open')); });
+function tweenNum(el, to, f) {
+  const from = el._v; el._v = to;
+  if (!gs || from === undefined || from === to) { el.textContent = f(to); return; }
+  const o = { v: from }; el._tw?.kill();
+  el._tw = gs.to(o, { v: to, duration: 1.2, ease: 'expo.out', onUpdate: () => { el.textContent = f(o.v); } });
+}
+function spark(curve, start, w = 240, h = 30) {
+  if (!curve || curve.length < 2) return '';
+  const ys = curve.map(p => p[1]), x0 = curve[0][0], x1 = curve.at(-1)[0];
+  const lo = Math.min(start, ...ys), hi = Math.max(start, ...ys);
+  const X = x => (x - x0) / Math.max(1, x1 - x0) * w, Y = y => h - (y - lo) / Math.max(1e-9, hi - lo) * h;
+  const d = curve.map((p, i) => `${i ? 'L' : 'M'}${X(p[0]).toFixed(1)},${Y(p[1]).toFixed(1)}`).join('');
+  const c = ys.at(-1) >= start ? 'var(--long)' : 'var(--short)', b = Y(start).toFixed(1);
+  return `<svg viewBox="0 0 ${w} ${h}" preserveAspectRatio="none" aria-hidden="true"><line x1="0" x2="${w}" y1="${b}" y2="${b}" stroke="rgba(255,255,255,.2)" stroke-dasharray="3 4" vector-effect="non-scaling-stroke"/><path d="${d}" fill="none" stroke="${c}" stroke-width="1.7" stroke-linejoin="round" vector-effect="non-scaling-stroke"/></svg>`;
+}
+const whenKst = t => { const p = parts(t), n = parts(now()); return p.month === n.month && p.day === n.day ? `${p.hour}:${p.minute}` : `${p.month}/${p.day} ${p.hour}:${p.minute}`; };
+function renderRich(d) {
+  const T = d.total || {}, rooms = d.rooms || [];
+  $('#rTitle').textContent = d.title || '트레이딩 룸';
+  $('#dRichName').textContent = (d.title || '실전 현황').replace(/\s*트레이딩\s*룸$/, '');
+  $('#rTotLbl').textContent = `${rooms.length}개 방 합산 잔고`;
+  tweenNum($('#rTotEq'), +T.equity || 0, v => fmt(v));
+  const roi = $('#rTotRoi'); roi.textContent = `${sgn(+T.roi || 0)}%`; roi.dataset.tone = tone(+T.roi || 0);
+  $('#rTotStart').textContent = T.start ? `시작 ${usd(T.start)}` : '';
+  $('#dRoi').textContent = `${sgn(+T.roi || 0, 1)}%`; $('#dRoi').dataset.tone = tone(+T.roi || 0);
+  $('#rRooms').innerHTML = rooms.map(r => `<div class="rt-room">
+      <div class="top"><b>${esc(r.name)}${r.lev ? ` ${esc(r.lev)}×` : ''}</b><em data-tone="${tone(r.roi)}">${sgn(r.roi, 1)}%</em></div>
+      <div class="meta"><span>${usd(r.equity)}</span><span>${r.wins}승 ${r.losses}패 · 승률 ${r.trades ? Math.round(r.wins / r.trades * 100) : 0}%</span></div>
+      ${spark(r.curve, r.start)}
+      ${r.open ? `<div class="hold"><span class="dot"></span>${esc(r.open.side)} 보유 중 · 진입 ${fmt(r.open.entry, r.open.entry < 1000 ? 2 : 1)}</div>` : ''}
+    </div>`).join('');
+  const recent = (d.recent || []).slice(0, 8), keys = recent.map(x => `${x.room}|${x.t}|${x.side}`);
+  const fresh = R.recent ? recent.filter((x, i) => !R.recent.has(keys[i])) : [];
+  $('#rRecent').innerHTML = recent.map((x, i) => `<li class="${R.recent && !R.recent.has(keys[i]) ? 'new' : ''}"><b>${esc(x.room)}</b><span>${esc(x.side)} ${esc(x.result)} · ${whenKst(x.t)}</span><em data-tone="${x.roe >= 0 ? 'up' : 'down'}">${sgn(x.roe, 1)}%</em></li>`).join('');
+  R.recent = new Set(keys);
+  const won = fresh.find(x => x.pnl > 0);
+  if (won) { const g = $('#rGain'); g.textContent = `+${usd(won.pnl, 2)}`; g.classList.remove('go'); void g.offsetWidth; g.classList.add('go'); }
+  $('#rNote').textContent = d.note || '';
+}
+const PALETTE = ['#f7c948', '#3cc8ff', '#2fd18a', '#a98bff', '#ff9b6a', '#ff7eb6'];
+const hue = s => PALETTE[[...String(s)].reduce((a, c) => a + c.charCodeAt(0), 0) % PALETTE.length];
+function renderChat(d) {
+  const msgs = d.messages || [];
+  if (!msgs.length) { hideRail(railChat, $('#dChat')); return; }
+  const body = $('#cBody'), stick = !R.chat || body.scrollHeight - body.scrollTop - body.clientHeight < 60;
+  $('#cTitle').textContent = d.title || '커뮤니티 소통방';
+  if (d.join) { $('#cJoin').href = d.join; $('#cJoin').hidden = false; }
+  $('#cList').innerHTML = msgs.map(m => `<li class="${R.chat && !R.chat.has(m.id) ? 'new' : ''}"><span class="av" style="background:${hue(m.name)}">${esc([...String(m.name)][0] || '?')}</span>
+      <div><div class="who"><b>${esc(m.name)}</b><span>${m.t ? whenKst(m.t) : ''}</span></div><div class="msg">${esc(m.text)}</div></div></li>`).join('');
+  R.chat = new Set(msgs.map(m => m.id));
+  showRail(railChat, $('#dChat'));
+  if (stick) body.scrollTop = body.scrollHeight;
+}
+async function pollExt(name, render, missing) {
+  if (!S.feed) return;
+  try {
+    const r = await fetch(`${S.feed}ext/${name}.json`, { cache: 'no-store' });
+    if (r.status === 404) { missing(); return; }
+    if (r.ok) render(await r.json());
+  } catch { /* offline for a moment: keep what is on screen */ }
+}
+const pollRich = () => pollExt('rich', d => { renderRich(d); showRail(railRich, $('#dRich')); }, () => hideRail(railRich, $('#dRich')));
+const pollChat = () => pollExt('chat', renderChat, () => hideRail(railChat, $('#dChat')));
+
 // ---- motion (GSAP + ScrollTrigger from jsDelivr; the page works without it) ----------------------------------
 function loadScript(src) {
   return new Promise((ok, no) => { const s = document.createElement('script'); s.src = src; s.async = false; s.onload = ok; s.onerror = no; document.head.append(s); });
@@ -1292,6 +1475,9 @@ async function initMotion() {
 initMotion();
 await poll();
 setInterval(poll, 15000);
+pollRich(); pollChat();
+setInterval(pollRich, 20000);
+setInterval(pollChat, 8000);
 </script>
 </body>
 </html>

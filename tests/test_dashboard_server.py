@@ -8,9 +8,12 @@ import urllib.error
 import urllib.request
 from pathlib import Path
 
+import tempfile
+
 import pytest
 
 RUN = Path("runs/fixture-perp")
+EXT = Path(tempfile.mkdtemp(prefix="fly-ext-"))
 pytestmark = pytest.mark.skipif(not (RUN / "events.jsonl").exists() or not Path("data/graph.npz").exists(),
                                 reason="needs runs/fixture-perp from the engine plan and prepared data")
 
@@ -22,7 +25,7 @@ def free_port():
 @pytest.fixture(scope="module")
 def server():
     port = free_port()
-    env = {**os.environ, "PORT": str(port)}
+    env = {**os.environ, "PORT": str(port), "STONKFLY_EXT": str(EXT)}
     proc = subprocess.Popen([sys.executable, "dashboard/server.py", str(RUN)], env=env,
                             stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True)
     deadline = time.time() + 180  # first start builds dashboard/cache
@@ -79,6 +82,20 @@ def test_path_traversal_is_refused(server):
     # Plain and percent-encoded: the route regex never sees an unquoted separator.
     for route in ["/assets/fonts/../server.py", "/assets/fonts/%2e%2e%2fserver.py",
                   "/assets/fonts/..%2F..%2Fserver.py", "/assets/fonts/%2e%2e%2f%2e%2e%2fserver.py"]:
+        with pytest.raises(urllib.error.HTTPError) as e:
+            get(server + route)
+        assert e.value.code in (400, 404), route
+
+
+def test_ext_documents_are_served_read_only(server):
+    (EXT / "board.json").write_text('{"rooms": []}', encoding="utf-8")
+    st, h, body = get(server + "/ext/board.json")
+    assert st == 200 and json.loads(body) == {"rooms": []}
+    assert h["Cache-Control"] == "no-store" and h["Access-Control-Allow-Origin"] == "*"
+    (EXT / "board.json").write_text('{"rooms": [1]}', encoding="utf-8")  # rewritten files show up at once
+    assert json.loads(get(server + "/ext/board.json")[2]) == {"rooms": [1]}
+    for route in ["/ext/missing.json", "/ext/Board.json", "/ext/../server.json", "/ext/%2e%2e%2fserver.json",
+                  "/ext/board.txt"]:
         with pytest.raises(urllib.error.HTTPError) as e:
             get(server + route)
         assert e.value.code in (400, 404), route
