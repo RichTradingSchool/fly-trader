@@ -69,8 +69,9 @@ nav.main a{color:var(--mute);text-decoration:none;font-size:14px;font-weight:650
 nav.main a:hover{color:var(--text);background:rgba(255,255,255,.05)}
 nav.main a.on{color:var(--text);background:rgba(255,255,255,.06)}
 .top-cta{margin-left:6px}
-.ticker{height:var(--tick);display:flex;align-items:stretch;background:rgba(9,12,20,.9);-webkit-backdrop-filter:blur(16px);backdrop-filter:blur(16px);border-bottom:1px solid rgba(255,255,255,.07);font-size:13px;line-height:1;overflow:hidden;font-variant-numeric:tabular-nums}
-.tk-fixed{display:flex;align-items:center;gap:10px;padding:0 18px 0 max(18px,calc((100vw - 1180px) / 2 + 24px));text-decoration:none;white-space:nowrap;background:linear-gradient(90deg,#0a0e17 85%,rgba(10,14,23,0));position:relative;z-index:1}
+.ticker{height:var(--tick);background:rgba(9,12,20,.9);-webkit-backdrop-filter:blur(16px);backdrop-filter:blur(16px);border-bottom:1px solid rgba(255,255,255,.07);font-size:13px;line-height:1;overflow:hidden;font-variant-numeric:tabular-nums}
+.tk-in{max-width:1180px;height:100%;margin:0 auto;padding:0 24px;display:flex;align-items:stretch}
+.tk-fixed{display:flex;align-items:center;gap:10px;padding-right:14px;text-decoration:none;white-space:nowrap;position:relative;z-index:1}
 .tk-fixed .st{font-weight:800;letter-spacing:.06em;font-size:12px}
 .tk-eq b{font-weight:800;font-size:14px}
 .tk-eq small{color:var(--mute);margin-left:4px;font-size:11px;font-weight:700}
@@ -114,9 +115,12 @@ html:not(.motion) .tk-scroll{overflow-x:auto;scrollbar-width:none}
 
 /* hero */
 .hero{position:relative;min-height:min(calc(100svh - var(--hdr) - var(--tick)),880px);display:flex;align-items:center;padding:56px 0 96px;overflow:hidden;isolation:isolate}
-.hero::before{content:"";position:absolute;inset:0;z-index:-3;background:radial-gradient(900px 600px at 74% 46%,rgba(60,200,255,.11),transparent 62%),radial-gradient(760px 520px at 6% -4%,rgba(247,201,72,.08),transparent 60%),radial-gradient(600px 400px at 60% 110%,rgba(47,209,138,.05),transparent 70%)}
+.hero::before{content:"";position:absolute;inset:0;z-index:-3;background:radial-gradient(760px 520px at calc(max(0px,(100% - 1180px) / 2) + 60px) -4%,rgba(247,201,72,.08),transparent 60%),radial-gradient(600px 400px at 50% 110%,rgba(47,209,138,.05),transparent 70%)}
 .hero::after{content:"";position:absolute;inset:0;z-index:-3;background-image:linear-gradient(rgba(255,255,255,.03) 1px,transparent 1px),linear-gradient(90deg,rgba(255,255,255,.03) 1px,transparent 1px);background-size:64px 64px;-webkit-mask-image:radial-gradient(ellipse 70% 60% at 55% 45%,#000 20%,transparent 75%);mask-image:radial-gradient(ellipse 70% 60% at 55% 45%,#000 20%,transparent 75%)}
-.brain-wrap{position:absolute;z-index:-2;top:0;bottom:0;left:35%;width:68%}
+/* The brain is centred on the right part of the 1180px content column, not the viewport, so wide
+   screens keep the headline and the brain together instead of drifting apart. */
+.brain-wrap{--bw:min(68%,1000px);position:absolute;z-index:-2;top:0;bottom:0;width:var(--bw);left:calc(max(0px,(100% - 1180px) / 2) + min(100%,1180px) * .72 - var(--bw) / 2)}
+.brain-wrap::before{content:"";position:absolute;inset:-6% -18%;z-index:-1;pointer-events:none;background:radial-gradient(closest-side,rgba(60,200,255,.13),transparent 78%)}
 .hero-brain{display:block;width:100%;height:100%;-webkit-mask-image:radial-gradient(closest-side at 50% 50%,#000 60%,transparent 100%);mask-image:radial-gradient(closest-side at 50% 50%,#000 60%,transparent 100%)}
 .hero-in{width:100%}
 .hero-copy{max-width:620px;position:relative}
@@ -318,13 +322,12 @@ h2{font-size:clamp(30px,4.3vw,52px);line-height:1.14;letter-spacing:-.045em;marg
 .step .live .dot{background:var(--cyan)}
 
 /* rules */
-.rules{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:16px}
+.rules{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:16px}
 .rule{padding:28px;border-radius:24px;background:linear-gradient(180deg,rgba(255,255,255,.04),rgba(255,255,255,.012));border:1px solid var(--line)}
 .rule .ic{width:44px;height:44px;border-radius:13px;display:grid;place-items:center;background:rgba(247,201,72,.1);color:var(--gold);margin-bottom:20px;border:1px solid rgba(247,201,72,.2)}
 .rule .ic .i{width:22px;height:22px}
 .rule b{display:block;font-size:30px;letter-spacing:-.035em;font-weight:900;font-variant-numeric:tabular-nums;line-height:1.15}
 .rule p{margin:8px 0 0;color:var(--text-2);font-size:15px}
-.rule.warn .ic{background:rgba(255,77,94,.1);color:var(--short);border-color:rgba(255,77,94,.25)}
 .src{margin-top:18px;font-size:13px;color:var(--faint)}
 
 /* rich room */
@@ -398,6 +401,7 @@ footer .flogo{display:flex;align-items:center;gap:10px;color:var(--text-2);font-
   .b-grid{grid-template-columns:repeat(2,minmax(0,1fr));grid-auto-flow:dense}
   .c-eq{grid-column:1}.c-ps{grid-column:2}.c-ch,.c-kp{grid-column:1/-1}.c-pg{grid-column:1}.c-nx{grid-column:2}
   .how{gap:40px}
+  .rules{grid-template-columns:repeat(2,minmax(0,1fr))}
 }
 @media (max-width:959px){
   .hero{display:block;min-height:0;padding:0 0 72px}
@@ -448,6 +452,7 @@ footer .flogo{display:flex;align-items:center;gap:10px;color:var(--text-2);font-
   .dots span{padding:0 8px;font-size:11px}
   .stage-time{display:none}
   .tk-item{padding:0 14px}
+  .tk-in{padding:0 16px}
   .logo-t{font-size:14px}
 }
 @media (max-width:380px){.logo-t{display:none}.ladder{grid-template-columns:1fr}}
@@ -476,8 +481,6 @@ footer .flogo{display:flex;align-items:center;gap:10px;color:var(--text-2);font-
 <symbol id="i-wallet" viewBox="0 0 24 24"><rect x="3" y="6" width="18" height="13" rx="2.5"/><path d="M3 10h18M15.5 14.5h2"/></symbol>
 <symbol id="i-trend" viewBox="0 0 24 24"><path d="m3.5 17.5 6-6 3.5 3.5 7.5-8"/><path d="M15 7h5.5v5.5"/></symbol>
 <symbol id="i-flip" viewBox="0 0 24 24"><path d="M4 8.5h14.5L15 5M20 15.5H5.5L9 19"/></symbol>
-<symbol id="i-alert" viewBox="0 0 24 24"><path d="M12 4.5 3 19.5h18z"/><path d="M12 10.5v4M12 17.2v.1"/></symbol>
-<symbol id="i-x" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="m9 9 6 6M15 9l-6 6"/></symbol>
 <symbol id="i-clock" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 7.5V12l3 2"/></symbol>
 <symbol id="i-lock" viewBox="0 0 24 24"><rect x="5" y="11" width="14" height="9.5" rx="2.2"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/></symbol>
 <symbol id="i-unlock" viewBox="0 0 24 24"><rect x="5" y="11" width="14" height="9.5" rx="2.2"/><path d="M8 11V8a4 4 0 0 1 7.6-1.8"/></symbol>
@@ -492,6 +495,7 @@ footer .flogo{display:flex;align-items:center;gap:10px;color:var(--text-2);font-
     <!--TOP-CTA-->
   </div></header>
   <div class="ticker" aria-label="실시간 챌린지 현황">
+    <div class="tk-in">
     <a class="tk-fixed" href="#board"><span class="dot"></span><span class="st" data-live-text>연결 중</span><span class="tk-eq"><b data-k="eq">–</b><small>USDT</small></span><span class="tk-roi" data-k="roi"></span></a>
     <div class="tk-scroll"><div class="tk-track" id="tkTrack"><div class="tk-set">
       <span class="tk-item">포지션 <b data-k="pos">–</b></span>
@@ -504,6 +508,7 @@ footer .flogo{display:flex;align-items:center;gap:10px;color:var(--text-2);font-
       <span class="tk-item">관측 <b data-k="tick">–</b>회</span>
       <span class="tk-item">다음 아이템 <b data-k="next">–</b></span>
     </div></div></div>
+    </div>
   </div>
 </div>
 
@@ -681,8 +686,6 @@ footer .flogo{display:flex;align-items:center;gap:10px;color:var(--text-2);font-
     <div class="rule spot"><span class="ic"><svg class="i"><use href="#i-wallet"/></svg></span><b><span data-to="1000">1,000</span> USDT</b><p>가상 시작 자금, <span data-to="7">7</span>일 시즌</p></div>
     <div class="rule spot"><span class="ic"><svg class="i"><use href="#i-trend"/></svg></span><b>격리 <span data-to="20">20</span>배</b><p>진입마다 잔고의 <span data-to="33">33</span>%를 증거금으로</p></div>
     <div class="rule spot"><span class="ic"><svg class="i"><use href="#i-flip"/></svg></span><b>본전 이상에서만</b><p>반대 신호가 와도 수수료를 빼고 본전 이상일 때만 뒤집습니다</p></div>
-    <div class="rule spot warn"><span class="ic"><svg class="i"><use href="#i-alert"/></svg></span><b>손절 없음</b><p>손실 중이면 회복하거나 강제청산까지 들고 갑니다</p></div>
-    <div class="rule spot warn"><span class="ic"><svg class="i"><use href="#i-x"/></svg></span><b>파산 = 종료</b><p>최소 주문도 낼 수 없는 잔고가 되면 끝</p></div>
     <div class="rule spot"><span class="ic"><svg class="i"><use href="#i-clock"/></svg></span><b><span data-to="60">60</span>초 관측</b><p>1분 사이의 순간 급등락은 반영되지 않습니다</p></div>
   </div>
   <p class="src">시세는 OrangeX BTC 무기한 선물 공개 API, 초기 차트는 Bybit 1분봉으로 채웁니다.</p>
@@ -946,16 +949,19 @@ function updateAgo(T) {
   const e = S.view?.e; if (!e) return;
   $('#bUpdated').textContent = `마지막 관측 ${hm(e.time)} KST · ${ago(T - e.time)}`;
 }
+// With motion, the board and the rich-room ladder fill up each time they scroll into view and empty again
+// when the visitor scrolls back above them; without it everything is simply shown.
 const seen = { board: !MOTION, ladder: !MOTION };
+const pct = (on, v) => (on ? `${(v || 0) * 100}%` : '0%');
 function bars() {
-  if (seen.board) {
-    $('#pLiqBar').style.width = `${(S.liqW || 0) * 100}%`;
-    $('#pLiqBar').style.setProperty('--bw', `${100 / Math.max(S.liqW || 1, .02)}%`);
-    $('#gBar').style.width = `${(S.prog || 0) * 100}%`;
-    $('#nBar').style.width = `${(S.nextW || 0) * 100}%`;
-  }
-  if (seen.ladder) { const it = $('#ladder .item.next .bar i'); if (it) it.style.width = `${(S.nextW || 0) * 100}%`; }
+  $('#pLiqBar').style.width = pct(seen.board, S.liqW);
+  $('#pLiqBar').style.setProperty('--bw', `${100 / Math.max(S.liqW || 1, .02)}%`);
+  $('#gBar').style.width = pct(seen.board, S.prog);
+  $('#nBar').style.width = pct(seen.board, S.nextW);
+  const it = $('#ladder .item.next .bar i'); if (it) it.style.width = pct(seen.ladder, S.nextW);
 }
+function boardIn() { seen.board = true; countUp($('#boardCard')); chartShow(true); setTimeout(bars, 350); }
+function boardOut() { seen.board = false; $$('#boardCard [data-num]').forEach(el => { el._seen = false; }); chartShow(false); bars(); }
 
 // ---- equity chart ---------------------------------------------------------------------------------------------
 const chart = $('#chart'), svg = $('#chartSvg');
@@ -988,11 +994,19 @@ function drawChart() {
   $('#axis').innerHTML = Array.from({ length: SEASON_DAYS }, (_, k) => `<span style="left:${(X(start + (k + .5) * 86400) / W * 100).toFixed(2)}%">D${k + 1}</span>`).join('');
   const nd = $('#nowDot'); nd.style.left = `${xn}px`; nd.style.top = `${Y(pts.at(-1).eq)}px`;
   $('#chartEmpty').hidden = true;
-  const areas = [$('#areaUp'), $('#areaDn')];
-  if (!seen.board) { line.style.strokeDasharray = '1'; line.style.strokeDashoffset = '1'; nd.style.opacity = 0; areas.forEach(a => { a.style.opacity = 0; }); return; }
-  if (line._drawn) return;
-  line._drawn = true;
-  if (gs) {   // first time on screen: the season line draws itself, then the area and the live dot
+  chartShow(seen.board);
+}
+// Reveal the season line (it draws itself, then the area and the live dot) or hide it again.
+function chartShow(on) {
+  const line = $('#eqLine'), nd = $('#nowDot'), areas = [$('#areaUp'), $('#areaDn')];
+  if (!on) {
+    line._shown = false; gs?.killTweensOf([line, nd, ...areas]);
+    line.style.strokeDasharray = '1'; line.style.strokeDashoffset = '1'; nd.style.opacity = 0; areas.forEach(a => { a.style.opacity = 0; });
+    return;
+  }
+  if (line._shown || !line.getAttribute('d')) return;   // not drawn yet: drawChart() calls back when data arrives
+  line._shown = true;
+  if (gs) {
     gs.fromTo(line, { strokeDasharray: 1, strokeDashoffset: 1 }, { strokeDashoffset: 0, duration: 2.2, ease: 'power2.inOut' });
     gs.fromTo(areas, { opacity: 0 }, { opacity: 1, duration: 1.2, delay: 1.1 });
     gs.fromTo(nd, { opacity: 0, scale: 0 }, { opacity: 1, scale: 1, duration: .6, delay: 2, ease: 'back.out(2)' });
@@ -1238,34 +1252,38 @@ async function initMotion() {
   gsap.to('.hero-copy', { y: -70, autoAlpha: .1, ease: 'none', scrollTrigger: heroST });
   gsap.to('.brain-wrap', { yPercent: 16, scale: 1.1, autoAlpha: .3, ease: 'none', scrollTrigger: { ...heroST } });
 
-  $$('.sec-head').forEach(h => gsap.from(h.children, { y: 34, autoAlpha: 0, duration: 1.1, stagger: .09, ease: E, scrollTrigger: { trigger: h, start: 'top 86%', once: true } }));
+  // Every reveal plays when its block scrolls into view and rolls back when the visitor scrolls above it again.
+  const RT = (trigger, start, more = {}) => ({ trigger, start, toggleActions: 'play none none reverse', ...more });
+  const countRules = () => $$('.rules [data-to]').forEach(el => {
+    const o = { v: 0 }; gsap.to(o, { v: +el.dataset.to, duration: 1.8, ease: E, onUpdate: () => { el.textContent = fmt(Math.round(o.v), 0); } });
+  });
+
+  $$('.sec-head').forEach(h => gsap.from(h.children, { y: 34, autoAlpha: 0, duration: 1.1, stagger: .09, ease: E, scrollTrigger: RT(h, 'top 86%') }));
 
   const board = $('#boardCard');
-  gsap.from(board, { y: 80, autoAlpha: 0, scale: .96, duration: 1.4, ease: E, scrollTrigger: { trigger: board, start: 'top 88%', once: true } });
+  gsap.from(board, { y: 80, autoAlpha: 0, scale: .96, duration: 1.4, ease: E, scrollTrigger: RT(board, 'top 88%') });
   gsap.from('#boardCard [data-reveal]', { y: 34, autoAlpha: 0, duration: 1.1, stagger: .06, ease: E, delay: .2,
-    scrollTrigger: { trigger: board, start: 'top 80%', once: true, onEnter: () => { seen.board = true; countUp(board); drawChart(); setTimeout(bars, 350); } } });
-  if ($('#apply')) gsap.from('#apply', { y: 50, autoAlpha: 0, duration: 1.2, ease: E, scrollTrigger: { trigger: '#apply', start: 'top 92%', once: true } });
+    scrollTrigger: RT(board, 'top 80%', { onEnter: boardIn, onLeaveBack: boardOut }) });
+  if ($('#apply')) gsap.from('#apply', { y: 50, autoAlpha: 0, duration: 1.2, ease: E, scrollTrigger: RT('#apply', 'top 92%') });
 
   gsap.fromTo('.monitor', { rotateX: 24, scale: .86, y: 70, transformPerspective: 1500 },
     { rotateX: 0, scale: 1, y: 0, ease: 'none', scrollTrigger: { trigger: '.monitor', start: 'top 98%', end: 'top 28%', scrub: .8 } });
-  gsap.from('.studio-cta .btn', { y: 24, autoAlpha: 0, stagger: .08, duration: .9, ease: E, scrollTrigger: { trigger: '.studio-cta', start: 'top 95%', once: true } });
+  gsap.from('.studio-cta .btn', { y: 24, autoAlpha: 0, stagger: .08, duration: .9, ease: E, scrollTrigger: RT('.studio-cta', 'top 95%') });
 
-  gsap.from('.stage', { autoAlpha: 0, scale: .94, duration: 1.3, ease: E, scrollTrigger: { trigger: '.how', start: 'top 82%', once: true } });
-  steps.forEach(st => gsap.from(st.children, { y: 34, autoAlpha: 0, stagger: .07, duration: 1, ease: E, scrollTrigger: { trigger: st, start: 'top 78%', once: true } }));
+  gsap.from('.stage', { autoAlpha: 0, scale: .94, duration: 1.3, ease: E, scrollTrigger: RT('.how', 'top 82%') });
+  steps.forEach(st => gsap.from(st.children, { y: 34, autoAlpha: 0, stagger: .07, duration: 1, ease: E, scrollTrigger: RT(st, 'top 78%') }));
 
   gsap.from('.rule', { y: 56, autoAlpha: 0, rotateX: -16, transformPerspective: 900, transformOrigin: '50% 0%', duration: 1.2, stagger: .08, ease: E,
-    scrollTrigger: { trigger: '.rules', start: 'top 84%', once: true, onEnter: () => {
-      $$('.rules [data-to]').forEach(el => { const to = +el.dataset.to, o = { v: 0 }; gsap.to(o, { v: to, duration: 1.8, ease: E, onUpdate: () => { el.textContent = fmt(Math.round(o.v), 0); } }); });
-    } } });
-  gsap.from('.src', { autoAlpha: 0, y: 16, duration: .9, ease: E, scrollTrigger: { trigger: '.src', start: 'top 95%', once: true } });
-  gsap.from('.ladder-head > div > *', { y: 34, autoAlpha: 0, duration: 1.1, stagger: .09, ease: E, scrollTrigger: { trigger: '.ladder-head', start: 'top 86%', once: true } });
-  gsap.from('.now-eq', { autoAlpha: 0, x: 30, duration: 1, ease: E, scrollTrigger: { trigger: '.ladder-head', start: 'top 85%', once: true } });
+    scrollTrigger: RT('.rules', 'top 84%', { onEnter: countRules }) });
+  gsap.from('.src', { autoAlpha: 0, y: 16, duration: .9, ease: E, scrollTrigger: RT('.src', 'top 95%') });
+  gsap.from('.ladder-head > div > *', { y: 34, autoAlpha: 0, duration: 1.1, stagger: .09, ease: E, scrollTrigger: RT('.ladder-head', 'top 86%') });
+  gsap.from('.now-eq', { autoAlpha: 0, x: 30, duration: 1, ease: E, scrollTrigger: RT('.ladder-head', 'top 85%') });
   gsap.from('#ladder .item', { y: 36, autoAlpha: 0, scale: .95, duration: 1, stagger: { each: .06, grid: 'auto' }, ease: E,
-    scrollTrigger: { trigger: '#ladder', start: 'top 86%', once: true, onEnter: () => { seen.ladder = true; setTimeout(bars, 500); } } });
+    scrollTrigger: RT('#ladder', 'top 86%', { onEnter: () => { seen.ladder = true; setTimeout(bars, 500); }, onLeaveBack: () => { seen.ladder = false; bars(); } }) });
 
-  if ($('.tgc')) gsap.from('.tgc', { y: 60, autoAlpha: 0, scale: .97, duration: 1.3, ease: E, scrollTrigger: { trigger: '.tgc', start: 'top 90%', once: true } });
-  if ($('.ref')) gsap.from('.ref', { y: 50, autoAlpha: 0, duration: 1.2, ease: E, scrollTrigger: { trigger: '.ref', start: 'top 90%', once: true } });
-  $$('[data-rise]').forEach(el => gsap.from(el, { y: 44, autoAlpha: 0, duration: 1.1, ease: E, scrollTrigger: { trigger: el, start: 'top 90%', once: true } }));
+  if ($('.tgc')) gsap.from('.tgc', { y: 60, autoAlpha: 0, scale: .97, duration: 1.3, ease: E, scrollTrigger: RT('.tgc', 'top 90%') });
+  if ($('.ref')) gsap.from('.ref', { y: 50, autoAlpha: 0, duration: 1.2, ease: E, scrollTrigger: RT('.ref', 'top 90%') });
+  $$('[data-rise]').forEach(el => gsap.from(el, { y: 44, autoAlpha: 0, duration: 1.1, ease: E, scrollTrigger: RT(el, 'top 90%') }));
 
   document.fonts?.ready.then(() => ScrollTrigger.refresh());
   addEventListener('load', () => ScrollTrigger.refresh());
