@@ -535,9 +535,22 @@ class Handler(BaseHTTPRequestHandler):
         if m and (ANIM_DIR / f"{m.group(1)}.mp4").is_file():
             return self.send_range(ANIM_DIR / f"{m.group(1)}.mp4", "video/mp4")
         x = re.fullmatch(r"/ext/([a-z0-9_-]{1,40})\.json", route)
-        if x and (EXT_DIR / f"{x.group(1)}.json").is_file():
-            body = (EXT_DIR / f"{x.group(1)}.json").read_bytes()
-            return self.send(body, "application/json; charset=utf-8", False, gzip.compress(body, 5) if self.accepts_gzip() else None)
+        if x:
+            p = EXT_DIR / f"{x.group(1)}.json"
+            if p.is_file():
+                body = p.read_bytes()
+                return self.send(body, "application/json; charset=utf-8", False, gzip.compress(body, 5) if self.accepts_gzip() else None)
+            # "Not there" is an answer the viewer acts on (it hides or swaps that panel), so it must be
+            # readable cross-origin: a plain send_error would carry no CORS header.
+            self.send_response(404)
+            self.send_header("Content-Type", "application/json")
+            self.send_header("Content-Length", "2")
+            self.send_header("Cache-Control", "no-store")
+            self.send_header("Access-Control-Allow-Origin", "*")
+            self.end_headers()
+            if self.command != "HEAD":
+                self.wfile.write(b"{}")
+            return
         self.send_error(404)
 
     do_HEAD = do_GET

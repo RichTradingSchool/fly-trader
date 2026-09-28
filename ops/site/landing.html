@@ -399,7 +399,7 @@ details p{margin:0 4px 24px;color:var(--text-2);max-width:760px}
 .rail-l{left:calc(50% - 590px - 20px - 272px);transform:translateX(-28px)}
 .rail-r{left:calc(50% + 590px + 20px);transform:translateX(28px)}
 .rail.ready{opacity:1;transform:none}
-.rail-card{display:flex;flex-direction:column;min-height:0;overflow:hidden;border-radius:22px;background:linear-gradient(180deg,rgba(17,23,38,.94),rgba(8,11,19,.96));border:1px solid var(--line);box-shadow:0 30px 80px -30px #000,inset 0 1px 0 rgba(255,255,255,.05)}
+.rail-card{display:flex;flex-direction:column;min-height:0;overflow:hidden;border-radius:22px;background:linear-gradient(180deg,#111726,#080b13);border:1px solid var(--line);box-shadow:0 30px 80px -30px #000,inset 0 1px 0 rgba(255,255,255,.05)}
 .rail-l .rail-card{border-color:rgba(247,201,72,.28)}
 .rail-body{overflow-y:auto;scrollbar-width:none;padding:16px 16px 14px}
 .rail-body::-webkit-scrollbar{display:none}
@@ -442,6 +442,12 @@ details p{margin:0 4px 24px;color:var(--text-2);max-width:760px}
 .chat .who b{color:var(--text-2);font-weight:800}
 .chat .msg{margin-top:2px;padding:7px 10px;border-radius:4px 12px 12px 12px;background:rgba(255,255,255,.05);font-size:13px;line-height:1.5;color:var(--text);overflow-wrap:anywhere}
 .chat li.new{animation:chatIn .6s var(--ease)}
+.teaser{font-size:13.5px;color:var(--text-2);line-height:1.6}
+.teaser p{margin:0 0 12px}
+.teaser ul{list-style:none;margin:0;padding:0;display:grid;gap:8px}
+.teaser li{display:flex;gap:8px;align-items:center;font-weight:650;color:#d6ebf8;font-size:13px}
+.teaser .i{color:#7fcaf5}
+#chatRail.teasing .live{display:none}
 @keyframes chatIn{from{opacity:0;transform:translateY(10px)}}
 .rail-r .rail-body{flex:1;min-height:0}
 .rail-r .rail-foot{padding:0 16px 14px}
@@ -582,7 +588,7 @@ footer .flogo{display:flex;align-items:center;gap:10px;color:var(--text-2);font-
 </aside>
 <div class="dock" id="dock" hidden>
   <button class="pill rich" type="button" id="dRich" data-open="richRail" hidden><span class="dot" style="background:var(--gold)"></span><span id="dRichName">실전 현황</span><b id="dRoi">–</b></button>
-  <button class="pill" type="button" id="dChat" data-open="chatRail" hidden><svg class="i"><use href="#i-send"/></svg>소통방 LIVE</button>
+  <button class="pill" type="button" id="dChat" data-open="chatRail" hidden><svg class="i"><use href="#i-send"/></svg><span id="dChatName">소통방</span></button>
 </div>
 <div class="chrome" id="chrome">
   <header class="top"><div class="wrap">
@@ -1376,9 +1382,22 @@ function renderRich(d) {
 }
 const PALETTE = ['#f7c948', '#3cc8ff', '#2fd18a', '#a98bff', '#ff9b6a', '#ff7eb6'];
 const hue = s => PALETTE[[...String(s)].reduce((a, c) => a + c.charCodeAt(0), 0) % PALETTE.length];
+// Until the chat feed is connected the right rail introduces the community instead (no LIVE badge).
+function chatTeaser() {
+  if (!$('#cJoin').getAttribute('href')) { hideRail(railChat, $('#dChat')); return; }
+  if (!railChat.classList.contains('teasing')) {
+    railChat.classList.add('teasing'); R.chat = null;
+    $('#cTitle').textContent = '커뮤니티 소통방';
+    $('#cList').outerHTML = `<div class="teaser" id="cList"><p>시장을 움직이는 경제뉴스를 실시간으로 받고, 매매 이야기와 제작 파일을 나누는 텔레그램 소통방입니다.</p>
+      <ul><li><svg class="i"><use href="#i-news"/></svg>실시간 경제뉴스 · 지표 발표 알림</li><li><svg class="i"><use href="#i-folder"/></svg>제작 파일 자료실 · 가이드</li><li><svg class="i"><use href="#i-send"/></svg>매매 이야기 · 질문 · 시즌 소식</li></ul></div>`;
+  }
+  showRail(railChat, $('#dChat'));
+}
 function renderChat(d) {
   const msgs = d.messages || [];
-  if (!msgs.length) { hideRail(railChat, $('#dChat')); return; }
+  if (!msgs.length) { chatTeaser(); return; }
+  if (railChat.classList.contains('teasing')) { railChat.classList.remove('teasing'); $('#cList').outerHTML = '<ul class="chat" id="cList"></ul>'; }
+  $('#dChatName').textContent = '소통방 LIVE';
   const body = $('#cBody'), stick = !R.chat || body.scrollHeight - body.scrollTop - body.clientHeight < 60;
   $('#cTitle').textContent = d.title || '커뮤니티 소통방';
   if (d.join) { $('#cJoin').href = d.join; $('#cJoin').hidden = false; }
@@ -1397,7 +1416,7 @@ async function pollExt(name, render, missing) {
   } catch { /* offline for a moment: keep what is on screen */ }
 }
 const pollRich = () => pollExt('rich', d => { renderRich(d); showRail(railRich, $('#dRich')); }, () => hideRail(railRich, $('#dRich')));
-const pollChat = () => pollExt('chat', renderChat, () => hideRail(railChat, $('#dChat')));
+const pollChat = () => pollExt('chat', renderChat, chatTeaser);
 
 // ---- motion (GSAP + ScrollTrigger from jsDelivr; the page works without it) ----------------------------------
 function loadScript(src) {

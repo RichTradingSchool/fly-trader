@@ -94,6 +94,9 @@ def test_ext_documents_are_served_read_only(server):
     assert h["Cache-Control"] == "no-store" and h["Access-Control-Allow-Origin"] == "*"
     (EXT / "board.json").write_text('{"rooms": [1]}', encoding="utf-8")  # rewritten files show up at once
     assert json.loads(get(server + "/ext/board.json")[2]) == {"rooms": [1]}
+    with pytest.raises(urllib.error.HTTPError) as e:  # a missing document is a readable (CORS) 404
+        get(server + "/ext/missing.json")
+    assert e.value.code == 404 and e.value.headers["Access-Control-Allow-Origin"] == "*"
     for route in ["/ext/missing.json", "/ext/Board.json", "/ext/../server.json", "/ext/%2e%2e%2fserver.json",
                   "/ext/board.txt"]:
         with pytest.raises(urllib.error.HTTPError) as e:
