@@ -1357,7 +1357,29 @@ function spark(curve, start, w = 240, h = 30) {
   return `<svg viewBox="0 0 ${w} ${h}" preserveAspectRatio="none" aria-hidden="true"><line x1="0" x2="${w}" y1="${b}" y2="${b}" stroke="rgba(255,255,255,.2)" stroke-dasharray="3 4" vector-effect="non-scaling-stroke"/><path d="${d}" fill="none" stroke="${c}" stroke-width="1.7" stroke-linejoin="round" vector-effect="non-scaling-stroke"/></svg>`;
 }
 const whenKst = t => { const p = parts(t), n = parts(now()); return p.month === n.month && p.day === n.day ? `${p.hour}:${p.minute}` : `${p.month}/${p.day} ${p.hour}:${p.minute}`; };
+// A challenge account (one balance following every room's signals from its start day) when the feed has
+// one; otherwise each room's own history.
+function renderChallenge(d) {
+  const c = d.challenge, p = parts(c.start_ts);
+  $('#rTitle').textContent = d.title || '챌린지';
+  $('#dRichName').textContent = `챌린지 Day ${c.day}`;
+  $('#rTotLbl').textContent = `Day ${c.day} · ${p.month}/${p.day} 시작 · ${usd(c.start)}에서 출발`;
+  tweenNum($('#rTotEq'), +c.equity || 0, v => fmt(v));
+  const roi = $('#rTotRoi'); roi.textContent = `${sgn(+c.roi || 0)}%`; roi.dataset.tone = tone(+c.roi || 0);
+  $('#rTotStart').textContent = `${c.wins}승 ${c.losses}패${c.trades ? ` · 승률 ${Math.round(c.wins / c.trades * 100)}%` : ''}`;
+  $('#dRoi').textContent = `${sgn(+c.roi || 0, 1)}%`; $('#dRoi').dataset.tone = tone(+c.roi || 0);
+  const pnl = v => (Math.abs(v) < .005 ? '$0' : `${v > 0 ? '+' : '−'}${usd(Math.abs(v), 2)}`);
+  $('#rRooms').innerHTML = `<div class="rt-room">
+      <div class="top"><b>잔고 추이</b><em data-tone="${tone(+c.roi || 0)}">${usd(c.equity, 2)}</em></div>
+      ${spark(c.curve, c.start, 240, 44)}
+      <div class="meta"><span>매매마다 잔고의 ${esc(c.bet_pct)}% 복리</span><span>${c.trades}회 체결</span></div>
+    </div>
+    ${(c.rooms || []).map(r => `<div class="rt-room"><div class="top"><b>${esc(r.tag)}</b><em data-tone="${tone(r.pnl)}">${pnl(r.pnl)}</em></div>
+      <div class="meta"><span>${r.trades}회 체결</span><span>${r.wins}승 ${r.trades - r.wins}패</span></div>
+      ${(c.open || []).filter(o => o.room === r.tag).map(o => `<div class="hold"><span class="dot"></span>${esc(o.side)} 보유 중 · 진입 ${fmt(o.entry, o.entry < 1000 ? 2 : 1)}</div>`).join('')}</div>`).join('')}`;
+}
 function renderRich(d) {
+  if (d.challenge) { renderChallenge(d); renderRecent(d); return; }
   const T = d.total || {}, rooms = d.rooms || [];
   $('#rTitle').textContent = d.title || '트레이딩 룸';
   $('#dRichName').textContent = (d.title || '실전 현황').replace(/\s*트레이딩\s*룸$/, '');
@@ -1372,9 +1394,14 @@ function renderRich(d) {
       ${spark(r.curve, r.start)}
       ${r.open ? `<div class="hold"><span class="dot"></span>${esc(r.open.side)} 보유 중 · 진입 ${fmt(r.open.entry, r.open.entry < 1000 ? 2 : 1)}</div>` : ''}
     </div>`).join('');
+  renderRecent(d);
+}
+function renderRecent(d) {
   const recent = (d.recent || []).slice(0, 8), keys = recent.map(x => `${x.room}|${x.t}|${x.side}`);
   const fresh = R.recent ? recent.filter((x, i) => !R.recent.has(keys[i])) : [];
-  $('#rRecent').innerHTML = recent.map((x, i) => `<li class="${R.recent && !R.recent.has(keys[i]) ? 'new' : ''}"><b>${esc(x.room)}</b><span>${esc(x.side)} ${esc(x.result)} · ${whenKst(x.t)}</span><em data-tone="${x.roe >= 0 ? 'up' : 'down'}">${sgn(x.roe, 1)}%</em></li>`).join('');
+  $('#rRecent').innerHTML = recent.length
+    ? recent.map((x, i) => `<li class="${R.recent && !R.recent.has(keys[i]) ? 'new' : ''}"><b>${esc(x.room)}</b><span>${esc(x.side)} ${esc(x.result)} · ${whenKst(x.t)}</span><em data-tone="${x.roe >= 0 ? 'up' : 'down'}">${sgn(x.roe, 1)}%</em></li>`).join('')
+    : '<li><span>첫 체결을 기다리는 중입니다</span></li>';
   R.recent = new Set(keys);
   const won = fresh.find(x => x.pnl > 0);
   if (won) { const g = $('#rGain'); g.textContent = `+${usd(won.pnl, 2)}`; g.classList.remove('go'); void g.offsetWidth; g.classList.add('go'); }
