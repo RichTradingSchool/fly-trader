@@ -572,7 +572,7 @@ footer .flogo{display:flex;align-items:center;gap:10px;color:var(--text-2);font-
         <div class="rt-sub"><span class="roi" id="rTotRoi">–</span><span id="rTotStart"></span></div></div>
       <span class="gain" id="rGain"></span>
       <div class="rt-rooms" id="rRooms"></div>
-      <div class="rt-recent"><span class="lbl">최근 체결 · 익절·손절 모두</span><ul id="rRecent"></ul></div>
+      <div class="rt-recent"><span class="lbl">최근 익절 · 잔고·승패는 손절 포함</span><ul id="rRecent"></ul></div>
     </div>
     <div class="rail-foot"><a class="btn gold rail-cta" id="rApply" href="{{APPLY_URL}}" target="_blank" rel="noopener">챌린지 신청하기<svg class="i"><use href="#i-arrow"/></svg></a>
       <p class="rail-note" id="rNote"></p></div>
@@ -1397,11 +1397,12 @@ function renderRich(d) {
   renderRecent(d);
 }
 function renderRecent(d) {
-  const recent = (d.recent || []).slice(0, 8), keys = recent.map(x => `${x.room}|${x.t}|${x.side}`);
+  // 목록은 최근 익절만 — 잔고·승패·수익률은 위에서 손절 포함 전체 기준으로 보여 준다
+  const recent = (d.recent_wins || (d.recent || []).filter(x => x.result === '익절')).slice(0, 8), keys = recent.map(x => `${x.room}|${x.t}|${x.side}`);
   const fresh = R.recent ? recent.filter((x, i) => !R.recent.has(keys[i])) : [];
   $('#rRecent').innerHTML = recent.length
     ? recent.map((x, i) => `<li class="${R.recent && !R.recent.has(keys[i]) ? 'new' : ''}"><b>${esc(x.room)}</b><span>${esc(x.side)} ${esc(x.result)} · ${whenKst(x.t)}</span><em data-tone="${x.roe >= 0 ? 'up' : 'down'}">${sgn(x.roe, 1)}%</em></li>`).join('')
-    : '<li><span>첫 체결을 기다리는 중입니다</span></li>';
+    : '<li><span>첫 익절을 기다리는 중입니다</span></li>';
   R.recent = new Set(keys);
   const won = fresh.find(x => x.pnl > 0);
   if (won) { const g = $('#rGain'); g.textContent = `+${usd(won.pnl, 2)}`; g.classList.remove('go'); void g.offsetWidth; g.classList.add('go'); }
