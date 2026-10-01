@@ -1,0 +1,1530 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>초파리 트레이딩 챌린지 — 진짜 초파리 뇌가 비트코인 차트를 본다</title>
+<meta name="description" content="실제 초파리 뇌 연결 지도(뉴런 166,700개)를 시뮬레이션해 1분마다 BTC 차트를 보여 주고, 그 반응으로 20배 선물을 페이퍼 트레이딩합니다. 실시간 현황판과 3D 라이브 방송, 프로그램을 공개합니다.">
+<meta property="og:type" content="website">
+<meta property="og:title" content="초파리 트레이딩 챌린지 · LIVE">
+<meta property="og:description" content="진짜 초파리 뇌(뉴런 166,700개)가 비트코인 차트를 보고 롱·숏 신호를 냅니다. 1,000 USDT · 20배 · 7일 페이퍼 챌린지 3D 생중계.">
+<meta property="og:image" content="https://richtradingschool.github.io/fly-trader/og.png">
+<meta property="og:url" content="https://richtradingschool.github.io/fly-trader/">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="theme-color" content="#05070c">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='8' fill='%230c111c'/%3E%3Cg fill='none' stroke='%23f7c948' stroke-width='2' stroke-linecap='round'%3E%3Cellipse cx='16' cy='19.5' rx='3.3' ry='6'/%3E%3Ccircle cx='16' cy='10.3' r='2.6'/%3E%3Cellipse cx='9.4' cy='14.6' rx='6' ry='2.9' transform='rotate(-28 9.4 14.6)'/%3E%3Cellipse cx='22.6' cy='14.6' rx='6' ry='2.9' transform='rotate(28 22.6 14.6)'/%3E%3C/g%3E%3C/svg%3E">
+<link rel="preload" href="assets/fonts/PretendardVariable.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
+<script>
+(function (d) {
+  d.classList.add('js');
+  try {
+    if (!matchMedia('(prefers-reduced-motion: reduce)').matches) {
+      d.classList.add('motion', 'anim-pending');
+      // If the animation library never arrives, show the hero as it is.
+      setTimeout(function () { d.classList.remove('anim-pending'); }, 3500);
+    }
+  } catch (e) {}
+})(document.documentElement);
+</script>
+<script type="importmap">{"imports":{"three":"./room/vendor/three.module.min.js"}}</script>
+<style>
+@font-face{font-family:"Pretendard Variable";src:url("assets/fonts/PretendardVariable.woff2") format("woff2");font-weight:45 920;font-display:swap}
+:root{
+  --bg:#05070c;--surface:#0b0f19;--surface-2:#111726;
+  --line:#1a2133;--line-2:#27304a;
+  --text:#f3f5fb;--text-2:#c3c8d9;--mute:#8b93a9;--faint:#5d6579;
+  --gold:#f7c948;--gold-2:#f59e0b;--gold-soft:#ffe29a;
+  --long:#2fd18a;--short:#ff4d5e;--cyan:#3cc8ff;--amber:#ffb347;
+  --ease:cubic-bezier(.16,1,.3,1);
+  --hdr:62px;--tick:36px;--chrome-h:calc(var(--hdr) + var(--tick));
+}
+*{box-sizing:border-box}
+[hidden]{display:none!important}
+html{-webkit-text-size-adjust:100%}
+html.motion{scroll-behavior:smooth}
+body{margin:0;background:var(--bg);color:var(--text);font:16px/1.65 "Pretendard Variable",Pretendard,system-ui,-apple-system,"Apple SD Gothic Neo","Malgun Gothic",sans-serif;-webkit-font-smoothing:antialiased;overflow-x:hidden;word-break:keep-all;overflow-wrap:anywhere}
+a{color:inherit}
+img{max-width:100%}
+.wrap{max-width:1180px;margin:0 auto;padding:0 24px}
+.i{width:1.15em;height:1.15em;flex:none;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round;vertical-align:-.18em}
+.num{font-variant-numeric:tabular-nums}
+[data-tone=up]{color:var(--long)}[data-tone=down]{color:var(--short)}
+.fu,.fd{border-radius:6px}
+.fu{animation:fu 1.3s ease-out}.fd{animation:fd 1.3s ease-out}
+@keyframes fu{0%{background:rgba(47,209,138,.3);box-shadow:0 0 0 4px rgba(47,209,138,.3)}100%{background:transparent;box-shadow:0 0 0 4px transparent}}
+@keyframes fd{0%{background:rgba(255,77,94,.3);box-shadow:0 0 0 4px rgba(255,77,94,.3)}100%{background:transparent;box-shadow:0 0 0 4px transparent}}
+
+/* scroll progress + sticky chrome (header hides on scroll down, the live ticker stays) */
+.progress{position:fixed;left:0;right:0;top:0;height:2px;z-index:60;background:linear-gradient(90deg,var(--gold-2),var(--gold),var(--gold-soft));transform-origin:0 50%;transform:scaleX(0);pointer-events:none}
+.chrome{position:sticky;top:0;z-index:50;transition:transform .5s var(--ease)}
+.chrome.hide{transform:translateY(calc(var(--hdr) * -1))}
+header.top{height:var(--hdr);background:rgba(5,7,12,.74);-webkit-backdrop-filter:saturate(1.5) blur(16px);backdrop-filter:saturate(1.5) blur(16px);border-bottom:1px solid rgba(255,255,255,.06)}
+header.top .wrap{display:flex;align-items:center;gap:18px;height:100%}
+.logo{display:flex;align-items:center;gap:10px;font-weight:800;letter-spacing:-.02em;text-decoration:none;font-size:16px;white-space:nowrap}
+.logo .mark{width:32px;height:32px;border-radius:10px;display:grid;place-items:center;background:linear-gradient(145deg,#1b2336,#0b0f19);border:1px solid var(--line-2);color:var(--gold);box-shadow:0 0 22px -6px rgba(247,201,72,.5)}
+.logo .mark .i{width:19px;height:19px;stroke-width:1.7}
+nav.main{margin-left:auto;display:flex;gap:2px}
+nav.main a{color:var(--mute);text-decoration:none;font-size:14px;font-weight:650;padding:8px 12px;border-radius:10px;transition:color .2s,background .2s}
+nav.main a:hover{color:var(--text);background:rgba(255,255,255,.05)}
+nav.main a.on{color:var(--text);background:rgba(255,255,255,.06)}
+.top-cta{margin-left:6px}
+.ticker{height:var(--tick);background:rgba(9,12,20,.9);-webkit-backdrop-filter:blur(16px);backdrop-filter:blur(16px);border-bottom:1px solid rgba(255,255,255,.07);font-size:13px;line-height:1;overflow:hidden;font-variant-numeric:tabular-nums}
+.tk-in{max-width:1180px;height:100%;margin:0 auto;padding:0 24px;display:flex;align-items:stretch}
+.tk-fixed{display:flex;align-items:center;gap:10px;padding-right:14px;text-decoration:none;white-space:nowrap;position:relative;z-index:1}
+.tk-fixed .st{font-weight:800;letter-spacing:.06em;font-size:12px}
+.tk-eq b{font-weight:800;font-size:14px}
+.tk-eq small{color:var(--mute);margin-left:4px;font-size:11px;font-weight:700}
+.tk-roi{font-weight:800}
+.tk-scroll{flex:1;min-width:0;overflow:hidden;-webkit-mask-image:linear-gradient(90deg,transparent,#000 48px,#000 calc(100% - 48px),transparent);mask-image:linear-gradient(90deg,transparent,#000 48px,#000 calc(100% - 48px),transparent)}
+.tk-track{display:flex;width:max-content;height:100%}
+.motion .tk-track.run{animation:marquee var(--dur,60s) linear infinite}
+.ticker:hover .tk-track{animation-play-state:paused}
+@keyframes marquee{to{transform:translateX(-50%)}}
+html:not(.motion) .tk-scroll{overflow-x:auto;scrollbar-width:none}
+.tk-set{display:flex;align-items:center;height:100%}
+.tk-item{display:flex;align-items:center;gap:6px;padding:0 18px;height:100%;white-space:nowrap;color:var(--mute);border-left:1px solid rgba(255,255,255,.06)}
+.tk-item b{color:var(--text);font-weight:750}
+.tk-item em{font-style:normal;font-weight:700;font-size:12px}
+.dot{width:8px;height:8px;border-radius:50%;background:var(--faint);flex:none}
+[data-live=live] .dot{background:var(--long);animation:ping 1.8s infinite}
+[data-live=wait] .dot{background:var(--amber)}
+[data-live=bad] .dot,[data-live=lost] .dot{background:var(--short)}
+[data-live=live] .st{color:var(--long)}[data-live=wait] .st{color:var(--amber)}[data-live=bad] .st,[data-live=lost] .st{color:var(--short)}
+@keyframes ping{0%{box-shadow:0 0 0 0 rgba(47,209,138,.6)}70%{box-shadow:0 0 0 9px rgba(47,209,138,0)}100%{box-shadow:0 0 0 0 rgba(47,209,138,0)}}
+
+/* buttons */
+.btn{--h:48px;display:inline-flex;align-items:center;justify-content:center;gap:10px;height:var(--h);padding:0 20px;border-radius:14px;font-weight:800;font-size:15px;letter-spacing:-.01em;text-decoration:none;border:1px solid transparent;white-space:nowrap;position:relative;overflow:hidden;isolation:isolate;cursor:pointer;transition:transform .35s var(--ease),box-shadow .35s var(--ease),border-color .25s,background .25s}
+.btn .i{width:19px;height:19px}
+.btn:hover{transform:translateY(-2px)}
+.btn:active{transform:translateY(0) scale(.98)}
+.btn:focus-visible,nav.main a:focus-visible,.logo:focus-visible{outline:2px solid var(--gold);outline-offset:3px}
+.btn.gold{background:linear-gradient(135deg,var(--gold-soft) 0%,var(--gold) 42%,var(--gold-2) 100%);color:#1b1305;box-shadow:0 12px 34px -10px rgba(245,158,11,.65),inset 0 1px 0 rgba(255,255,255,.55)}
+.btn.gold:hover{box-shadow:0 18px 44px -10px rgba(245,158,11,.8),inset 0 1px 0 rgba(255,255,255,.55)}
+.btn.gold::after,.btn.tg::after{content:"";position:absolute;inset:0;z-index:-1;background:linear-gradient(110deg,transparent 30%,rgba(255,255,255,.6) 50%,transparent 70%);transform:translateX(-130%);transition:transform .9s var(--ease)}
+.btn.gold:hover::after,.btn.tg:hover::after{transform:translateX(130%)}
+.btn.ghost{background:rgba(255,255,255,.035);border-color:var(--line-2);color:var(--text)}
+.btn.ghost:hover{background:rgba(255,255,255,.07);border-color:#3b4768}
+.btn.tg{background:linear-gradient(135deg,#43bdf5,#1f8fd0);color:#fff;box-shadow:0 12px 34px -10px rgba(42,171,238,.6)}
+.btn.sm{--h:38px;padding:0 14px;font-size:14px;border-radius:11px;gap:7px}
+.btn.sm .i{width:16px;height:16px}
+.btn.lg{--h:56px;padding:0 26px;font-size:16px;border-radius:16px}
+.btn.xl{--h:64px;padding:0 32px;font-size:18px;border-radius:18px}
+.btn[hidden]{display:none}
+.btns{display:flex;flex-wrap:wrap;gap:12px}
+
+/* hero */
+.hero{position:relative;min-height:min(calc(100svh - var(--hdr) - var(--tick)),880px);display:flex;align-items:center;padding:56px 0 96px;overflow:hidden;isolation:isolate}
+.hero::before{content:"";position:absolute;inset:0;z-index:-3;background:radial-gradient(760px 520px at calc(max(0px,(100% - 1180px) / 2) + 60px) -4%,rgba(247,201,72,.08),transparent 60%),radial-gradient(600px 400px at 50% 110%,rgba(47,209,138,.05),transparent 70%)}
+.hero::after{content:"";position:absolute;inset:0;z-index:-3;background-image:linear-gradient(rgba(255,255,255,.03) 1px,transparent 1px),linear-gradient(90deg,rgba(255,255,255,.03) 1px,transparent 1px);background-size:64px 64px;-webkit-mask-image:radial-gradient(ellipse 70% 60% at 55% 45%,#000 20%,transparent 75%);mask-image:radial-gradient(ellipse 70% 60% at 55% 45%,#000 20%,transparent 75%)}
+/* The brain is centred on the right part of the 1180px content column, not the viewport, so wide
+   screens keep the headline and the brain together instead of drifting apart. */
+.brain-wrap{--bw:min(68%,1000px);position:absolute;z-index:-2;top:0;bottom:0;width:var(--bw);left:calc(max(0px,(100% - 1180px) / 2) + min(100%,1180px) * .72 - var(--bw) / 2)}
+.brain-wrap::before{content:"";position:absolute;inset:-6% -18%;z-index:-1;pointer-events:none;background:radial-gradient(closest-side,rgba(60,200,255,.13),transparent 78%)}
+.hero-brain{display:block;width:100%;height:100%;-webkit-mask-image:radial-gradient(closest-side at 50% 50%,#000 60%,transparent 100%);mask-image:radial-gradient(closest-side at 50% 50%,#000 60%,transparent 100%)}
+.hero-in{width:100%}
+.hero-copy{max-width:620px;position:relative}
+.chip{display:inline-flex;align-items:center;gap:10px;height:34px;padding:0 15px 0 13px;border-radius:99px;border:1px solid var(--line-2);background:rgba(11,15,25,.72);-webkit-backdrop-filter:blur(10px);backdrop-filter:blur(10px);font-size:13px;font-weight:700;color:var(--text-2);text-decoration:none;white-space:nowrap}
+.chip .sep{width:1px;height:12px;background:var(--line-2)}
+.chip .st{font-weight:850;letter-spacing:.08em;font-size:12px}
+h1{font-size:clamp(42px,5.6vw,74px);line-height:1.08;letter-spacing:-.05em;font-weight:900;margin:24px 0 24px}
+h1 .ln{display:block;overflow:hidden;padding:0 .04em .08em;margin:0 -.04em -.08em}
+h1 .ln>span{display:block}
+h1 em{font-style:normal;background:linear-gradient(95deg,var(--gold-soft) 0%,var(--gold) 38%,#8fe3ff 100%);-webkit-background-clip:text;background-clip:text;color:transparent}
+.lead{font-size:clamp(16px,1.45vw,19px);color:var(--text-2);margin:0 0 30px;max-width:560px}
+.trust{list-style:none;margin:26px 0 0;padding:0;display:flex;flex-wrap:wrap;gap:8px 20px;font-size:14px;color:var(--mute);font-weight:600}
+.trust li{display:flex;align-items:center;gap:7px}
+.trust .i{color:var(--gold);stroke-width:2.4;width:15px;height:15px}
+.textlink{display:inline-flex;align-items:center;gap:8px;margin-top:18px;font-size:14px;font-weight:700;color:#7fcaf5;text-decoration:none;border-bottom:1px solid transparent;transition:border-color .2s}
+.textlink:hover{border-color:currentColor}
+.brain-cap{position:absolute;right:max(24px,calc((100vw - 1180px) / 2 + 24px));bottom:36px;display:flex;align-items:center;gap:9px;font-size:12px;font-weight:650;color:var(--mute);padding:8px 13px;border-radius:99px;background:rgba(11,15,25,.6);border:1px solid var(--line);-webkit-backdrop-filter:blur(8px);backdrop-filter:blur(8px);max-width:calc(100% - 48px)}
+.brain-cap .dot{background:var(--cyan);box-shadow:0 0 10px var(--cyan)}
+.scroll-cue{position:absolute;left:50%;bottom:30px;width:24px;height:38px;margin-left:-12px;border:1.5px solid rgba(255,255,255,.28);border-radius:14px}
+.scroll-cue i{position:absolute;left:50%;top:7px;width:3px;height:7px;margin-left:-1.5px;border-radius:2px;background:var(--gold)}
+.motion .scroll-cue i{animation:cue 1.8s var(--ease) infinite}
+@keyframes cue{0%{opacity:0;transform:translateY(0)}30%{opacity:1}100%{opacity:0;transform:translateY(12px)}}
+.anim-pending [data-hero],.anim-pending .hero h1,.anim-pending .hero-brain{visibility:hidden}
+
+/* sections */
+section{position:relative;padding:100px 0;scroll-margin-top:calc(var(--hdr) + var(--tick) + 8px)}
+.sec-head{max-width:760px;margin-bottom:48px}
+.sec-head.center{margin-left:auto;margin-right:auto;text-align:center}
+.eyebrow{display:inline-flex;align-items:center;gap:10px;font-size:12px;font-weight:850;letter-spacing:.2em;color:var(--gold)}
+.eyebrow::before{content:"";width:22px;height:1px;background:currentColor;opacity:.7}
+h2{font-size:clamp(30px,4.3vw,52px);line-height:1.14;letter-spacing:-.045em;margin:14px 0 16px;font-weight:880}
+.sub{color:var(--mute);font-size:17px;margin:0}
+.lbl{font-size:13px;color:var(--mute);font-weight:700;letter-spacing:.01em}
+.mute{color:var(--mute)}
+.spot{position:relative;overflow:hidden;isolation:isolate}
+.spot::before{content:"";position:absolute;inset:0;z-index:-1;pointer-events:none;background:radial-gradient(380px circle at var(--mx,50%) var(--my,50%),rgba(247,201,72,.09),transparent 45%);opacity:0;transition:opacity .35s}
+.spot:hover::before{opacity:1}
+
+/* live board */
+.board-sec{padding-top:40px}
+.board{position:relative;border-radius:30px;padding:26px;background:linear-gradient(180deg,rgba(16,22,36,.92),rgba(8,11,19,.94));border:1px solid var(--line);box-shadow:0 50px 140px -50px rgba(0,0,0,.9),inset 0 1px 0 rgba(255,255,255,.05)}
+.board::before{content:"";position:absolute;inset:-1px;border-radius:inherit;padding:1px;pointer-events:none;background:linear-gradient(140deg,rgba(247,201,72,.55),rgba(247,201,72,0) 28%,rgba(60,200,255,0) 68%,rgba(60,200,255,.45));-webkit-mask:linear-gradient(#000 0 0) content-box,linear-gradient(#000 0 0);-webkit-mask-composite:xor;mask:linear-gradient(#000 0 0) content-box exclude,linear-gradient(#000 0 0)}
+.b-top{display:flex;justify-content:space-between;align-items:center;gap:10px 18px;flex-wrap:wrap;margin:0 4px 18px}
+.b-status{display:flex;align-items:center;gap:12px;flex-wrap:wrap}
+.pill{display:inline-flex;align-items:center;gap:8px;height:30px;padding:0 13px 0 11px;border-radius:99px;font-size:12px;font-weight:850;letter-spacing:.06em;border:1px solid var(--line-2);background:rgba(255,255,255,.03)}
+.b-season{display:flex;align-items:center;gap:10px;font-size:14px;color:var(--text-2);font-weight:650}
+.b-season b{color:var(--gold);font-variant-numeric:tabular-nums;font-weight:800}
+.b-offline{display:none;align-items:center;justify-content:space-between;gap:14px;flex-wrap:wrap;margin:0 0 16px;padding:14px 16px;border-radius:16px;border:1px dashed var(--line-2);color:var(--text-2);font-size:14px}
+[data-live=off] .b-offline{display:flex}
+.b-grid{display:grid;grid-template-columns:repeat(12,minmax(0,1fr));gap:14px}
+.cell{background:rgba(255,255,255,.022);border:1px solid rgba(255,255,255,.065);border-radius:22px;padding:22px}
+.c-eq{grid-column:1/5}.c-ch{grid-column:5/13}.c-ps{grid-column:1/5}.c-kp{grid-column:5/13}.c-pg{grid-column:1/8}.c-nx{grid-column:8/13}
+.big{font-size:clamp(42px,4.4vw,60px);font-weight:900;letter-spacing:-.045em;line-height:1.02;margin-top:12px;font-variant-numeric:tabular-nums;white-space:nowrap}
+.big small{font-size:16px;color:var(--mute);font-weight:750;margin-left:8px;letter-spacing:0}
+.roi{display:inline-flex;align-items:center;gap:6px;margin-top:12px;font-weight:850;font-size:16px;padding:5px 11px;border-radius:10px;background:rgba(255,255,255,.05);font-variant-numeric:tabular-nums}
+.roi[data-tone=up]{background:rgba(47,209,138,.12)}.roi[data-tone=down]{background:rgba(255,77,94,.12)}
+.roi .i{width:14px;height:14px;stroke-width:2.6}
+.roi-note{font-size:13px;color:var(--mute);margin-left:8px;font-weight:600}
+.split{list-style:none;margin:22px 0 0;padding:16px 0 0;border-top:1px solid rgba(255,255,255,.07);display:grid;gap:9px;font-size:14px}
+.split li{display:flex;justify-content:space-between;gap:10px;color:var(--mute)}
+.split b{color:var(--text-2);font-weight:750;font-variant-numeric:tabular-nums}
+.split li.sum{padding-top:10px;border-top:1px dashed rgba(255,255,255,.1);color:var(--text)}
+.split li.sum b{color:var(--text);font-weight:850}
+.c-ch{display:flex;flex-direction:column}
+.chart-head{display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap}
+.legend{display:flex;gap:14px;font-size:12px;color:var(--mute);font-weight:650}
+.legend span{display:inline-flex;align-items:center;gap:6px}
+.legend i{width:14px;height:2px;border-radius:2px;background:var(--long)}
+.legend i.b{background:none;border-top:1.5px dashed rgba(255,255,255,.45);height:0}
+.chart{position:relative;flex:1;min-height:230px;margin-top:14px;touch-action:pan-y}
+.chart svg{position:absolute;inset:0;width:100%;height:100%;overflow:visible}
+.chart .ln{fill:none;stroke-width:2.2;stroke-linejoin:round;stroke-linecap:round;filter:drop-shadow(0 0 6px rgba(247,201,72,.25))}
+.chart .base{stroke:rgba(255,255,255,.35);stroke-dasharray:4 5}
+.chart .day{stroke:rgba(255,255,255,.05)}
+.chart .future{fill:url(#hatch)}
+.chart .liqm{fill:var(--short);stroke:#05070c;stroke-width:2}
+.y-lbl{position:absolute;left:0;font-size:11px;color:var(--faint);transform:translateY(-50%);font-variant-numeric:tabular-nums;background:rgba(10,14,23,.85);padding:1px 6px;border-radius:6px;pointer-events:none}
+.y-lbl.base{color:var(--text-2)}
+.axis{position:relative;height:18px;margin-top:10px;font-size:11px;color:var(--faint);font-weight:650}
+.axis span{position:absolute;transform:translateX(-50%);white-space:nowrap}
+.now-dot{position:absolute;width:12px;height:12px;margin:-6px 0 0 -6px;border-radius:50%;background:var(--gold);box-shadow:0 0 0 4px rgba(247,201,72,.22),0 0 22px var(--gold);pointer-events:none;opacity:0}
+.now-dot::after{content:"";position:absolute;inset:-7px;border-radius:50%;border:1.5px solid var(--gold);opacity:0}
+.motion .now-dot::after{animation:ring 2s var(--ease) infinite}
+@keyframes ring{0%{opacity:.8;transform:scale(.4)}100%{opacity:0;transform:scale(1.9)}}
+.xhair{position:absolute;top:0;bottom:0;width:1px;background:rgba(255,255,255,.22);pointer-events:none;opacity:0}
+.tip{position:absolute;top:0;pointer-events:none;background:rgba(9,12,20,.95);border:1px solid var(--line-2);border-radius:12px;padding:9px 12px;font-size:12px;line-height:1.5;white-space:nowrap;opacity:0;transform:translate(-50%,-4px);font-variant-numeric:tabular-nums;box-shadow:0 12px 30px rgba(0,0,0,.5);z-index:2}
+.tip b{font-size:14px}
+.chart.hover .xhair,.chart.hover .tip{opacity:1}
+.chart-empty{position:absolute;inset:0;display:grid;place-items:center;color:var(--faint);font-size:14px}
+.pos-head{display:flex;justify-content:space-between;align-items:center;gap:10px}
+.side{display:inline-flex;align-items:center;gap:6px;height:30px;padding:0 12px;border-radius:9px;font-weight:900;font-size:14px;background:rgba(255,255,255,.06);color:var(--text-2)}
+.side[data-tone=up]{background:rgba(47,209,138,.14);color:var(--long)}
+.side[data-tone=down]{background:rgba(255,77,94,.14);color:var(--short)}
+.rows{display:grid;gap:9px;margin-top:16px;font-size:14px}
+.rows div{display:flex;justify-content:space-between;gap:10px;color:var(--mute)}
+.rows b{color:var(--text);font-weight:750;font-variant-numeric:tabular-nums;text-align:right}
+.liq{margin-top:18px;padding-top:16px;border-top:1px solid rgba(255,255,255,.07)}
+.liq-head{display:flex;justify-content:space-between;align-items:baseline;gap:10px;font-size:14px;color:var(--mute)}
+.liq-head b{color:var(--text);font-variant-numeric:tabular-nums}
+.liq-dist{font-size:20px;font-weight:900;font-variant-numeric:tabular-nums;color:var(--text)}
+.liq-bar{position:relative;height:9px;border-radius:99px;background:rgba(255,255,255,.07);margin-top:12px;overflow:hidden}
+.liq-bar i{position:absolute;left:0;top:0;bottom:0;width:0;border-radius:inherit;background:linear-gradient(90deg,var(--short),var(--amber) 45%,var(--long));background-size:var(--bw,100%) 100%;transition:width 1.4s var(--ease)}
+.liq-note{margin:10px 0 0;font-size:13px;color:var(--mute)}
+.c-ps[data-risk=hot]{border-color:rgba(255,77,94,.45);box-shadow:0 0 0 1px rgba(255,77,94,.15),0 0 60px -20px rgba(255,77,94,.55)}
+.c-ps[data-risk=hot] .liq-dist{color:var(--short)}
+.c-ps[data-risk=warm] .liq-dist{color:var(--amber)}
+.c-ps[data-risk=calm] .liq-dist{color:var(--long)}
+.motion .c-ps[data-risk=hot]{animation:hot 2.4s ease-in-out infinite}
+@keyframes hot{50%{box-shadow:0 0 0 1px rgba(255,77,94,.3),0 0 80px -16px rgba(255,77,94,.75)}}
+.c-kp{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:14px;padding:0;background:none;border:0}
+.kpi{display:flex;flex-direction:column;justify-content:space-between;gap:10px;min-height:112px}
+.kpi b{font-size:clamp(20px,2vw,26px);font-weight:850;letter-spacing:-.02em;font-variant-numeric:tabular-nums;line-height:1.1}
+.kpi small{display:block;font-size:12px;color:var(--mute);font-weight:600;margin-top:5px}
+.prog-head{display:flex;justify-content:space-between;align-items:baseline;gap:10px}
+.prog-head b{font-size:22px;font-weight:900;letter-spacing:-.02em;font-variant-numeric:tabular-nums}
+.prog-bar{position:relative;height:12px;border-radius:99px;background:rgba(255,255,255,.07);margin:16px 0 12px;overflow:hidden}
+.prog-bar i{position:absolute;left:0;top:0;bottom:0;width:0;border-radius:inherit;background:linear-gradient(90deg,var(--gold-2),var(--gold),var(--gold-soft));box-shadow:0 0 24px rgba(247,201,72,.6);transition:width 1.6s var(--ease)}
+.prog-bar::after{content:"";position:absolute;inset:0;background:repeating-linear-gradient(90deg,transparent 0 calc(100% / 7 - 2px),rgba(8,11,19,.95) calc(100% / 7 - 2px) calc(100% / 7));pointer-events:none}
+.prog-foot{display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap;font-size:13px;color:var(--mute);font-variant-numeric:tabular-nums}
+.prog-foot b{color:var(--text-2);font-weight:750}
+.c-nx b.nx{display:block;font-size:22px;font-weight:900;margin-top:8px;letter-spacing:-.02em}
+.nx-bar{height:8px;border-radius:99px;background:rgba(255,255,255,.07);margin:14px 0 10px;overflow:hidden}
+.nx-bar i{display:block;height:100%;width:0;border-radius:inherit;background:linear-gradient(90deg,#b98a1e,var(--gold));transition:width 1.6s var(--ease)}
+.b-foot{display:flex;justify-content:space-between;gap:8px 20px;flex-wrap:wrap;margin:18px 4px 0;font-size:12px;color:var(--faint)}
+
+/* challenge sign-up (built only when a link is configured) */
+.apply{position:relative;margin-top:22px;border-radius:28px;padding:36px 40px;display:flex;align-items:center;justify-content:space-between;gap:28px;overflow:hidden;isolation:isolate;background:radial-gradient(640px 260px at 0% 0%,rgba(247,201,72,.2),transparent 70%),linear-gradient(135deg,#191409,#0c0f16 62%);border:1px solid rgba(247,201,72,.35)}
+.apply::after{content:"";position:absolute;inset:0;z-index:-1;background:linear-gradient(105deg,transparent 35%,rgba(255,226,154,.13) 50%,transparent 65%);transform:translateX(-100%)}
+.motion .apply::after{animation:sweep 5.5s var(--ease) infinite}
+@keyframes sweep{0%,55%{transform:translateX(-100%)}100%{transform:translateX(100%)}}
+.apply h3{font-size:clamp(26px,3vw,36px);letter-spacing:-.04em;margin:12px 0 8px;font-weight:880}
+.apply p{margin:0;color:var(--text-2);max-width:560px}
+
+/* 3D studio preview */
+.studio-sec{padding-bottom:80px}
+.monitor{display:block;max-width:1060px;margin:0 auto;padding:10px;border-radius:24px;background:linear-gradient(180deg,#1b2233,#0b0f19);border:1px solid var(--line-2);box-shadow:0 70px 160px -60px rgba(60,200,255,.35),0 40px 90px -40px #000;text-decoration:none;transform-origin:50% 100%;will-change:transform}
+.screen{position:relative;border-radius:16px;overflow:hidden;aspect-ratio:1200/630;background:#000}
+.screen img{display:block;width:100%;height:100%;object-fit:cover;transition:transform 1.2s var(--ease)}
+.monitor:hover .screen img{transform:scale(1.025)}
+.live-badge{position:absolute;top:16px;left:16px;display:inline-flex;align-items:center;gap:7px;height:28px;padding:0 11px;border-radius:8px;background:#e5243b;color:#fff;font-size:12px;font-weight:900;letter-spacing:.1em}
+.live-badge i{width:7px;height:7px;border-radius:50%;background:#fff}
+.motion .live-badge i{animation:blink 1.2s infinite}
+@keyframes blink{50%{opacity:.3}}
+.play{position:absolute;left:50%;top:50%;width:92px;height:92px;margin:-46px 0 0 -46px;border-radius:50%;display:grid;place-items:center;background:rgba(5,7,12,.55);border:1px solid rgba(255,255,255,.25);-webkit-backdrop-filter:blur(8px);backdrop-filter:blur(8px);color:#fff;transition:transform .5s var(--ease),background .3s}
+.play .i{width:34px;height:34px;margin-left:4px}
+.monitor:hover .play{transform:scale(1.1);background:rgba(247,201,72,.85);color:#1b1305}
+.studio-cta{justify-content:center;margin-top:34px}
+
+/* how it works: sticky stage + scrolling steps */
+.how{display:grid;grid-template-columns:minmax(0,1.08fr) minmax(0,.92fr);gap:60px;align-items:start}
+.stage{position:sticky;top:calc(var(--chrome-h) + 22px);height:min(640px,calc(100vh - var(--chrome-h) - 44px));border-radius:30px;overflow:hidden;background:radial-gradient(circle at 50% 46%,#0f1b2d 0%,#070a11 72%);border:1px solid var(--line);transition:top .5s var(--ease);isolation:isolate}
+.stage::before,.stage::after{content:"";position:absolute;width:22px;height:22px;border:1.5px solid rgba(247,201,72,.55);z-index:3;pointer-events:none}
+.stage::before{top:10px;right:10px;border-left:0;border-bottom:0;border-radius:0 8px 0 0}
+.stage::after{bottom:10px;left:10px;border-right:0;border-top:0;border-radius:0 0 0 8px}
+.stage canvas{position:absolute;inset:0;width:100%;height:100%;display:block;transition:opacity .8s var(--ease),transform 1s var(--ease)}
+.stage[data-stage="1"] canvas{opacity:.16;transform:scale(.88)}
+.stage-top{position:absolute;top:24px;left:24px;right:30px;display:flex;justify-content:space-between;align-items:center;gap:10px;z-index:2}
+.dots{display:flex;gap:6px}
+.dots span{height:26px;padding:0 10px;border-radius:99px;display:inline-flex;align-items:center;font-size:12px;font-weight:800;color:var(--faint);background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.06);transition:all .4s var(--ease);white-space:nowrap}
+.stage[data-stage="1"] .dots span:nth-child(1),.stage[data-stage="2"] .dots span:nth-child(2),.stage[data-stage="3"] .dots span:nth-child(3),.stage[data-stage="4"] .dots span:nth-child(4){color:#1b1305;background:var(--gold);border-color:var(--gold)}
+.stage-time{font-size:12px;color:var(--mute);font-weight:650;white-space:nowrap}
+.eye{position:absolute;left:50%;top:47%;width:min(74%,440px);margin:0;transform:translate(-50%,-50%);transition:opacity .7s var(--ease),transform .9s var(--ease);z-index:1}
+.eye .frame{position:relative;border-radius:18px;overflow:hidden;border:1px solid rgba(143,227,255,.35);box-shadow:0 0 0 8px rgba(60,200,255,.06),0 0 90px -10px rgba(60,200,255,.45);aspect-ratio:16/9;background:#0a0f1a}
+.eye img{display:block;width:100%;height:100%;object-fit:cover}
+.eye .frame::before{content:"";position:absolute;inset:0;z-index:1;pointer-events:none;background:radial-gradient(circle,transparent 58%,rgba(5,9,18,.3) 64%) 0 0/11px 9.5px,radial-gradient(circle,transparent 58%,rgba(5,9,18,.3) 64%) 5.5px 4.75px/11px 9.5px}
+.eye .frame::after{content:"";position:absolute;left:0;right:0;height:30%;top:-30%;z-index:2;background:linear-gradient(180deg,transparent,rgba(143,227,255,.28),transparent);pointer-events:none}
+.motion .eye .frame::after{animation:scan 2.8s linear infinite}
+@keyframes scan{to{top:100%}}
+.eye figcaption{margin-top:12px;text-align:center;font-size:13px;color:var(--mute)}
+.stage:not([data-stage="1"]) .eye{opacity:0;transform:translate(-120%,-50%) scale(.35)}
+.ov{position:absolute;left:22px;right:22px;bottom:22px;z-index:2;padding:16px 18px;border-radius:18px;background:rgba(8,11,19,.78);border:1px solid rgba(255,255,255,.08);-webkit-backdrop-filter:blur(12px);backdrop-filter:blur(12px);opacity:0;transform:translateY(14px);transition:opacity .5s var(--ease),transform .7s var(--ease);pointer-events:none}
+.stage[data-stage="2"] .ov2,.stage[data-stage="3"] .ov3,.stage[data-stage="4"] .ov4{opacity:1;transform:none}
+.ov .k{font-size:12px;color:var(--mute);font-weight:700}
+.ov .v{font-size:26px;font-weight:900;letter-spacing:-.03em;font-variant-numeric:tabular-nums}
+.ov .v small{font-size:14px;color:var(--mute);font-weight:700;margin-left:6px}
+.hz{display:grid;grid-template-columns:auto 1fr auto;align-items:center;gap:8px 12px;font-size:13px;margin-top:8px}
+.hz span{color:var(--text-2);font-weight:700}
+.hz em{font-style:normal;font-weight:800;font-variant-numeric:tabular-nums;text-align:right;min-width:52px}
+.hz .bar{height:8px;border-radius:99px;background:rgba(255,255,255,.07);overflow:hidden}
+.hz .bar i{display:block;height:100%;width:0;border-radius:inherit;transition:width 1s var(--ease)}
+.hz .l i{background:var(--short)}.hz .r i{background:var(--long)}
+.call{display:flex;justify-content:space-between;align-items:center;gap:10px;margin-top:10px;padding-top:10px;border-top:1px solid rgba(255,255,255,.08);font-size:13px;color:var(--mute)}
+.call b{font-size:15px;color:var(--text)}
+.rw{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:6px}
+.rw div{padding:10px 12px;border-radius:12px;background:rgba(255,255,255,.04)}
+.rw b{display:block;font-size:22px;font-weight:900;font-variant-numeric:tabular-nums}
+.rw .g b{color:var(--long)}.rw .r b{color:var(--short)}
+.rw span{font-size:12px;color:var(--mute);font-weight:700}
+.steps{list-style:none;margin:0;padding:0}
+.step{min-height:74vh;display:flex;flex-direction:column;justify-content:center;opacity:.3;transition:opacity .6s var(--ease)}
+.step.on{opacity:1}
+.step:first-child{min-height:60vh}
+.step:last-child{min-height:72vh}
+.step .n{display:inline-flex;align-items:center;gap:10px;font-weight:850;color:var(--gold);letter-spacing:.14em;font-size:13px}
+.step .n .i{width:18px;height:18px}
+.step h3{font-size:clamp(28px,3.1vw,40px);letter-spacing:-.04em;margin:12px 0 14px;font-weight:880;line-height:1.2}
+.step p{color:var(--text-2);font-size:17px;margin:0;max-width:460px}
+.step .live{display:inline-flex;align-items:center;gap:9px;margin-top:20px;padding:9px 14px;border-radius:12px;border:1px solid var(--line-2);background:rgba(255,255,255,.025);font-size:14px;color:var(--text-2);font-variant-numeric:tabular-nums;align-self:flex-start}
+.step .live .dot{background:var(--cyan)}
+
+/* rules */
+.rules{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:16px}
+.rule{padding:28px;border-radius:24px;background:linear-gradient(180deg,rgba(255,255,255,.04),rgba(255,255,255,.012));border:1px solid var(--line)}
+.rule .ic{width:44px;height:44px;border-radius:13px;display:grid;place-items:center;background:rgba(247,201,72,.1);color:var(--gold);margin-bottom:20px;border:1px solid rgba(247,201,72,.2)}
+.rule .ic .i{width:22px;height:22px}
+.rule b{display:block;font-size:30px;letter-spacing:-.035em;font-weight:900;font-variant-numeric:tabular-nums;line-height:1.15}
+.rule p{margin:8px 0 0;color:var(--text-2);font-size:15px}
+.src{margin-top:18px;font-size:13px;color:var(--faint)}
+
+/* rich room */
+.ladder-head{display:flex;justify-content:space-between;align-items:flex-end;gap:16px;flex-wrap:wrap;margin:96px 0 28px}
+.ladder-head h2{margin-bottom:10px}
+.now-eq{display:inline-flex;align-items:center;gap:10px;padding:10px 16px;border-radius:14px;border:1px solid var(--line-2);background:rgba(255,255,255,.03);font-size:14px;color:var(--mute);font-weight:650}
+.now-eq b{color:var(--text);font-size:17px;font-variant-numeric:tabular-nums}
+.ladder{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:14px}
+.item{position:relative;padding:20px;border-radius:20px;border:1px solid var(--line);background:rgba(255,255,255,.02);transition:border-color .5s,background .5s,box-shadow .5s}
+.item .th{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:4px 8px}
+.item b{font-size:24px;font-weight:900;letter-spacing:-.03em;font-variant-numeric:tabular-nums;white-space:nowrap}
+.item .st{display:inline-flex;align-items:center;gap:5px;font-size:11px;font-weight:850;letter-spacing:.04em;color:var(--faint);white-space:nowrap}
+.item .st .i{width:14px;height:14px}
+.item .name{display:block;margin-top:6px;color:var(--text-2);font-size:15px;font-weight:650}
+.item .bar{height:4px;border-radius:99px;background:rgba(255,255,255,.07);margin-top:14px;overflow:hidden;display:none}
+.item .bar i{display:block;height:100%;width:0;border-radius:inherit;background:var(--gold);transition:width 1.6s var(--ease)}
+.item.got{border-color:rgba(247,201,72,.55);background:linear-gradient(180deg,rgba(247,201,72,.13),rgba(247,201,72,.02));box-shadow:0 0 50px -18px rgba(247,201,72,.6)}
+.item.got b,.item.got .st{color:var(--gold)}
+.item.next{border-color:var(--line-2)}
+.item.next .bar{display:block}
+.item.next .st{color:var(--text-2)}
+
+/* community */
+.tg-sec,.ref-sec{padding:24px 0}
+.tgc{position:relative;display:flex;gap:30px;align-items:center;justify-content:space-between;padding:40px 44px;border-radius:30px;overflow:hidden;isolation:isolate;background:#0a1320}
+.tgc::before{content:"";position:absolute;inset:-80%;z-index:-2;background:conic-gradient(from 0deg,transparent 0 58%,rgba(67,189,245,.7) 72%,transparent 84%)}
+.motion .tgc::before{animation:spin 7s linear infinite}
+.tgc::after{content:"";position:absolute;inset:1px;z-index:-1;border-radius:29px;background:radial-gradient(520px 260px at 0% 0%,rgba(67,189,245,.16),transparent 70%),linear-gradient(135deg,#0d1b2b,#090f19)}
+@keyframes spin{to{transform:rotate(1turn)}}
+.tgc .eyebrow{color:#7fcaf5}
+.tgc h2{font-size:clamp(26px,3.2vw,40px)}
+.tgc .sub{color:#a9c3d8;max-width:560px}
+.tg-list{list-style:none;margin:20px 0 0;padding:0;display:flex;flex-wrap:wrap;gap:10px 22px;color:#d6ebf8;font-size:15px;font-weight:600}
+.tg-list li{display:flex;align-items:center;gap:8px}
+.tg-list .i{color:#7fcaf5}
+.ref{display:flex;gap:28px;align-items:center;justify-content:space-between;padding:36px 40px;border-radius:28px;background:linear-gradient(135deg,#1d1409,#0e0b07);border:1px solid #5a3a1a}
+.ref h2{font-size:clamp(24px,3vw,36px);color:#ffc58a}
+
+/* download */
+.dl{display:grid;grid-template-columns:minmax(0,1.15fr) minmax(0,.85fr);gap:22px;align-items:stretch}
+.dl-main{padding:34px;border-radius:26px;border:1px solid var(--line);background:linear-gradient(180deg,rgba(255,255,255,.035),rgba(255,255,255,.01))}
+.dl-main h2{font-size:clamp(28px,3.4vw,42px);margin-top:12px}
+.dl ol{list-style:none;counter-reset:s;margin:26px 0 0;padding:0;display:grid;gap:14px}
+.dl li{counter-increment:s;position:relative;padding-left:44px;color:var(--text-2)}
+.dl li::before{content:counter(s);position:absolute;left:0;top:-1px;width:30px;height:30px;border-radius:10px;display:grid;place-items:center;font-size:13px;font-weight:900;color:var(--gold);background:rgba(247,201,72,.1);border:1px solid rgba(247,201,72,.25)}
+code{font-family:ui-monospace,SFMono-Regular,Consolas,monospace;background:#121828;border:1px solid var(--line-2);border-radius:7px;padding:2px 7px;font-size:13.5px;color:#e7ebf7;white-space:nowrap}
+@media (max-width:370px){code{white-space:normal;word-break:break-all}}
+.req{margin:22px 0 0;font-size:14px;color:var(--mute)}
+.obs{padding:34px;border-radius:26px;border:1px solid var(--line);background:radial-gradient(420px 220px at 100% 0%,rgba(60,200,255,.1),transparent 70%),rgba(255,255,255,.015);display:flex;flex-direction:column}
+.obs .ic{width:48px;height:48px;border-radius:14px;display:grid;place-items:center;background:rgba(60,200,255,.1);color:var(--cyan);border:1px solid rgba(60,200,255,.25);margin-bottom:22px}
+.obs .ic .i{width:24px;height:24px}
+.obs h3{font-size:24px;letter-spacing:-.03em;margin:0 0 10px}
+.obs p{margin:0;color:var(--text-2)}
+
+/* faq */
+.faq{max-width:860px}
+details{border-bottom:1px solid var(--line)}
+summary{list-style:none;cursor:pointer;display:flex;justify-content:space-between;align-items:center;gap:16px;padding:22px 4px;font-size:18px;font-weight:750;letter-spacing:-.02em}
+summary::-webkit-details-marker{display:none}
+summary .i{color:var(--mute);transition:transform .4s var(--ease),color .3s;width:20px;height:20px}
+details[open] summary .i{transform:rotate(45deg);color:var(--gold)}
+summary:hover{color:#fff}
+summary:focus-visible{outline:2px solid var(--gold);outline-offset:2px;border-radius:8px}
+details p{margin:0 4px 24px;color:var(--text-2);max-width:760px}
+
+/* side rails: a trading room's live board (left) and its community chat (right), fed by /ext/*.json.
+   Wide screens keep them fixed beside the content column; narrower ones open them from a bottom dock. */
+.rail{position:fixed;z-index:40;top:calc(var(--chrome-h) + 22px);width:272px;max-height:calc(100vh - var(--chrome-h) - 44px);display:flex;flex-direction:column;opacity:0;transition:top .5s var(--ease),opacity .6s var(--ease),transform .8s var(--ease)}
+.rail-l{left:calc(50% - 590px - 20px - 272px);transform:translateX(-28px)}
+.rail-r{left:calc(50% + 590px + 20px);transform:translateX(28px)}
+.rail.ready{opacity:1;transform:none}
+.rail-card{display:flex;flex-direction:column;min-height:0;overflow:hidden;border-radius:22px;background:linear-gradient(180deg,#111726,#080b13);border:1px solid var(--line);box-shadow:0 30px 80px -30px #000,inset 0 1px 0 rgba(255,255,255,.05)}
+.rail-l .rail-card{border-color:rgba(247,201,72,.28)}
+.rail-body{flex:1;min-height:0;overflow-y:auto;scrollbar-width:none;padding:16px 16px 14px}
+.rail-foot{padding:12px 16px 14px;border-top:1px solid rgba(255,255,255,.06)}
+.rail-foot .rail-cta{margin-top:0}
+.rail-body::-webkit-scrollbar{display:none}
+.rail-head{display:flex;align-items:center;gap:9px;padding:14px 16px 12px;border-bottom:1px solid rgba(255,255,255,.06);font-size:13px}
+.rail-head b{font-weight:850;letter-spacing:-.01em}
+.rail-head .live{margin-left:auto;font-size:10.5px;font-weight:850;letter-spacing:.1em;color:var(--long)}
+.rail-head .dot{background:var(--long);animation:ping 1.8s infinite}
+.rail-x{display:none;margin-left:6px;width:28px;height:28px;border-radius:9px;border:1px solid var(--line-2);background:transparent;color:var(--mute);cursor:pointer;font-size:16px;line-height:1}
+.rt-total .lbl{font-size:12px}
+.rt-eq{margin-top:4px;font-size:30px;font-weight:900;letter-spacing:-.04em;font-variant-numeric:tabular-nums;line-height:1.1;white-space:nowrap}
+.rt-eq small{font-size:12px;color:var(--mute);font-weight:750;margin-left:5px;letter-spacing:0}
+.rt-sub{display:flex;align-items:center;gap:8px;margin-top:6px;font-size:12px;color:var(--mute);font-weight:650}
+.rt-sub .roi{margin:0;font-size:13px;padding:3px 8px}
+.rt-rooms{display:grid;gap:8px;margin-top:14px}
+.rt-room{padding:11px 12px 10px;border-radius:14px;background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.06)}
+.rt-room .top{display:flex;justify-content:space-between;align-items:baseline;gap:8px;font-size:13px}
+.rt-room .top b{font-weight:800}
+.rt-room .top em{font-style:normal;font-weight:900;font-size:15px;font-variant-numeric:tabular-nums}
+.rt-room .meta{display:flex;justify-content:space-between;gap:8px;margin-top:3px;font-size:11.5px;color:var(--mute);font-variant-numeric:tabular-nums}
+.rt-room svg{display:block;width:100%;height:30px;margin-top:6px;overflow:visible}
+.rt-room .hold{display:flex;align-items:center;gap:6px;margin-top:6px;font-size:11.5px;color:var(--text-2);font-weight:650}
+.rt-room .hold .dot{width:6px;height:6px;background:var(--cyan);box-shadow:0 0 8px var(--cyan)}
+.rt-recent{margin-top:14px}
+.rt-recent .lbl{font-size:12px}
+.rt-recent ul{list-style:none;margin:8px 0 0;padding:0;display:grid;gap:5px}
+.rt-recent li{display:grid;grid-template-columns:auto 1fr auto;gap:8px;align-items:center;font-size:12px;padding:6px 8px;border-radius:10px;background:rgba(255,255,255,.02);font-variant-numeric:tabular-nums}
+.rt-recent li b{font-weight:800;font-size:11px;color:var(--text-2)}
+.rt-recent li span{color:var(--mute);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.rt-recent li em{font-style:normal;font-weight:850}
+.rt-recent li.new{animation:fu 1.6s ease-out}
+.rail-cta{width:100%;margin-top:14px}
+.rail-note{margin:10px 2px 0;font-size:10.5px;line-height:1.5;color:var(--faint)}
+.gain{position:absolute;right:16px;top:58px;font-size:13px;font-weight:900;color:var(--long);pointer-events:none;opacity:0}
+.gain.go{animation:gain 2.2s var(--ease)}
+@keyframes gain{0%{opacity:0;transform:translateY(10px)}15%{opacity:1}100%{opacity:0;transform:translateY(-26px)}}
+.chat{list-style:none;margin:0;padding:0;display:grid;gap:10px}
+.chat li{display:grid;grid-template-columns:28px 1fr;gap:9px;align-items:start}
+.chat .av{width:28px;height:28px;border-radius:50%;display:grid;place-items:center;font-size:12px;font-weight:850;color:#0b0f19}
+.chat .who{display:flex;gap:6px;align-items:baseline;font-size:11.5px;color:var(--mute)}
+.chat .who b{color:var(--text-2);font-weight:800}
+.chat .msg{margin-top:2px;padding:7px 10px;border-radius:4px 12px 12px 12px;background:rgba(255,255,255,.05);font-size:13px;line-height:1.5;color:var(--text);overflow-wrap:anywhere}
+.chat li.new{animation:chatIn .6s var(--ease)}
+.teaser{font-size:13.5px;color:var(--text-2);line-height:1.6}
+.teaser p{margin:0 0 12px}
+.teaser ul{list-style:none;margin:0;padding:0;display:grid;gap:8px}
+.teaser li{display:flex;gap:8px;align-items:center;font-weight:650;color:#d6ebf8;font-size:13px}
+.teaser .i{color:#7fcaf5}
+#chatRail.teasing .live{display:none}
+@keyframes chatIn{from{opacity:0;transform:translateY(10px)}}
+.dock{display:none}
+@media (max-width:1819px){
+  .rail{top:auto;bottom:calc(76px + env(safe-area-inset-bottom));width:min(340px,calc(100vw - 24px));max-height:min(72vh,620px);transform:translateY(16px) scale(.98);pointer-events:none}
+  .rail-l{left:12px}
+  .rail-r{left:auto;right:12px}
+  .rail.ready{opacity:0;transform:translateY(16px) scale(.98)}
+  .rail.open{opacity:1;transform:none;pointer-events:auto;z-index:45}
+  .rail-x{display:inline-grid;place-items:center}
+  .dock{position:fixed;z-index:42;left:12px;right:12px;bottom:calc(14px + env(safe-area-inset-bottom));display:flex;justify-content:space-between;gap:10px;pointer-events:none}
+  .dock[hidden]{display:none}
+  .dock .pill{pointer-events:auto;height:44px;padding:0 16px 0 13px;font-size:13px;color:var(--text);background:rgba(11,15,25,.92);-webkit-backdrop-filter:blur(12px);backdrop-filter:blur(12px);box-shadow:0 12px 30px -8px rgba(0,0,0,.8);cursor:pointer;opacity:0;transform:translateY(12px);transition:opacity .5s var(--ease),transform .6s var(--ease)}
+  .dock .pill.ready{opacity:1;transform:none}
+  .dock .pill b{font-variant-numeric:tabular-nums}
+  .dock .pill.rich{border-color:rgba(247,201,72,.4)}
+  .dock .pill .i{width:16px;height:16px}
+}
+html:not(.motion) .rail,html:not(.motion) .dock .pill{transition:none}
+
+footer{padding:56px 0 72px;color:var(--faint);font-size:13px;border-top:1px solid var(--line)}
+footer p{margin:0 0 8px}
+footer .flogo{display:flex;align-items:center;gap:10px;color:var(--text-2);font-weight:800;margin-bottom:18px;font-size:15px}
+
+@media (max-width:1099px){
+  .b-grid{grid-template-columns:repeat(2,minmax(0,1fr));grid-auto-flow:dense}
+  .c-eq{grid-column:1}.c-ps{grid-column:2}.c-ch,.c-kp{grid-column:1/-1}.c-pg{grid-column:1}.c-nx{grid-column:2}
+  .how{gap:40px}
+  .rules{grid-template-columns:repeat(2,minmax(0,1fr))}
+}
+@media (max-width:959px){
+  .hero{display:block;min-height:0;padding:0 0 72px}
+  .brain-wrap{position:relative;left:0;width:100%;height:min(60vh,520px);margin-bottom:-22vh}
+  .hero-brain{-webkit-mask-image:radial-gradient(closest-side at 50% 46%,#000 55%,transparent 100%);mask-image:radial-gradient(closest-side at 50% 46%,#000 55%,transparent 100%)}
+  .brain-cap{top:16px;bottom:auto;right:16px}
+  .scroll-cue{display:none}
+  .how{grid-template-columns:1fr;gap:0}
+  .stage{top:calc(var(--chrome-h) + 10px);height:min(44vh,400px);z-index:3;box-shadow:0 14px 22px -10px var(--bg),0 -40px 0 0 var(--bg)}
+  .stage-top{top:16px;left:18px;right:18px}
+  .ov{left:14px;right:14px;bottom:14px;padding:12px 14px}
+  .ov .v{font-size:21px}
+  .eye{width:min(78%,360px)}
+  .eye figcaption{display:none}
+  .step{min-height:62vh;padding:6vh 0}
+  .step:first-child{min-height:52vh}
+  .dl{grid-template-columns:1fr}
+}
+@media (max-width:860px){
+  :root{--hdr:56px;--tick:34px}
+  nav.main{display:none}
+  .top-cta{margin-left:auto}
+  .logo{font-size:15px}
+  section{padding:76px 0}
+  .board{padding:16px;border-radius:24px}
+  .cell{padding:18px;border-radius:18px}
+  .rules{grid-template-columns:1fr 1fr}
+  .ladder{grid-template-columns:1fr 1fr}
+  .tgc,.ref,.apply{flex-direction:column;align-items:stretch;padding:28px 24px}
+  .tgc .btn,.ref .btn,.apply .btn{width:100%}
+  .dl-main,.obs{padding:26px 22px}
+}
+@media (max-width:639px){
+  .wrap{padding:0 16px}
+  .b-grid{grid-template-columns:1fr}
+  .c-eq,.c-ps,.c-ch,.c-kp,.c-pg,.c-nx{grid-column:1}
+  .c-kp{grid-template-columns:1fr 1fr;gap:10px}
+  .kpi{min-height:96px}
+  .chart{min-height:200px}
+  h1{font-size:clamp(38px,11.2vw,52px)}
+  .btns .btn.lg{flex:1 1 auto}
+  .rules{grid-template-columns:1fr}
+  .rule{padding:22px}
+  .ladder{gap:10px}
+  .item{padding:16px;border-radius:16px}
+  .item b{font-size:20px}
+  .item .name{font-size:14px}
+  .dots span{padding:0 8px;font-size:11px}
+  .stage-time{display:none}
+  .tk-item{padding:0 14px}
+  .tk-in{padding:0 16px}
+  .logo-t{font-size:14px}
+}
+@media (max-width:380px){.logo-t{display:none}.ladder{grid-template-columns:1fr}}
+</style>
+</head>
+<body data-live="init">
+<svg width="0" height="0" style="position:absolute" aria-hidden="true" focusable="false"><defs>
+<symbol id="i-fly" viewBox="0 0 24 24"><ellipse cx="12" cy="14.6" rx="2.5" ry="4.6"/><circle cx="12" cy="7.7" r="2"/><ellipse cx="7" cy="11.1" rx="4.5" ry="2.2" transform="rotate(-28 7 11.1)"/><ellipse cx="17" cy="11.1" rx="4.5" ry="2.2" transform="rotate(28 17 11.1)"/><path d="M10.7 6.2 9.4 4.4M13.3 6.2l1.3-1.8"/></symbol>
+<symbol id="i-play" viewBox="0 0 24 24"><path d="M8 5.5v13l10.5-6.5z" fill="currentColor"/></symbol>
+<symbol id="i-pulse" viewBox="0 0 24 24"><path d="M3 12h4l2.5-6.5 5 13 2.5-6.5h4"/></symbol>
+<symbol id="i-check" viewBox="0 0 24 24"><path d="m5 12.5 4.5 4.5L19 7.5"/></symbol>
+<symbol id="i-arrow" viewBox="0 0 24 24"><path d="M7 17 17 7M9 7h8v8"/></symbol>
+<symbol id="i-down" viewBox="0 0 24 24"><path d="M12 5v14m0 0-6-6m6 6 6-6"/></symbol>
+<symbol id="i-up" viewBox="0 0 24 24"><path d="M12 19V5m0 0-6 6m6-6 6 6"/></symbol>
+<symbol id="i-send" viewBox="0 0 24 24"><path d="M21 4 3 11.2l6.6 2.3M21 4l-3.8 16-7.6-6.5M21 4 9.6 13.5v5.8l3.1-3.2"/></symbol>
+<symbol id="i-news" viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="14" rx="2.5"/><path d="M7 9.2h5M7 12.5h10M7 15.8h10"/></symbol>
+<symbol id="i-folder" viewBox="0 0 24 24"><path d="M3 7.5A2.5 2.5 0 0 1 5.5 5h3.7l2.2 2.2h7.1A2.5 2.5 0 0 1 21 9.7v7.8a2.5 2.5 0 0 1-2.5 2.5h-13A2.5 2.5 0 0 1 3 17.5z"/></symbol>
+<symbol id="i-code" viewBox="0 0 24 24"><path d="m8.5 8-4 4 4 4M15.5 8l4 4-4 4M13.4 5.5l-2.8 13"/></symbol>
+<symbol id="i-book" viewBox="0 0 24 24"><path d="M5 5.5A2.5 2.5 0 0 1 7.5 3H19v15H7.5A2.5 2.5 0 0 0 5 20.5z"/><path d="M5 20.5A2.5 2.5 0 0 1 7.5 18H19v3H7.5A2.5 2.5 0 0 1 5 18.5"/></symbol>
+<symbol id="i-flask" viewBox="0 0 24 24"><path d="M9 3h6M10 3v6.2L4.8 18.4A1.8 1.8 0 0 0 6.4 21h11.2a1.8 1.8 0 0 0 1.6-2.6L14 9.2V3"/><path d="M7.2 15h9.6"/></symbol>
+<symbol id="i-cast" viewBox="0 0 24 24"><circle cx="12" cy="12" r="1.8"/><path d="M8.6 15.4a4.8 4.8 0 0 1 0-6.8M15.4 8.6a4.8 4.8 0 0 1 0 6.8M5.6 18.4a9 9 0 0 1 0-12.8M18.4 5.6a9 9 0 0 1 0 12.8"/></symbol>
+<symbol id="i-eye" viewBox="0 0 24 24"><path d="M2.5 12S6 5.5 12 5.5 21.5 12 21.5 12 18 18.5 12 18.5 2.5 12 2.5 12z"/><circle cx="12" cy="12" r="3"/></symbol>
+<symbol id="i-nodes" viewBox="0 0 24 24"><circle cx="6" cy="6.5" r="2"/><circle cx="18" cy="6" r="2"/><circle cx="12" cy="12.5" r="2"/><circle cx="6" cy="18" r="2"/><circle cx="18" cy="17.5" r="2"/><path d="m7.5 8 3 3M16.5 7.5l-3 3.5M10.5 14l-3 2.5M13.5 14l3 2"/></symbol>
+<symbol id="i-updown" viewBox="0 0 24 24"><path d="M8 19.5V5m0 0L4.5 8.5M8 5l3.5 3.5M16 4.5V19m0 0-3.5-3.5M16 19l3.5-3.5"/></symbol>
+<symbol id="i-spark" viewBox="0 0 24 24"><path d="M12 3.5 13.9 10l6.6 2-6.6 2L12 20.5 10.1 14l-6.6-2 6.6-2z"/></symbol>
+<symbol id="i-wallet" viewBox="0 0 24 24"><rect x="3" y="6" width="18" height="13" rx="2.5"/><path d="M3 10h18M15.5 14.5h2"/></symbol>
+<symbol id="i-trend" viewBox="0 0 24 24"><path d="m3.5 17.5 6-6 3.5 3.5 7.5-8"/><path d="M15 7h5.5v5.5"/></symbol>
+<symbol id="i-flip" viewBox="0 0 24 24"><path d="M4 8.5h14.5L15 5M20 15.5H5.5L9 19"/></symbol>
+<symbol id="i-clock" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 7.5V12l3 2"/></symbol>
+<symbol id="i-lock" viewBox="0 0 24 24"><rect x="5" y="11" width="14" height="9.5" rx="2.2"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/></symbol>
+<symbol id="i-unlock" viewBox="0 0 24 24"><rect x="5" y="11" width="14" height="9.5" rx="2.2"/><path d="M8 11V8a4 4 0 0 1 7.6-1.8"/></symbol>
+<symbol id="i-plus" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></symbol>
+</defs></svg>
+
+<div class="progress" id="progress" aria-hidden="true"></div>
+<aside class="rail rail-l" id="richRail" hidden aria-label="트레이딩 룸 실전 현황">
+  <div class="rail-card">
+    <div class="rail-head"><span class="dot"></span><b id="rTitle">트레이딩 룸</b><span class="live">LIVE</span><button class="rail-x" type="button" data-close aria-label="닫기">×</button></div>
+    <div class="rail-body" style="position:relative">
+      <div class="rt-total"><span class="lbl" id="rTotLbl">방 합산 잔고</span><div class="rt-eq"><span id="rTotEq">–</span><small>USDT</small></div>
+        <div class="rt-sub"><span class="roi" id="rTotRoi">–</span><span id="rTotStart"></span></div></div>
+      <span class="gain" id="rGain"></span>
+      <div class="rt-rooms" id="rRooms"></div>
+      <div class="rt-recent"><span class="lbl">최근 익절 · 잔고·승패는 손절 포함</span><ul id="rRecent"></ul></div>
+    </div>
+    <div class="rail-foot"><a class="btn gold rail-cta" id="rApply" href="https://pf.kakao.com/_ICyin/chat" target="_blank" rel="noopener">챌린지 신청하기<svg class="i"><use href="#i-arrow"/></svg></a>
+      <p class="rail-note" id="rNote"></p></div>
+  </div>
+</aside>
+<aside class="rail rail-r" id="chatRail" hidden aria-label="커뮤니티 소통방">
+  <div class="rail-card" style="max-height:inherit">
+    <div class="rail-head"><span class="dot"></span><b id="cTitle">커뮤니티 소통방</b><span class="live">LIVE</span><button class="rail-x" type="button" data-close aria-label="닫기">×</button></div>
+    <div class="rail-body" id="cBody"><ul class="chat" id="cList"></ul></div>
+    <div class="rail-foot"><a class="btn tg rail-cta" id="cJoin" href="https://t.me/+opoYiGB_H9kwMzZl" target="_blank" rel="noopener"><svg class="i"><use href="#i-send"/></svg>소통방 입장하기</a>
+      <p class="rail-note">닉네임은 첫 글자만 보이고, 링크·연락처는 가려서 보여 줍니다.</p></div>
+  </div>
+</aside>
+<div class="dock" id="dock" hidden>
+  <button class="pill rich" type="button" id="dRich" data-open="richRail" hidden><span class="dot" style="background:var(--gold)"></span><span id="dRichName">실전 현황</span><b id="dRoi">–</b></button>
+  <button class="pill" type="button" id="dChat" data-open="chatRail" hidden><svg class="i"><use href="#i-send"/></svg><span id="dChatName">소통방</span></button>
+</div>
+<div class="chrome" id="chrome">
+  <header class="top"><div class="wrap">
+    <a class="logo" href="#top"><span class="mark"><svg class="i"><use href="#i-fly"/></svg></span><span class="logo-t">초파리 트레이딩 챌린지</span></a>
+    <nav class="main" aria-label="주요 메뉴"><a href="#board">현황판</a><a href="#how">작동 원리</a><a href="#rules">규칙</a><a href="#download">직접 돌려 보기</a><a href="#faq">FAQ</a><a href="https://t.me/+opoYiGB_H9kwMzZl" target="_blank" rel="noopener">커뮤니티</a></nav>
+    <a class="btn sm gold top-cta" href="https://pf.kakao.com/_ICyin/chat" target="_blank" rel="noopener">챌린지 신청<svg class="i"><use href="#i-arrow"/></svg></a>
+  </div></header>
+  <div class="ticker" aria-label="실시간 챌린지 현황">
+    <div class="tk-in">
+    <a class="tk-fixed" href="#board"><span class="dot"></span><span class="st" data-live-text>연결 중</span><span class="tk-eq"><b data-k="eq">–</b><small>USDT</small></span><span class="tk-roi" data-k="roi"></span></a>
+    <div class="tk-scroll"><div class="tk-track" id="tkTrack"><div class="tk-set">
+      <span class="tk-item">포지션 <b data-k="pos">–</b></span>
+      <span class="tk-item">미실현 <b data-k="upnl">–</b></span>
+      <span class="tk-item">청산가 <b data-k="liq">–</b><em data-k="liqd"></em></span>
+      <span class="tk-item">BTC <b data-k="btc">–</b><em data-k="btc24"></em></span>
+      <span class="tk-item">실현 손익 <b data-k="real">–</b></span>
+      <span class="tk-item">수수료 <b data-k="fee">–</b></span>
+      <span class="tk-item"><b data-k="day">–</b>종료까지 <b data-k="left">–</b></span>
+      <span class="tk-item">관측 <b data-k="tick">–</b>회</span>
+      <span class="tk-item">다음 아이템 <b data-k="next">–</b></span>
+    </div></div></div>
+    </div>
+  </div>
+</div>
+
+<main id="top">
+<section class="hero" aria-label="소개">
+  <div class="brain-wrap"><canvas id="heroBrain" class="hero-brain" aria-hidden="true"></canvas></div>
+  <div class="wrap hero-in">
+    <div class="hero-copy">
+      <a class="chip" href="#board" data-hero><span class="dot"></span><span class="st" data-live-text>연결 중</span><span class="sep"></span><span data-k="season">초파리 · 시즌 1</span><span class="sep"></span><span data-k="day">–</span></a>
+      <h1><span class="ln"><span>진짜 초파리 뇌가</span></span><span class="ln"><span><em>비트코인 차트</em>를 본다</span></span></h1>
+      <p class="lead" data-hero>실제 초파리의 뇌 연결 지도(뉴런 166,700개)를 컴퓨터로 돌려 1분마다 BTC 차트를 보여 주고, 그 반응으로 롱·숏 신호를 만듭니다. 책상 앞 3D 초파리가 매매할 때마다 춤추고, 기절하고, 방이 부자가 됐다가 압류당합니다.</p>
+      <div class="btns" data-hero>
+        <a class="btn gold lg" href="room/"><svg class="i"><use href="#i-play"/></svg>3D 라이브 보기</a>
+        <a class="btn ghost lg" href="#board"><svg class="i"><use href="#i-pulse"/></svg>실시간 현황판</a>
+      </div>
+      <ul class="trust" data-hero>
+        <li><svg class="i"><use href="#i-check"/></svg>실제 초파리 연결체 데이터</li>
+        <li><svg class="i"><use href="#i-check"/></svg>100% 페이퍼 트레이딩</li>
+        <li><svg class="i"><use href="#i-check"/></svg>프로그램 무료 제공</li>
+      </ul>
+      <div data-hero><a class="textlink" href="https://t.me/+opoYiGB_H9kwMzZl" target="_blank" rel="noopener"><svg class="i"><use href="#i-send"/></svg>텔레그램 커뮤니티 입장<svg class="i"><use href="#i-arrow"/></svg></a></div>
+    </div>
+  </div>
+  <div class="brain-cap" data-hero><span class="dot"></span><span id="brainCap">뇌 데이터 불러오는 중…</span></div>
+  <a class="scroll-cue" href="#board" aria-label="현황판으로 이동"><i></i></a>
+</section>
+
+<section id="board" class="board-sec"><div class="wrap">
+  <div class="sec-head">
+    <span class="eyebrow">LIVE BOARD</span>
+    <h2>챌린지 현황판</h2>
+    <p class="sub">방송 PC가 1분마다 새로 관측한 결과를 그대로 보여 줍니다. 이 화면은 15초마다 저절로 갱신됩니다.</p>
+  </div>
+  <div class="board" id="boardCard">
+    <div class="b-top">
+      <div class="b-status"><span class="pill"><span class="dot"></span><span class="st" data-live-text>연결 중</span></span><span class="mute" id="bUpdated" style="font-size:13px"></span></div>
+      <div class="b-season"><span data-k="season">초파리 · 시즌 1</span><span class="mute">·</span><span>종료까지 <b data-k="left">–</b></span></div>
+    </div>
+    <div class="b-offline"><span>방송 PC와 연결되면 실시간 값이 여기에 채워집니다. 그동안은 3D 데모 시즌을 볼 수 있습니다.</span><a class="btn ghost sm" href="room/?demo=1"><svg class="i"><use href="#i-play"/></svg>3D 데모 보기</a></div>
+    <div class="b-grid">
+      <div class="cell c-eq" data-reveal>
+        <span class="lbl">현재 잔고</span>
+        <div class="big"><span id="bEq" data-num>–</span><small>USDT</small></div>
+        <div><span class="roi" id="bRoiBox"><svg class="i" id="bRoiIc" style="display:none"><use href="#i-up"/></svg><span id="bRoi" data-num>–</span></span><span class="roi-note">시작 1,000 USDT 대비</span></div>
+        <ul class="split">
+          <li><span>시작 자금</span><b id="sInit">–</b></li>
+          <li><span>실현 손익</span><b id="sReal" data-num>–</b></li>
+          <li><span>수수료</span><b id="sFee" data-num>–</b></li>
+          <li><span>펀딩비</span><b id="sFund" data-num>–</b></li>
+          <li><span>미실현 손익</span><b id="sUpnl" data-num>–</b></li>
+          <li class="sum"><span>= 현재 잔고</span><b id="sEq">–</b></li>
+        </ul>
+      </div>
+      <div class="cell c-ch" data-reveal>
+        <div class="chart-head"><span class="lbl">시즌 잔고 추이 (7일)</span><span class="legend"><span><i id="lgLine"></i>잔고</span><span><i class="b"></i>시작 1,000</span></span></div>
+        <div class="chart" id="chart">
+          <svg id="chartSvg" aria-hidden="true">
+            <defs>
+              <linearGradient id="gLine" gradientUnits="userSpaceOnUse" x1="0" y1="0" x2="0" y2="300"><stop id="gl1" offset=".5" stop-color="#2fd18a"/><stop id="gl2" offset=".5" stop-color="#ff4d5e"/></linearGradient>
+              <linearGradient id="gUp" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#2fd18a" stop-opacity=".28"/><stop offset="1" stop-color="#2fd18a" stop-opacity=".02"/></linearGradient>
+              <linearGradient id="gDn" x1="0" y1="1" x2="0" y2="0"><stop offset="0" stop-color="#ff4d5e" stop-opacity=".28"/><stop offset="1" stop-color="#ff4d5e" stop-opacity=".02"/></linearGradient>
+              <pattern id="hatch" width="8" height="8" patternUnits="userSpaceOnUse" patternTransform="rotate(45)"><rect width="8" height="8" fill="rgba(255,255,255,.012)"/><line x1="0" y1="0" x2="0" y2="8" stroke="rgba(255,255,255,.045)" stroke-width="2"/></pattern>
+              <clipPath id="cUp"><rect id="cUpR" x="0" y="0" width="0" height="0"/></clipPath>
+              <clipPath id="cDn"><rect id="cDnR" x="0" y="0" width="0" height="0"/></clipPath>
+            </defs>
+            <g id="gDays"></g>
+            <rect class="future" id="future" x="0" y="0" width="0" height="0"/>
+            <path id="areaUp" fill="url(#gUp)" clip-path="url(#cUp)"/>
+            <path id="areaDn" fill="url(#gDn)" clip-path="url(#cDn)"/>
+            <line class="base" id="baseLine"/>
+            <path class="ln" id="eqLine" stroke="url(#gLine)" pathLength="1"/>
+            <g id="gLiq"></g>
+          </svg>
+          <div id="yLbls"></div>
+          <div class="now-dot" id="nowDot"></div>
+          <div class="xhair" id="xhair"></div>
+          <div class="tip" id="tip"></div>
+          <div class="chart-empty" id="chartEmpty">방송 PC와 연결되면 그래프가 그려집니다</div>
+        </div>
+        <div class="axis" id="axis"></div>
+      </div>
+      <div class="cell c-ps" id="posCell" data-reveal>
+        <div class="pos-head"><span class="lbl">현재 포지션</span><span class="side" id="pSide">–</span></div>
+        <div class="rows">
+          <div><span>진입가</span><b id="pEntry">–</b></div>
+          <div><span>현재가 (BTC)</span><b id="pMark">–</b></div>
+          <div><span>수량 · 규모</span><b id="pQty">–</b></div>
+          <div><span>증거금</span><b id="pMargin">–</b></div>
+          <div><span>미실현 손익</span><b id="pUpnl">–</b></div>
+          <div><span>보유 시간</span><b id="pHeld">–</b></div>
+        </div>
+        <div class="liq" id="liqBox">
+          <div class="liq-head"><span>청산가 <b id="pLiq">–</b></span><span class="liq-dist" id="pLiqDist">–</span></div>
+          <div class="liq-bar"><i id="pLiqBar"></i></div>
+          <p class="liq-note" id="pLiqNote">&nbsp;</p>
+        </div>
+      </div>
+      <div class="c-kp">
+        <div class="cell kpi" data-reveal><span class="lbl">최고 잔고</span><div><b id="kPeak" data-num>–</b><small id="kPeakAt">&nbsp;</small></div></div>
+        <div class="cell kpi" data-reveal><span class="lbl">최대 낙폭</span><div><b id="kDD" data-num>–</b><small>최고점 대비</small></div></div>
+        <div class="cell kpi" data-reveal><span class="lbl">강제청산</span><div><b id="kLiq">–</b><small>이번 시즌</small></div></div>
+        <div class="cell kpi" data-reveal><span class="lbl">BTC 무기한</span><div><b id="kBtc" data-num>–</b><small id="kBtc24">&nbsp;</small></div></div>
+        <div class="cell kpi" data-reveal><span class="lbl">관측 횟수</span><div><b id="kTick" data-num>–</b><small>1분마다 1회</small></div></div>
+        <div class="cell kpi" data-reveal><span class="lbl">다음 펀딩</span><div><b id="kFund">–</b><small id="kFundIn">&nbsp;</small></div></div>
+      </div>
+      <div class="cell c-pg" data-reveal>
+        <div class="prog-head"><span class="lbl">시즌 진행</span><b id="gDay">–</b></div>
+        <div class="prog-bar"><i id="gBar"></i></div>
+        <div class="prog-foot"><span>시작 <b id="gStart">–</b></span><span>종료까지 <b data-k="left">–</b></span><span>종료 <b id="gEnd">–</b></span></div>
+      </div>
+      <div class="cell c-nx" data-reveal>
+        <span class="lbl">부자 방 · 다음 아이템</span>
+        <b class="nx" id="nName">–</b>
+        <div class="nx-bar"><i id="nBar"></i></div>
+        <span class="mute" id="nGap" style="font-size:13px">&nbsp;</span>
+      </div>
+    </div>
+    <div class="b-foot"><span>페이퍼 트레이딩 · 실거래 없음 · 투자 자문 아님</span><span>시세: OrangeX BTC 무기한 공개 API · 60초 관측</span></div>
+  </div>
+  <div class="apply" id="apply"><div class="apply-text"><span class="eyebrow">JOIN THE CHALLENGE</span><h3>리치 트레이딩 챌린지 참가 신청</h3><p>초파리와는 별개로 리치 트레이딩 룸이 운영하는 실전 챌린지입니다. 카카오톡 채널 1:1 채팅으로 신청하세요.</p></div><a class="btn gold xl" href="https://pf.kakao.com/_ICyin/chat" target="_blank" rel="noopener">카카오톡으로 신청하기<svg class="i"><use href="#i-arrow"/></svg></a></div>
+</div></section>
+
+<section id="studio" class="studio-sec"><div class="wrap">
+  <div class="sec-head center">
+    <span class="eyebrow">3D LIVE STUDIO</span>
+    <h2>책상 앞 초파리를 3D로 생중계합니다</h2>
+    <p class="sub">매매할 때마다 춤추고, 기절하고, 수익이 쌓이면 방이 부자가 됩니다. 휴대폰에서도, OBS 방송 화면으로도 그대로 볼 수 있습니다.</p>
+  </div>
+  <a class="monitor" href="room/" aria-label="3D 라이브 방송 열기"><div class="screen">
+    <img src="og.png" alt="3D 방송 화면: 책상 앞 초파리, 뇌 점구름, 계좌 잔고" loading="lazy" onerror="this.remove()">
+    <span class="live-badge"><i></i>LIVE</span>
+    <span class="play"><svg class="i"><use href="#i-play"/></svg></span>
+  </div></a>
+  <div class="btns studio-cta">
+    <a class="btn gold lg" href="room/"><svg class="i"><use href="#i-play"/></svg>3D 라이브 보기</a>
+    <a class="btn ghost lg" id="lab" href="#" target="_blank" rel="noopener" hidden><svg class="i"><use href="#i-flask"/></svg>연구실 뷰</a>
+  </div>
+</div></section>
+
+<section id="how"><div class="wrap">
+  <div class="sec-head">
+    <span class="eyebrow">HOW IT WORKS</span>
+    <h2>1분마다 일어나는 일</h2>
+    <p class="sub">신호를 주문으로 바꾸는 매매 규칙은 제작자가 설계했습니다. 초파리 뇌는 그 규칙에 들어갈 신호만 만듭니다. 아래 수치는 가장 최근 관측의 실제 값입니다.</p>
+  </div>
+  <div class="how">
+    <div class="stage" id="stage" data-stage="1">
+      <canvas id="howBrain" aria-hidden="true"></canvas>
+      <div class="stage-top"><div class="dots"><span>01 눈</span><span>02 뇌</span><span>03 결정</span><span>04 보상</span></div><span class="stage-time" id="stageTime">최근 관측</span></div>
+      <figure class="eye"><div class="frame"><img id="eyeImg" src="room/sample-eye.png" alt="초파리 눈에 들어간 BTC 차트 이미지"></div><figcaption id="eyeCap">초파리 눈에 들어간 이미지 · 320×180</figcaption></figure>
+      <div class="ov ov2"><div class="k">0.5초 동안 퍼진 스파이크</div><div class="v"><span id="oSpk">–</span><small>개 · 뉴런 166,700개</small></div></div>
+      <div class="ov ov3">
+        <div class="k">결정 뉴런 DNp20 발화율</div>
+        <div class="hz"><span>좌 · 숏</span><div class="bar l"><i id="oL"></i></div><em id="oLv">–</em><span>우 · 롱</span><div class="bar r"><i id="oR"></i></div><em id="oRv">–</em></div>
+        <div class="call"><span>게이트 <b id="oGate">–</b></span><span>신호 <b id="oCall">–</b></span></div>
+      </div>
+      <div class="ov ov4"><div class="k">직전 손익에 따른 자극</div><div class="rw"><div class="g"><span>보상 (도파민)</span><b id="oRew">–</b></div><div class="r"><span>처벌</span><b id="oAve">–</b></div></div></div>
+    </div>
+    <ol class="steps">
+      <li class="step on"><span class="n"><svg class="i"><use href="#i-eye"/></svg>01 · 눈</span><h3>차트를 빛으로</h3><p>최근 BTC 가격 차트를 작은 이미지로 그려 초파리 눈의 광수용체에 넣습니다.</p><span class="live"><span class="dot"></span><span id="l1">방송 PC 연결을 기다리는 중</span></span></li>
+      <li class="step"><span class="n"><svg class="i"><use href="#i-nodes"/></svg>02 · 뇌</span><h3>166,700개 뉴런</h3><p>FlyEM이 전자현미경으로 복원한 수컷 초파리 연결 지도(MaleCNS v1.0)에서 신호가 0.5초 동안 퍼집니다. 스크롤하면 빛 신호가 눈에서 먼 곳으로 퍼져 나가는 순서를 볼 수 있습니다.</p><span class="live"><span class="dot"></span><span id="l2">–</span></span></li>
+      <li class="step"><span class="n"><svg class="i"><use href="#i-updown"/></svg>03 · 결정</span><h3>좌·우 DNp20</h3><p>오른쪽이 더 세게 발화하면 롱, 왼쪽이면 숏. 게이트 뉴런이 발화하지 않으면 관망합니다.</p><span class="live"><span class="dot"></span><span id="l3">–</span></span></li>
+      <li class="step"><span class="n"><svg class="i"><use href="#i-spark"/></svg>04 · 보상</span><h3>도파민 자극</h3><p>손익에 따라 보상·처벌 뉴런을 자극하고 시냅스 효율이 조금씩 바뀝니다. 이것만으로 ‘학습’이라 할 근거는 없습니다.</p><span class="live"><span class="dot"></span><span id="l4">–</span></span></li>
+    </ol>
+  </div>
+</div></section>
+
+<section id="rules"><div class="wrap">
+  <div class="sec-head">
+    <span class="eyebrow">RULES</span>
+    <h2>챌린지 규칙</h2>
+    <p class="sub">모든 시즌이 같은 규칙으로 돌아갑니다. 규칙은 시즌 중에 바꾸지 않습니다.</p>
+  </div>
+  <div class="rules">
+    <div class="rule spot"><span class="ic"><svg class="i"><use href="#i-wallet"/></svg></span><b><span data-to="1000">1,000</span> USDT</b><p>가상 시작 자금, <span data-to="7">7</span>일 시즌</p></div>
+    <div class="rule spot"><span class="ic"><svg class="i"><use href="#i-trend"/></svg></span><b>격리 <span data-to="20">20</span>배</b><p>진입마다 잔고의 <span data-to="33">33</span>%를 증거금으로</p></div>
+    <div class="rule spot"><span class="ic"><svg class="i"><use href="#i-flip"/></svg></span><b>본전 이상에서만</b><p>반대 신호가 와도 수수료를 빼고 본전 이상일 때만 뒤집습니다</p></div>
+    <div class="rule spot"><span class="ic"><svg class="i"><use href="#i-clock"/></svg></span><b><span data-to="60">60</span>초 관측</b><p>1분 사이의 순간 급등락은 반영되지 않습니다</p></div>
+  </div>
+  <p class="src">시세는 OrangeX BTC 무기한 선물 공개 API, 초기 차트는 Bybit 1분봉으로 채웁니다.</p>
+
+  <div class="ladder-head">
+    <div><span class="eyebrow">RICH ROOM</span><h2>부자 방</h2><p class="sub">순자산이 기준을 넘으면 방에 아이템이 생기고, 다시 떨어지면 압류됩니다.</p></div>
+    <span class="now-eq">지금 잔고 <b data-k="eq">–</b></span>
+  </div>
+  <div class="ladder" id="ladder">
+    <div class="item spot" data-th="1200"><div class="th"><b>1,200</b><span class="st"></span></div><span class="name">커피머신</span><div class="bar"><i></i></div></div>
+    <div class="item spot" data-th="1500"><div class="th"><b>1,500</b><span class="st"></span></div><span class="name">듀얼 모니터</span><div class="bar"><i></i></div></div>
+    <div class="item spot" data-th="2000"><div class="th"><b>2,000</b><span class="st"></span></div><span class="name">금목걸이</span><div class="bar"><i></i></div></div>
+    <div class="item spot" data-th="3000"><div class="th"><b>3,000</b><span class="st"></span></div><span class="name">트리플 모니터 · 가죽의자</span><div class="bar"><i></i></div></div>
+    <div class="item spot" data-th="5000"><div class="th"><b>5,000</b><span class="st"></span></div><span class="name">고급 세단</span><div class="bar"><i></i></div></div>
+    <div class="item spot" data-th="10000"><div class="th"><b>10,000</b><span class="st"></span></div><span class="name">요트</span><div class="bar"><i></i></div></div>
+    <div class="item spot" data-th="20000"><div class="th"><b>20,000</b><span class="st"></span></div><span class="name">금괴 더미</span><div class="bar"><i></i></div></div>
+    <div class="item spot" data-th="50000"><div class="th"><b>50,000</b><span class="st"></span></div><span class="name">헬기</span><div class="bar"><i></i></div></div>
+  </div>
+</div></section>
+
+<section id="community" class="tg-sec"><div class="wrap"><div class="tgc"><div class="tg-text"><span class="eyebrow">TELEGRAM COMMUNITY</span><h2>실시간 경제뉴스 · 제작 파일 자료실</h2><p class="sub">시장을 움직이는 경제뉴스를 실시간으로 받아 보고, 초파리 챌린지 제작 파일과 업데이트 소식을 한곳에서 챙길 수 있는 텔레그램 커뮤니티입니다.</p><ul class="tg-list"><li><svg class="i"><use href="#i-news"/></svg>실시간 경제뉴스 · 지표 발표 알림</li><li><svg class="i"><use href="#i-folder"/></svg>제작 파일 자료실 · 가이드 · 방송 장면</li><li><svg class="i"><use href="#i-fly"/></svg>초파리 시즌 소식 · 하이라이트</li></ul></div><a class="btn tg xl" href="https://t.me/+opoYiGB_H9kwMzZl" target="_blank" rel="noopener"><svg class="i"><use href="#i-send"/></svg>텔레그램 입장하기</a></div></div></section>
+
+
+
+<section id="download"><div class="wrap dl">
+  <div class="dl-main" data-rise>
+    <span class="eyebrow">FREE DOWNLOAD</span>
+    <h2>내 PC에서 직접 돌려 보기</h2>
+    <p class="sub">프로그램과 제작 가이드 PDF를 텔레그램 자료실에서 무료로 받을 수 있습니다. 내 초파리로 나만의 시즌을 열어 보세요.</p>
+    <ol>
+      <li>텔레그램 자료실에서 <b>프로그램 zip</b>과 <b>제작 가이드 PDF</b>를 받습니다</li>
+      <li>압축을 풀고 <code>install\windows-setup.cmd</code>를 더블클릭합니다 — WSL2(우분투) 확인부터 설치까지 안내합니다 (뇌 데이터 약 1.1 GB 자동 다운로드)</li>
+      <li><code>./fly start s1</code> → 브라우저에서 <code>http://127.0.0.1:8765/room/</code></li>
+    </ol>
+    <p class="req">권장: 4코어 이상 CPU · RAM 8 GB 이상(엔진이 약 0.9 GB 사용) · 여유 디스크 5 GB · 인터넷(공개 시세). GPU는 필요 없습니다.</p>
+    <div class="btns" style="margin-top:26px">
+      <a class="btn tg" href="https://t.me/+opoYiGB_H9kwMzZl" target="_blank" rel="noopener"><svg class="i"><use href="#i-send"/></svg>텔레그램 자료실에서 받기</a>
+      <a class="btn ghost" href="room/?demo=1"><svg class="i"><use href="#i-play"/></svg>3D 데모 먼저 보기</a>
+    </div>
+  </div>
+  <div class="obs" data-rise>
+    <span class="ic"><svg class="i"><use href="#i-cast"/></svg></span>
+    <span class="eyebrow">OPTIONAL</span>
+    <h3 style="margin-top:12px">방송은 선택 — OBS로 생중계</h3>
+    <p>내 PC에서 보기만 한다면 필요 없습니다. 유튜브·치지직으로 생중계하고 싶을 때만 OBS 브라우저 소스에 <code>http://127.0.0.1:8765/room/?stream=1</code>을 1920×1080으로 넣으세요. 버튼 없이 깨끗한 방송 화면이 됩니다.</p>
+  </div>
+</div></section>
+
+<section id="faq"><div class="wrap">
+  <div class="sec-head"><span class="eyebrow">FAQ</span><h2>자주 묻는 질문</h2></div>
+  <div class="faq" data-rise>
+    <details><summary>진짜 초파리인가요?<svg class="i"><use href="#i-plus"/></svg></summary><p>살아 있는 초파리가 아니라, 실제 초파리 한 마리의 뇌를 전자현미경으로 스캔해 복원한 연결 지도(뉴런 166,700개와 그 시냅스)를 컴퓨터에서 시뮬레이션한 것입니다.</p></details>
+    <details><summary>초파리가 스스로 매매하나요?<svg class="i"><use href="#i-plus"/></svg></summary><p>아닙니다. 롱·숏 신호는 뇌 시뮬레이션에서 나오지만, 언제 진입하고 뒤집을지·레버리지·증거금 같은 매매 규칙은 제작자가 정했습니다.</p></details>
+    <details><summary>따라 하면 돈을 벌 수 있나요?<svg class="i"><use href="#i-plus"/></svg></summary><p>이 챌린지는 재미와 과학 콘텐츠를 위한 페이퍼 트레이딩입니다. 결과는 우연에 크게 좌우되며, 어떤 투자 권유도 아닙니다. 20배 레버리지는 가격이 약 5%만 반대로 움직여도 증거금을 모두 잃습니다.</p></details>
+    <details><summary>초파리가 학습하나요?<svg class="i"><use href="#i-plus"/></svg></summary><p>손익에 따라 도파민 뉴런을 자극하고 시냅스 효율이 바뀌도록 만들었지만, 그것이 시장을 ‘배웠다’는 증거는 아닙니다. 방송에서도 학습이라고 단정하지 않습니다.</p></details>
+    <details><summary>현황판 숫자는 어디서 오나요?<svg class="i"><use href="#i-plus"/></svg></summary><p>챌린지를 돌리는 방송 PC가 공개하는 읽기 전용 피드에서 15초마다 가져옵니다. 잔고·포지션·청산가는 페이퍼 장부의 값 그대로이고, 연결이 끊기면 ‘연결 끊김’으로 표시됩니다.</p></details>
+    <details><summary>프로그램은 어디서 받나요?<svg class="i"><use href="#i-plus"/></svg></summary><p>텔레그램 자료실에서 무료로 받을 수 있습니다. 설치 파일(zip)과 제작 가이드 PDF, 업데이트 소식이 모두 그곳에 올라옵니다.</p></details>
+    <details><summary>화면이 ‘데모’라고 나와요<svg class="i"><use href="#i-plus"/></svg></summary><p>방송 PC와 연결이 끊겼을 때는 미리 만든 데모 시즌을 보여 주고, 연결되면 자동으로 라이브로 바뀝니다.</p></details>
+  </div>
+</div></section>
+</main>
+
+<footer><div class="wrap">
+  <div class="flogo"><span class="mark" style="color:var(--gold)"><svg class="i"><use href="#i-fly"/></svg></span>초파리 트레이딩 챌린지</div>
+  <p>데이터: MaleCNS v1.0 (FlyEM/HHMI Janelia, Univ. Cambridge, MRC LMB, Google Research; Berg et al., Cell 2026), CC BY 4.0 · 엔진: Stonkfly (MIT) · 대시보드: Bgihe/stonkfly-dashboard (MIT) · 초파리 3D 모델: Degeneret Fly (Robillionair OÜ, MIT) · three.js (MIT) · GSAP · Pretendard (OFL)</p>
+  <p>시세: OrangeX BTC 무기한 공개 API · 초기 차트: Bybit 1분봉. 거래소와 제휴한 공식 서비스가 아닙니다.</p>
+  <p>페이퍼 트레이딩 · 실거래 없음 · 투자 자문 아님 · 빌드 2026-10-01</p>
+</div></footer>
+
+<script type="module">
+const $ = (s, r = document) => r.querySelector(s);
+const $$ = (s, r = document) => [...r.querySelectorAll(s)];
+const root = document.documentElement;
+const MOTION = root.classList.contains('motion');
+const FINE = matchMedia('(hover: hover) and (pointer: fine)').matches;
+const SEASON_DAYS = 7;
+const RICH = [[1200, '커피머신'], [1500, '듀얼 모니터'], [2000, '금목걸이'], [3000, '트리플 모니터·가죽의자'], [5000, '고급 세단'], [10000, '요트'], [20000, '금괴 더미'], [50000, '헬기']];
+
+const fmt = (v, d = 2) => Number(v).toLocaleString('ko-KR', { minimumFractionDigits: d, maximumFractionDigits: d });
+const sgn = (v, d = 2) => (Math.abs(v) < .5 * 10 ** -d ? '' : v > 0 ? '+' : '−') + fmt(Math.abs(v), d);
+const tone = v => (v > .004 ? 'up' : v < -.004 ? 'down' : '');
+const clamp = (v, a, b) => Math.min(b, Math.max(a, v));
+const KST = new Intl.DateTimeFormat('en-GB', { timeZone: 'Asia/Seoul', month: 'numeric', day: 'numeric', hour: '2-digit', minute: '2-digit', hourCycle: 'h23' });
+const parts = t => Object.fromEntries(KST.formatToParts(new Date(t * 1000)).map(p => [p.type, p.value]));
+const mdhm = t => { const p = parts(t); return `${p.month}/${p.day} ${p.hour}:${p.minute}`; };
+const hm = t => { const p = parts(t); return `${p.hour}:${p.minute}`; };
+const span = s => { s = Math.max(0, s); const d = Math.floor(s / 86400), h = Math.floor(s % 86400 / 3600), m = Math.floor(s % 3600 / 60); return d ? `${d}일 ${h}시간` : h ? `${h}시간 ${m}분` : `${m}분`; };
+const clock = s => { s = Math.max(0, Math.floor(s)); const d = Math.floor(s / 86400), r = s % 86400, p = n => String(n).padStart(2, '0'); return `${d ? `${d}일 ` : ''}${p(Math.floor(r / 3600))}:${p(Math.floor(r % 3600 / 60))}:${p(r % 60)}`; };
+const ago = s => (s < 60 ? '방금' : s < 3600 ? `${Math.floor(s / 60)}분 전` : `${Math.floor(s / 3600)}시간 전`);
+const sideKo = s => (s === 'LONG' || s === 'BUY' ? '롱' : s === 'SHORT' || s === 'SELL' ? '숏' : '관망');
+const setK = (k, text, t) => $$(`[data-k="${k}"]`).forEach(el => { el.textContent = text; if (t !== undefined) el.dataset.tone = t; });
+const setT = (id, text, t) => { const el = $(id); if (!el) return; el.textContent = text; if (t !== undefined) el.dataset.tone = t; };
+const S = { feed: null, v: null, fails: 0, data: null, view: null, skew: 0, counts: null, countsReal: false };
+const now = () => Date.now() / 1000 + S.skew;
+let gs = null;   // gsap, once loaded
+
+// ---- animated numbers ------------------------------------------------------------------------------------
+function flash(el, cls) { el.classList.remove('fu', 'fd'); void el.offsetWidth; el.classList.add(cls); }
+function num(el, v, f, t) {
+  if (typeof el === 'string') el = $(el);
+  if (!el) return;
+  if (t !== undefined) el.dataset.tone = t;
+  const prev = el._v; el._v = v; el._f = f;
+  if (!gs || !el._seen) { el.textContent = f(v); return; }
+  if (prev === v) return;
+  el._tw?.kill();
+  const o = { v: prev ?? 0 };
+  el._tw = gs.to(o, { v, duration: prev === undefined ? 1.6 : .9, ease: 'expo.out', onUpdate: () => { el.textContent = f(o.v); } });
+  if (prev !== undefined && Math.abs(v - prev) > 1e-9) flash(el, v > prev ? 'fu' : 'fd');
+}
+function countUp(scope) {
+  $$('[data-num]', scope).forEach(el => {
+    el._seen = true;
+    if (el._v === undefined || !gs) return;
+    const o = { v: 0 }; el._tw?.kill();
+    el._tw = gs.to(o, { v: el._v, duration: 1.8, ease: 'expo.out', onUpdate: () => { el.textContent = el._f(o.v); } });
+  });
+}
+
+// ---- live status -------------------------------------------------------------------------------------------
+function setLive(state, text) {
+  document.body.dataset.live = state;
+  $$('[data-live-text]').forEach(el => { el.textContent = text; });
+}
+function status(s, t) {
+  const L = s.ledger || {}, e = (s.events || []).at(-1), age = t.now - (e?.time || 0);
+  if (L.halted === 'bankrupt') setLive('bad', '파산 · 시즌 종료');
+  else if (s.stopped || L.halted || t.stopped || t.halted) setLive('wait', '일시정지');
+  else if (age < 180) setLive('live', 'LIVE');
+  else setLive('wait', '대기 중');
+}
+function offline(lost) {
+  if (lost) setLive('lost', '연결 끊김');
+  else { setLive('off', '오프라인'); $('#l1').textContent = '방송 PC 연결을 기다리는 중 · 샘플 이미지'; }
+  const lab = $('#lab'); if (lab && !S.feed) lab.hidden = true;
+}
+
+// ---- board -----------------------------------------------------------------------------------------------------
+function render(s, t) {
+  const L = s.ledger || {}, ev = s.events || [], e = ev.at(-1) || null;
+  const init = +(L.initial_cash || s.settings?.capital || 1000);
+  const eq = e ? +e.equity : +(L.equity ?? init), roi = (eq / init - 1) * 100;
+  const start = +L.started_at || +(s.season?.points?.[0]?.time) || null;
+  const end = start ? start + SEASON_DAYS * 86400 : null;
+  const pts = (s.season?.points || []).filter(p => p.time && p.equity != null).map(p => ({ t: +p.time, eq: +p.equity, bid: +p.bid, liq: !!p.liq }));
+  if (e && (!pts.length || e.time > pts.at(-1).t)) pts.push({ t: +e.time, eq, bid: +e.bid });
+  let peak = init, peakAt = start, dd = 0;
+  for (const p of pts) { if (p.eq > peak) { peak = p.eq; peakAt = p.t; } dd = Math.max(dd, 1 - p.eq / peak); }
+  const pos = e?.position || null, lpos = L.position || null, bid = e ? +e.bid : null;
+  const T = t.now;
+  S.view = { init, eq, start, end, pts, e };
+
+  const run = String(s.run || 's1').replace(/^s/, ''), name = s.fly_name || '초파리';
+  setK('season', `${name} · 시즌 ${run}`);
+  const day = start ? Math.floor((T - start) / 86400) + 1 : null;
+  setK('day', day ? `D+${day}` : '–');
+
+  // ticker
+  setK('eq', fmt(eq)); setK('roi', `${sgn(roi)}%`, tone(roi));
+  setK('pos', pos ? `${sideKo(pos.side)} ${pos.leverage || 20}×` : '관망', pos ? (pos.side === 'LONG' ? 'up' : 'down') : '');
+  const upnl = pos ? +pos.unrealized : 0;
+  setK('upnl', pos ? sgn(upnl) : '–', pos ? tone(upnl) : '');
+  const realized = +(L.realized_pnl || 0), fees = +(L.fees_paid || 0), funding = +(L.funding_paid || 0);
+  setK('real', sgn(realized), tone(realized)); setK('fee', sgn(-fees), fees ? 'down' : '');
+  setK('tick', fmt(e?.tick ?? L.tick ?? 0, 0));
+  let dist = null;
+  if (pos && bid) {
+    const liq = +pos.liquidation_price;
+    dist = pos.side === 'LONG' ? (bid - liq) / bid : (liq - bid) / bid;
+    setK('liq', fmt(liq, 1)); setK('liqd', `${fmt(Math.max(0, dist * 100))}%`, dist < .015 ? 'down' : '');
+  } else { setK('liq', '–'); setK('liqd', ''); }
+  const back = pts.length ? pts.reduce((a, p) => (Math.abs(p.t - (T - 86400)) < Math.abs(a.t - (T - 86400)) ? p : a)) : null;
+  const btc24 = back && bid && T - back.t > 3600 * 20 ? (bid / back.bid - 1) * 100 : null;
+  setK('btc', bid ? fmt(bid, 1) : '–'); setK('btc24', btc24 == null ? '' : `24h ${sgn(btc24)}%`, btc24 == null ? '' : tone(btc24));
+  const next = RICH.find(([th]) => th > eq);
+  setK('next', next ? `${next[1]}까지 +${fmt(next[0] - eq)}` : '모두 달성');
+
+  // equity + breakdown
+  num('#bEq', eq, v => fmt(v));
+  num('#bRoi', roi, v => `${sgn(v)}%`);
+  $('#bRoiBox').dataset.tone = tone(roi);
+  $('#bRoiIc').innerHTML = `<use href="#i-${roi < 0 ? 'down' : 'up'}"/>`; $('#bRoiIc').style.display = '';
+  setT('#sInit', fmt(init));
+  num('#sReal', realized, v => sgn(v), tone(realized));
+  num('#sFee', -fees, v => sgn(v), fees ? 'down' : '');
+  num('#sFund', -funding, v => sgn(v), tone(-funding));
+  num('#sUpnl', upnl, v => sgn(v), tone(upnl));
+  setT('#sEq', `${fmt(eq)} USDT`);
+
+  // position
+  const pc = $('#posCell');
+  if (pos) {
+    const long = pos.side === 'LONG', margin = +pos.margin, qty = +pos.qty, entry = +pos.entry;
+    setT('#pSide', `${long ? '롱' : '숏'} ${pos.leverage || 20}×`, long ? 'up' : 'down');
+    setT('#pEntry', fmt(entry, 1)); setT('#pMark', fmt(bid, 1));
+    setT('#pQty', `${fmt(qty, 3)} BTC · ${fmt(qty * bid, 0)} USDT`);
+    setT('#pMargin', `${fmt(margin)} USDT`);
+    setT('#pUpnl', `${sgn(upnl)} (${sgn(upnl / margin * 100, 1)}%)`, tone(upnl));
+    setT('#pHeld', lpos?.opened_at ? span(T - +lpos.opened_at) : '–');
+    setT('#pLiq', fmt(+pos.liquidation_price, 1));
+    const d = Math.max(0, dist * 100);
+    setT('#pLiqDist', `여유 ${fmt(d)}%`);
+    pc.dataset.risk = dist < .015 ? 'hot' : dist < .03 ? 'warm' : 'calm';
+    $('#pLiqNote').textContent = `BTC가 ${fmt(d)}% ${long ? '더 내리면' : '더 오르면'} 강제청산${dist < .015 ? ' — 아슬아슬합니다' : ''}`;
+    S.liqW = clamp(d / 10, .02, 1);
+    $('#liqBox').hidden = false;
+  } else {
+    setT('#pSide', '포지션 없음', '');
+    ['#pEntry', '#pQty', '#pMargin', '#pUpnl', '#pHeld'].forEach(id => setT(id, '–', ''));
+    setT('#pMark', bid ? fmt(bid, 1) : '–');
+    pc.dataset.risk = 'none'; $('#liqBox').hidden = true; S.liqW = 0;
+  }
+
+  // KPIs
+  num('#kPeak', peak, v => fmt(v)); setT('#kPeakAt', peakAt ? `${mdhm(peakAt)} KST` : '');
+  num('#kDD', -dd * 100, v => `${sgn(v)}%`, dd > .0001 ? 'down' : '');
+  setT('#kLiq', `${fmt(+(L.liquidations || 0), 0)}회`, +(L.liquidations || 0) ? 'down' : '');
+  num('#kBtc', bid || 0, v => fmt(v, 1));
+  setT('#kBtc24', btc24 == null ? '' : `24시간 ${sgn(btc24)}%`, btc24 == null ? '' : tone(btc24));
+  num('#kTick', +(e?.tick ?? L.tick ?? 0), v => fmt(v, 0));
+  const nf = +L.next_funding ? +L.next_funding / 1000 : null;
+  setT('#kFund', nf ? `${hm(nf)} KST` : '–'); setT('#kFundIn', nf ? (nf > T ? `${span(nf - T)} 후 · 8시간마다` : '정산 중') : '');
+
+  // season + rich room
+  if (start) {
+    S.prog = clamp((T - start) / (end - start), 0, 1);
+    setT('#gDay', `D+${Math.min(day, SEASON_DAYS)} / ${SEASON_DAYS}일 · ${fmt(S.prog * 100, 0)}%`);
+    setT('#gStart', mdhm(start)); setT('#gEnd', mdhm(end));
+  }
+  if (next) {
+    setT('#nName', `${next[1]} · ${fmt(next[0], 0)}`);
+    S.nextW = clamp(eq / next[0], 0, 1);
+    setT('#nGap', `달성률 ${fmt(S.nextW * 100, 0)}% · ${fmt(next[0] - eq)} USDT 남음`);
+  } else { setT('#nName', '모든 아이템 달성'); S.nextW = 1; setT('#nGap', ''); }
+  $$('#ladder .item').forEach(it => {
+    const th = +it.dataset.th, got = eq >= th, isNext = next && th === next[0];
+    it.classList.toggle('got', got); it.classList.toggle('next', !!isNext);
+    it.querySelector('.st').innerHTML = got ? '<svg class="i"><use href="#i-unlock"/></svg>보유 중' : isNext ? `${fmt(S.nextW * 100, 0)}% 달성` : '<svg class="i"><use href="#i-lock"/></svg>잠김';
+  });
+  bars();
+
+  // how-it-works live lines
+  if (e) {
+    const call = e.side === 'BUY' ? '롱 신호' : e.side === 'SELL' ? '숏 신호' : '관망';
+    $('#stageTime').textContent = `최근 관측 ${hm(e.time)} KST`;
+    $('#eyeCap').textContent = `초파리가 ${hm(e.time)}에 본 이미지 · 320×180`;
+    $('#l1').textContent = `지금 보이는 이미지는 ${hm(e.time)} KST에 실제로 넣은 화면입니다`;
+    const L1 = +e.left_hz || 0, R1 = +e.right_hz || 0, mx = Math.max(L1, R1, 1);
+    $('#oLv').textContent = `${fmt(L1, 0)} Hz`; $('#oRv').textContent = `${fmt(R1, 0)} Hz`;
+    $('#oL').style.width = `${L1 / mx * 100}%`; $('#oR').style.width = `${R1 / mx * 100}%`;
+    $('#oGate').textContent = `${e.gate ?? 0}회`; $('#oCall').textContent = call;
+    $('#l3').textContent = `좌 ${fmt(L1, 0)} Hz · 우 ${fmt(R1, 0)} Hz · 게이트 ${e.gate ?? 0}회 → ${call}`;
+    $('#oRew').textContent = fmt(+e.reward_spikes || 0, 0); $('#oAve').textContent = fmt(+e.aversive_spikes || 0, 0);
+    $('#l4').textContent = `최근 관측: 보상 ${fmt(+e.reward_spikes || 0, 0)} · 처벌 ${fmt(+e.aversive_spikes || 0, 0)} 스파이크`;
+  }
+  drawChart();
+  status(s, t);
+  updateAgo(t.now);
+}
+function updateAgo(T) {
+  const e = S.view?.e; if (!e) return;
+  $('#bUpdated').textContent = `마지막 관측 ${hm(e.time)} KST · ${ago(T - e.time)}`;
+}
+// With motion, the board and the rich-room ladder fill up each time they scroll into view and empty again
+// when the visitor scrolls back above them; without it everything is simply shown.
+const seen = { board: !MOTION, ladder: !MOTION };
+const pct = (on, v) => (on ? `${(v || 0) * 100}%` : '0%');
+function bars() {
+  $('#pLiqBar').style.width = pct(seen.board, S.liqW);
+  $('#pLiqBar').style.setProperty('--bw', `${100 / Math.max(S.liqW || 1, .02)}%`);
+  $('#gBar').style.width = pct(seen.board, S.prog);
+  $('#nBar').style.width = pct(seen.board, S.nextW);
+  const it = $('#ladder .item.next .bar i'); if (it) it.style.width = pct(seen.ladder, S.nextW);
+}
+function boardIn() { seen.board = true; countUp($('#boardCard')); chartShow(true); setTimeout(bars, 350); }
+function boardOut() { seen.board = false; $$('#boardCard [data-num]').forEach(el => { el._seen = false; }); chartShow(false); bars(); }
+
+// ---- equity chart ---------------------------------------------------------------------------------------------
+const chart = $('#chart'), svg = $('#chartSvg');
+let CH = null;
+function drawChart() {
+  const v = S.view; if (!v || !v.start || v.pts.length < 2) return;
+  const W = chart.clientWidth, H = chart.clientHeight; if (!W || !H) return;
+  svg.setAttribute('viewBox', `0 0 ${W} ${H}`);
+  const { pts, init, start } = v, t1 = Math.max(v.end, pts.at(-1).t);
+  let lo = Math.min(init, ...pts.map(p => p.eq)), hi = Math.max(init, ...pts.map(p => p.eq));
+  const pad = (hi - lo) * .14 || 20; lo -= pad; hi += pad;
+  const X = t => (t - start) / (t1 - start) * W, Y = q => (1 - (q - lo) / (hi - lo)) * H;
+  CH = { X, Y, W, H, pts, t1 };
+  const d = pts.map((p, i) => `${i ? 'L' : 'M'}${X(p.t).toFixed(1)},${Y(p.eq).toFixed(1)}`).join('');
+  const by = Y(init), x0 = X(pts[0].t), xn = X(pts.at(-1).t);
+  const line = $('#eqLine'); line.setAttribute('d', d);
+  const area = `${d}L${xn.toFixed(1)},${by.toFixed(1)}L${x0.toFixed(1)},${by.toFixed(1)}Z`;
+  $('#areaUp').setAttribute('d', area); $('#areaDn').setAttribute('d', area);
+  Object.entries({ x: 0, y: 0, width: W, height: Math.max(0, by) }).forEach(([k, val]) => $('#cUpR').setAttribute(k, val));
+  Object.entries({ x: 0, y: by, width: W, height: Math.max(0, H - by) }).forEach(([k, val]) => $('#cDnR').setAttribute(k, val));
+  const g = $('#gLine'); g.setAttribute('y2', H);
+  const off = clamp(by / H, 0, 1); $('#gl1').setAttribute('offset', off); $('#gl2').setAttribute('offset', off);
+  const bl = $('#baseLine'); bl.setAttribute('x1', 0); bl.setAttribute('x2', W); bl.setAttribute('y1', by); bl.setAttribute('y2', by);
+  const fut = $('#future'); fut.setAttribute('x', xn); fut.setAttribute('y', 0); fut.setAttribute('width', Math.max(0, W - xn)); fut.setAttribute('height', H);
+  $('#gDays').innerHTML = Array.from({ length: SEASON_DAYS - 1 }, (_, k) => { const x = X(start + (k + 1) * 86400).toFixed(1); return `<line class="day" x1="${x}" x2="${x}" y1="0" y2="${H}"/>`; }).join('');
+  $('#gLiq').innerHTML = pts.filter(p => p.liq).map(p => `<circle class="liqm" cx="${X(p.t).toFixed(1)}" cy="${Y(p.eq).toFixed(1)}" r="5"/>`).join('');
+  $('#lgLine').style.background = v.eq >= init ? 'var(--long)' : 'var(--short)';
+  const labels = [[hi - pad, fmt(hi - pad, 0), ''], [init, `${fmt(init, 0)} 시작`, 'base'], [lo + pad, fmt(lo + pad, 0), '']];
+  $('#yLbls').innerHTML = labels.filter(([q], i) => i === 1 || Math.abs(Y(q) - by) > 22).map(([q, txt, c]) => `<span class="y-lbl ${c}" style="top:${Y(q).toFixed(1)}px">${txt}</span>`).join('');
+  $('#axis').innerHTML = Array.from({ length: SEASON_DAYS }, (_, k) => `<span style="left:${(X(start + (k + .5) * 86400) / W * 100).toFixed(2)}%">D${k + 1}</span>`).join('');
+  const nd = $('#nowDot'); nd.style.left = `${xn}px`; nd.style.top = `${Y(pts.at(-1).eq)}px`;
+  $('#chartEmpty').hidden = true;
+  chartShow(seen.board);
+}
+// Reveal the season line (it draws itself, then the area and the live dot) or hide it again.
+function chartShow(on) {
+  const line = $('#eqLine'), nd = $('#nowDot'), areas = [$('#areaUp'), $('#areaDn')];
+  if (!on) {
+    line._shown = false; gs?.killTweensOf([line, nd, ...areas]);
+    line.style.strokeDasharray = '1'; line.style.strokeDashoffset = '1'; nd.style.opacity = 0; areas.forEach(a => { a.style.opacity = 0; });
+    return;
+  }
+  if (line._shown || !line.getAttribute('d')) return;   // not drawn yet: drawChart() calls back when data arrives
+  line._shown = true;
+  if (gs) {
+    gs.fromTo(line, { strokeDasharray: 1, strokeDashoffset: 1 }, { strokeDashoffset: 0, duration: 2.2, ease: 'power2.inOut' });
+    gs.fromTo(areas, { opacity: 0 }, { opacity: 1, duration: 1.2, delay: 1.1 });
+    gs.fromTo(nd, { opacity: 0, scale: 0 }, { opacity: 1, scale: 1, duration: .6, delay: 2, ease: 'back.out(2)' });
+  } else {
+    line.style.strokeDasharray = ''; line.style.strokeDashoffset = ''; nd.style.opacity = 1; areas.forEach(a => { a.style.opacity = 1; });
+  }
+}
+new ResizeObserver(() => drawChart()).observe(chart);
+chart.addEventListener('pointermove', ev => {
+  if (!CH) return;
+  const x = ev.clientX - chart.getBoundingClientRect().left, P = CH.pts;
+  if (x > CH.X(P.at(-1).t) + 30) { chart.classList.remove('hover'); return; }
+  let lo = 0, hi = P.length - 1;
+  while (hi - lo > 1) { const m = (lo + hi) >> 1; if (CH.X(P[m].t) < x) lo = m; else hi = m; }
+  const p = Math.abs(CH.X(P[lo].t) - x) < Math.abs(CH.X(P[hi].t) - x) ? P[lo] : P[hi], px = CH.X(p.t);
+  $('#xhair').style.left = `${px}px`;
+  const tip = $('#tip'); tip.innerHTML = `${mdhm(p.t)} KST<br><b>${fmt(p.eq)}</b> USDT · BTC ${fmt(p.bid, 1)}`;
+  tip.style.left = `${clamp(px, 90, CH.W - 90)}px`;
+  chart.classList.add('hover');
+});
+chart.addEventListener('pointerleave', () => chart.classList.remove('hover'));
+
+// ---- feed polling ---------------------------------------------------------------------------------------------
+const readFeed = async () => {
+  try { const f = await fetch(`feed.json?t=${Date.now()}`, { cache: 'no-store' }).then(r => r.json()); return /^https?:\/\//.test(f.feed || '') ? f.feed.replace(/\/?$/, '/') : null; }
+  catch { return null; }
+};
+const getJson = (u, o) => fetch(u, o).then(r => { if (!r.ok) throw new Error(r.status); return r.json(); });
+async function poll() {
+  if (!S.feed) {
+    S.feed = await readFeed();
+    if (!S.feed) { offline(false); return; }
+  }
+  const lab = $('#lab'); lab.href = S.feed; lab.hidden = false;
+  try {
+    const t = await getJson(`${S.feed}tick.json`, { cache: 'no-store' });
+    S.skew = t.now - Date.now() / 1000;
+    if (t.v !== S.v) {
+      const s = await getJson(`${S.feed}live.json?v=${t.v}`);
+      S.v = t.v; S.data = s; render(s, t); observation();
+      if (gs && !S.refreshed) { S.refreshed = true; window.ScrollTrigger?.refresh(); }
+    } else if (S.data) { status(S.data, t); updateAgo(t.now); }
+    S.fails = 0;
+  } catch {
+    offline(!!S.data);
+    if (++S.fails % 2 === 0) { const f = await readFeed(); if (f !== S.feed) { S.feed = f; S.v = null; } }
+  }
+}
+setInterval(() => {
+  const v = S.view; if (!v?.end) return;
+  const left = v.end - now();
+  setK('left', left > 0 ? clock(left) : '종료 시각 지남');
+}, 1000);
+
+// ---- brains (the real MaleCNS point cloud, shared with the 3D room) --------------------------------------
+const brains = []; let BrainCls = null;
+const vis = new IntersectionObserver(es => es.forEach(en => { const b = brains.find(x => x.canvas === en.target); if (b) b.visible = en.isIntersecting; }), { rootMargin: '120px' });
+async function brainClass() {
+  if (BrainCls) return BrainCls;
+  const { Brain } = await import('./room/brain.js');
+  BrainCls = class extends Brain {
+    constructor(c, o) { super(c, o); this.spin = MOTION ? .1 : 0; this.scrub = null; this.loop = 0; this.zoom = null; this.visible = false; }
+    setCounts(c) {
+      if (!this.ready || c.length !== this.n) return;
+      const a = this.act.array, L = Math.log(256); let total = 0;
+      for (let i = 0; i < this.n; i++) { const x = c[i]; a[i] = x ? Math.log1p(x) / L : 0; total += x; }
+      this.act.needsUpdate = true; this.total = total; this.pulse();
+      if (!MOTION) { this.scrub = 1.4; this.render(0); }
+    }
+    render(dt) {
+      if (!this.ready) return;
+      this.time += dt; this.waveT += dt;
+      if (this.loop && this.waveT > this.loop) this.waveT = 0;
+      const u = this.material.uniforms;
+      u.uWave.value = this.scrub ?? Math.min(1.4, this.waveT / 2.4 * 1.4);
+      u.uTime.value = this.time;
+      this.group.rotation.y += dt * this.spin;
+      if (this.zoom != null) this.camera.position.z += (this.zoom - this.camera.position.z) * Math.min(1, dt * 2.5);
+      this.renderer.render(this.scene, this.camera);
+    }
+  };
+  return BrainCls;
+}
+function demoCounts(n) {
+  const c = new Uint8Array(n); let s = 20260922;
+  const r = () => (s = s * 16807 % 2147483647) / 2147483647;
+  for (let i = 0; i < n; i++) if (r() < .06) c[i] = 1 + Math.floor(r() ** 3 * 40);
+  return c;
+}
+async function addBrain(canvas, setup) {
+  try {
+    const C = await brainClass();
+    const b = new C(canvas, { lite: !FINE || innerWidth < 960 });
+    setup(b);
+    await b.load('./');
+    brains.push(b); vis.observe(canvas);
+    // Reduced motion draws single frames; a resize clears the WebGL canvas, so draw again.
+    if (!MOTION) new ResizeObserver(() => requestAnimationFrame(() => b.render(0))).observe(canvas);
+    if (!S.counts) S.counts = demoCounts(b.n);
+    b.setCounts(S.counts);
+    brainCaption();
+    return b;
+  } catch (err) {
+    console.warn('brain', err); canvas.style.display = 'none';
+    $('#brainCap').textContent = '이 기기에서는 3D 뇌를 표시할 수 없습니다';
+    return null;
+  }
+}
+function brainCaption() {
+  const b = brains[0], e = S.view?.e;
+  $('#brainCap').textContent = S.countsReal && b?.total != null
+    ? `실시간 뇌 활동 · ${e ? `${hm(e.time)} 관측 · ` : ''}스파이크 ${fmt(b.total, 0)}개`
+    : '실제 연결체 166,700 뉴런 · 데모 발화';
+  const total = brains.find(x => x.total != null)?.total;
+  $('#oSpk').textContent = S.countsReal && total != null ? fmt(total, 0) : '–';
+  $('#l2').textContent = S.countsReal && total != null ? `최근 관측에서 0.5초 동안 스파이크 ${fmt(total, 0)}개` : '방송 PC와 연결되면 실제 스파이크 수가 나옵니다';
+}
+async function observation() {
+  if (!S.feed || !S.v) return;
+  const img = $('#eyeImg'), v = S.v;
+  const pic = new Image();
+  pic.onload = () => { if (S.v === v) img.src = pic.src; };
+  pic.src = `${S.feed}input.png?v=${v}`;
+  try {
+    const buf = await fetch(`${S.feed}counts.bin?v=${v}`).then(r => { if (!r.ok) throw new Error(r.status); return r.arrayBuffer(); });
+    S.counts = new Uint8Array(buf); S.countsReal = true;
+    brains.forEach(b => b.setCounts(S.counts));
+  } catch { /* the brain keeps its last pattern */ }
+  brainCaption();
+}
+let last = performance.now();
+function frame(t) {
+  const dt = Math.min(.05, (t - last) / 1000); last = t;
+  if (!document.hidden) for (const b of brains) if (b.visible) b.render(dt);
+  requestAnimationFrame(frame);
+}
+let howBrain = null;
+const startBrains = () => {
+  addBrain($('#heroBrain'), b => { b.loop = 4.6; b.camera.position.z = innerWidth < 960 ? 3.9 : 3.75; });
+  const how = $('#how');
+  const io = new IntersectionObserver(es => {
+    if (!es.some(e => e.isIntersecting)) return;
+    io.disconnect();
+    addBrain($('#howBrain'), b => { b.spin = MOTION ? .05 : 0; b.scrub = 0; b.camera.position.z = 4.6; b.zoom = 4.6; }).then(b => { howBrain = b; applyStage(); });
+  }, { rootMargin: '900px 0px' });
+  io.observe(how);
+  if (MOTION) requestAnimationFrame(frame);
+};
+('requestIdleCallback' in window ? requestIdleCallback : setTimeout)(startBrains, { timeout: 1200 });
+
+// ---- how it works: the sticky stage follows the step in the middle of the screen --------------------------
+const stage = $('#stage'), steps = $$('.step');
+let cur = 1;
+function applyStage() {
+  const b = howBrain; if (!b) return;
+  if (cur === 1) { b.scrub = 0; b.zoom = 4.6; b.spin = MOTION ? .04 : 0; }
+  if (cur === 2) { b.zoom = 4.1; b.spin = MOTION ? .07 : 0; b.loop = 0; }
+  if (cur === 3) { b.scrub = 1.4; b.zoom = 3.25; b.spin = MOTION ? .025 : 0; }
+  if (cur === 4) { b.scrub = null; b.loop = 3.2; b.pulse(); b.zoom = 3.8; b.spin = MOTION ? .1 : 0; }
+  if (!MOTION) { if (cur !== 1) b.scrub = 1.4; b.camera.position.z = b.zoom; b.render(0); }
+}
+function howScroll() {
+  const vh = innerHeight, sb = stage.getBoundingClientRect();
+  const narrow = innerWidth < 960, probe = narrow ? (sb.bottom + vh) / 2 : vh * .5;
+  let n = 1; steps.forEach((s, i) => { if (s.getBoundingClientRect().top <= probe) n = i + 1; });
+  if (n !== cur) { cur = n; stage.dataset.stage = n; steps.forEach((s, i) => s.classList.toggle('on', i + 1 === n)); applyStage(); }
+  if (cur === 2 && howBrain) {
+    const r = steps[1].getBoundingClientRect();
+    howBrain.scrub = clamp((probe - r.top) / (r.height * .8), 0, 1) * 1.4;
+    if (!MOTION) howBrain.render(0);
+  }
+}
+
+// ---- scroll: progress bar, header, active nav ----------------------------------------------------------------
+const chrome = $('#chrome'), prog = $('#progress');
+const navLinks = $$('nav.main a[href^="#"]'), navSecs = navLinks.map(a => $(a.getAttribute('href')));
+let lastY = scrollY, queued = false;
+function onScroll() {
+  queued = false;
+  const y = scrollY, max = root.scrollHeight - innerHeight;
+  prog.style.transform = `scaleX(${max > 0 ? clamp(y / max, 0, 1) : 0})`;
+  const hidden = chrome.classList.contains('hide');
+  const hide = y > 260 && (y > lastY + 3 ? true : y < lastY - 3 ? false : hidden);
+  if (hide !== hidden) { chrome.classList.toggle('hide', hide); root.style.setProperty('--chrome-h', hide ? 'var(--tick)' : 'calc(var(--hdr) + var(--tick))'); }
+  lastY = y;
+  let on = -1; navSecs.forEach((s, i) => { if (s && s.getBoundingClientRect().top < innerHeight * .4) on = i; });
+  navLinks.forEach((a, i) => a.classList.toggle('on', i === on));
+  howScroll();
+}
+addEventListener('scroll', () => { if (!queued) { queued = true; requestAnimationFrame(onScroll); } }, { passive: true });
+addEventListener('resize', () => requestAnimationFrame(onScroll));
+onScroll();
+
+// ---- ticker marquee ----------------------------------------------------------------------------------------------
+const track = $('#tkTrack');
+if (MOTION) {
+  const set = track.firstElementChild, copy = set.cloneNode(true);
+  copy.setAttribute('aria-hidden', 'true'); track.append(copy);
+  const speed = () => track.style.setProperty('--dur', `${Math.max(30, set.offsetWidth / 42)}s`);
+  speed(); track.classList.add('run'); new ResizeObserver(speed).observe(set);
+}
+
+// ---- card spotlight ------------------------------------------------------------------------------------------------
+if (FINE) document.addEventListener('pointermove', ev => {
+  const c = ev.target.closest?.('.spot'); if (!c) return;
+  const r = c.getBoundingClientRect();
+  c.style.setProperty('--mx', `${ev.clientX - r.left}px`); c.style.setProperty('--my', `${ev.clientY - r.top}px`);
+}, { passive: true });
+
+// ---- side rails: the trading room's live board and its community chat (/ext/*.json on the feed) -----------
+const railRich = $('#richRail'), railChat = $('#chatRail'), dock = $('#dock');
+const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+const usd = (v, d = 0) => `$${fmt(v, d)}`;
+const R = { recent: null, chat: null };
+['#rApply', '#cJoin'].forEach(id => { if (!$(id).getAttribute('href')) $(id).hidden = true; });
+function showRail(el, pill) {
+  if (!el.hidden) return;
+  el.hidden = false; pill.hidden = false; dock.hidden = false;
+  requestAnimationFrame(() => requestAnimationFrame(() => { el.classList.add('ready'); pill.classList.add('ready'); }));
+}
+function hideRail(el, pill) {
+  el.hidden = true; el.classList.remove('ready', 'open'); pill.hidden = true;
+  if ($('#dRich').hidden && $('#dChat').hidden) dock.hidden = true;
+}
+$$('[data-open]').forEach(b => b.addEventListener('click', () => {
+  const el = $(`#${b.dataset.open}`);
+  (el === railRich ? railChat : railRich).classList.remove('open');
+  el.classList.toggle('open');
+  if (el === railChat) $('#cBody').scrollTop = $('#cBody').scrollHeight;
+}));
+$$('.rail [data-close]').forEach(b => b.addEventListener('click', () => b.closest('.rail').classList.remove('open')));
+addEventListener('keydown', ev => { if (ev.key === 'Escape') $$('.rail.open').forEach(r => r.classList.remove('open')); });
+function tweenNum(el, to, f) {
+  const from = el._v; el._v = to;
+  if (!gs || from === undefined || from === to) { el.textContent = f(to); return; }
+  const o = { v: from }; el._tw?.kill();
+  el._tw = gs.to(o, { v: to, duration: 1.2, ease: 'expo.out', onUpdate: () => { el.textContent = f(o.v); } });
+}
+function spark(curve, start, w = 240, h = 30) {
+  if (!curve || curve.length < 2) return '';
+  const ys = curve.map(p => p[1]), x0 = curve[0][0], x1 = curve.at(-1)[0];
+  const lo = Math.min(start, ...ys), hi = Math.max(start, ...ys);
+  const X = x => (x - x0) / Math.max(1, x1 - x0) * w, Y = y => h - (y - lo) / Math.max(1e-9, hi - lo) * h;
+  const d = curve.map((p, i) => `${i ? 'L' : 'M'}${X(p[0]).toFixed(1)},${Y(p[1]).toFixed(1)}`).join('');
+  const c = ys.at(-1) >= start ? 'var(--long)' : 'var(--short)', b = Y(start).toFixed(1);
+  return `<svg viewBox="0 0 ${w} ${h}" preserveAspectRatio="none" aria-hidden="true"><line x1="0" x2="${w}" y1="${b}" y2="${b}" stroke="rgba(255,255,255,.2)" stroke-dasharray="3 4" vector-effect="non-scaling-stroke"/><path d="${d}" fill="none" stroke="${c}" stroke-width="1.7" stroke-linejoin="round" vector-effect="non-scaling-stroke"/></svg>`;
+}
+const whenKst = t => { const p = parts(t), n = parts(now()); return p.month === n.month && p.day === n.day ? `${p.hour}:${p.minute}` : `${p.month}/${p.day} ${p.hour}:${p.minute}`; };
+// A challenge account (one balance following every room's signals from its start day) when the feed has
+// one; otherwise each room's own history.
+function renderChallenge(d) {
+  const c = d.challenge, p = parts(c.start_ts);
+  $('#rTitle').textContent = d.title || '챌린지';
+  $('#dRichName').textContent = `챌린지 Day ${c.day}`;
+  $('#rTotLbl').textContent = `Day ${c.day} · ${p.month}/${p.day} 시작 · ${usd(c.start)}에서 출발`;
+  tweenNum($('#rTotEq'), +c.equity || 0, v => fmt(v));
+  const roi = $('#rTotRoi'); roi.textContent = `${sgn(+c.roi || 0)}%`; roi.dataset.tone = tone(+c.roi || 0);
+  $('#rTotStart').textContent = `${c.wins}승 ${c.losses}패${c.trades ? ` · 승률 ${Math.round(c.wins / c.trades * 100)}%` : ''}`;
+  $('#dRoi').textContent = `${sgn(+c.roi || 0, 1)}%`; $('#dRoi').dataset.tone = tone(+c.roi || 0);
+  const pnl = v => (Math.abs(v) < .005 ? '$0' : `${v > 0 ? '+' : '−'}${usd(Math.abs(v), 2)}`);
+  $('#rRooms').innerHTML = `<div class="rt-room">
+      <div class="top"><b>잔고 추이</b><em data-tone="${tone(+c.roi || 0)}">${usd(c.equity, 2)}</em></div>
+      ${spark(c.curve, c.start, 240, 44)}
+      <div class="meta"><span>매매마다 잔고의 ${esc(c.bet_pct)}% 복리</span><span>${c.trades}회 체결</span></div>
+    </div>
+    ${(c.rooms || []).map(r => `<div class="rt-room"><div class="top"><b>${esc(r.tag)}</b><em data-tone="${tone(r.pnl)}">${pnl(r.pnl)}</em></div>
+      <div class="meta"><span>${r.trades}회 체결</span><span>${r.wins}승 ${r.trades - r.wins}패</span></div>
+      ${(c.open || []).filter(o => o.room === r.tag).map(o => `<div class="hold"><span class="dot"></span>${esc(o.side)} 보유 중 · 진입 ${fmt(o.entry, o.entry < 1000 ? 2 : 1)}</div>`).join('')}</div>`).join('')}`;
+}
+function renderRich(d) {
+  if (d.challenge) { renderChallenge(d); renderRecent(d); return; }
+  const T = d.total || {}, rooms = d.rooms || [];
+  $('#rTitle').textContent = d.title || '트레이딩 룸';
+  $('#dRichName').textContent = (d.title || '실전 현황').replace(/\s*트레이딩\s*룸$/, '');
+  $('#rTotLbl').textContent = `${rooms.length}개 방 합산 잔고`;
+  tweenNum($('#rTotEq'), +T.equity || 0, v => fmt(v));
+  const roi = $('#rTotRoi'); roi.textContent = `${sgn(+T.roi || 0)}%`; roi.dataset.tone = tone(+T.roi || 0);
+  $('#rTotStart').textContent = T.start ? `시작 ${usd(T.start)}` : '';
+  $('#dRoi').textContent = `${sgn(+T.roi || 0, 1)}%`; $('#dRoi').dataset.tone = tone(+T.roi || 0);
+  $('#rRooms').innerHTML = rooms.map(r => `<div class="rt-room">
+      <div class="top"><b>${esc(r.name)}${r.lev ? ` ${esc(r.lev)}×` : ''}</b><em data-tone="${tone(r.roi)}">${sgn(r.roi, 1)}%</em></div>
+      <div class="meta"><span>${usd(r.equity)}</span><span>${r.wins}승 ${r.losses}패 · 승률 ${r.trades ? Math.round(r.wins / r.trades * 100) : 0}%</span></div>
+      ${spark(r.curve, r.start)}
+      ${r.open ? `<div class="hold"><span class="dot"></span>${esc(r.open.side)} 보유 중 · 진입 ${fmt(r.open.entry, r.open.entry < 1000 ? 2 : 1)}</div>` : ''}
+    </div>`).join('');
+  renderRecent(d);
+}
+function renderRecent(d) {
+  // 목록은 최근 익절만 — 잔고·승패·수익률은 위에서 손절 포함 전체 기준으로 보여 준다
+  const recent = (d.recent_wins || (d.recent || []).filter(x => x.result === '익절')).slice(0, 8), keys = recent.map(x => `${x.room}|${x.t}|${x.side}`);
+  const fresh = R.recent ? recent.filter((x, i) => !R.recent.has(keys[i])) : [];
+  $('#rRecent').innerHTML = recent.length
+    ? recent.map((x, i) => `<li class="${R.recent && !R.recent.has(keys[i]) ? 'new' : ''}"><b>${esc(x.room)}</b><span>${esc(x.side)} ${esc(x.result)} · ${whenKst(x.t)}</span><em data-tone="${x.roe >= 0 ? 'up' : 'down'}">${sgn(x.roe, 1)}%</em></li>`).join('')
+    : '<li><span>첫 익절을 기다리는 중입니다</span></li>';
+  R.recent = new Set(keys);
+  const won = fresh.find(x => x.pnl > 0);
+  if (won) { const g = $('#rGain'); g.textContent = `+${usd(won.pnl, 2)}`; g.classList.remove('go'); void g.offsetWidth; g.classList.add('go'); }
+  $('#rNote').textContent = d.note || '';
+}
+const PALETTE = ['#f7c948', '#3cc8ff', '#2fd18a', '#a98bff', '#ff9b6a', '#ff7eb6'];
+const hue = s => PALETTE[[...String(s)].reduce((a, c) => a + c.charCodeAt(0), 0) % PALETTE.length];
+// Until the chat feed is connected the right rail introduces the community instead (no LIVE badge).
+function chatTeaser() {
+  if (!$('#cJoin').getAttribute('href')) { hideRail(railChat, $('#dChat')); return; }
+  if (!railChat.classList.contains('teasing')) {
+    railChat.classList.add('teasing'); R.chat = null;
+    $('#cTitle').textContent = '커뮤니티 소통방';
+    $('#cList').outerHTML = `<div class="teaser" id="cList"><p>시장을 움직이는 경제뉴스를 실시간으로 받고, 매매 이야기와 제작 파일을 나누는 텔레그램 소통방입니다.</p>
+      <ul><li><svg class="i"><use href="#i-news"/></svg>실시간 경제뉴스 · 지표 발표 알림</li><li><svg class="i"><use href="#i-folder"/></svg>제작 파일 자료실 · 가이드</li><li><svg class="i"><use href="#i-send"/></svg>매매 이야기 · 질문 · 시즌 소식</li></ul></div>`;
+  }
+  showRail(railChat, $('#dChat'));
+}
+function renderChat(d) {
+  const msgs = d.messages || [];
+  if (!msgs.length) { chatTeaser(); return; }
+  if (railChat.classList.contains('teasing')) { railChat.classList.remove('teasing'); $('#cList').outerHTML = '<ul class="chat" id="cList"></ul>'; }
+  $('#dChatName').textContent = '소통방 LIVE';
+  const body = $('#cBody'), stick = !R.chat || body.scrollHeight - body.scrollTop - body.clientHeight < 60;
+  $('#cTitle').textContent = d.title || '커뮤니티 소통방';
+  if (d.join) { $('#cJoin').href = d.join; $('#cJoin').hidden = false; }
+  $('#cList').innerHTML = msgs.map(m => `<li class="${R.chat && !R.chat.has(m.id) ? 'new' : ''}"><span class="av" style="background:${hue(m.name)}">${esc([...String(m.name)][0] || '?')}</span>
+      <div><div class="who"><b>${esc(m.name)}</b><span>${m.t ? whenKst(m.t) : ''}</span></div><div class="msg">${esc(m.text)}</div></div></li>`).join('');
+  R.chat = new Set(msgs.map(m => m.id));
+  showRail(railChat, $('#dChat'));
+  if (stick) body.scrollTop = body.scrollHeight;
+}
+async function pollExt(name, render, missing) {
+  if (!S.feed) return;
+  try {
+    const r = await fetch(`${S.feed}ext/${name}.json`, { cache: 'no-store' });
+    if (r.status === 404) { missing(); return; }
+    if (r.ok) render(await r.json());
+  } catch { /* offline for a moment: keep what is on screen */ }
+}
+const pollRich = () => pollExt('rich', d => { renderRich(d); showRail(railRich, $('#dRich')); }, () => hideRail(railRich, $('#dRich')));
+const pollChat = () => pollExt('chat', renderChat, chatTeaser);
+
+// ---- motion (GSAP + ScrollTrigger from jsDelivr; the page works without it) ----------------------------------
+function loadScript(src) {
+  return new Promise((ok, no) => { const s = document.createElement('script'); s.src = src; s.async = false; s.onload = ok; s.onerror = no; document.head.append(s); });
+}
+function revealAll() {
+  seen.board = seen.ladder = true;
+  $$('[data-num]').forEach(el => { el._seen = false; });
+  bars(); drawChart();
+  root.classList.remove('anim-pending');
+}
+async function initMotion() {
+  if (!MOTION) { revealAll(); return; }
+  try {
+    const cdn = 'https://cdn.jsdelivr.net/npm/gsap@3.13.0/dist/';
+    await Promise.all([loadScript(`${cdn}gsap.min.js`), loadScript(`${cdn}ScrollTrigger.min.js`)]);
+  } catch { revealAll(); return; }
+  const { gsap, ScrollTrigger } = window;
+  if (!gsap || !ScrollTrigger) { revealAll(); return; }
+  gsap.registerPlugin(ScrollTrigger); gs = gsap;
+  const E = 'expo.out';
+
+  if (root.classList.contains('anim-pending')) {
+    gsap.set('.hero h1 .ln > span', { yPercent: 110 });
+    gsap.set('.hero h1', { visibility: 'visible' });
+    gsap.set('[data-hero]', { autoAlpha: 0, y: 26 });
+    gsap.set('#heroBrain', { autoAlpha: 0, scale: .86 });
+    root.classList.remove('anim-pending');
+    gsap.timeline({ defaults: { ease: E } })
+      .to('#heroBrain', { autoAlpha: 1, scale: 1, duration: 2.6 }, 0)
+      .to('.hero h1 .ln > span', { yPercent: 0, duration: 1.3, stagger: .13 }, .1)
+      .to('[data-hero]', { autoAlpha: 1, y: 0, duration: 1.1, stagger: .08 }, .45);
+  }
+  const heroST = { trigger: '.hero', start: 'top top', end: 'bottom top', scrub: true };
+  gsap.to('.hero-copy', { y: -70, autoAlpha: .1, ease: 'none', scrollTrigger: heroST });
+  gsap.to('.brain-wrap', { yPercent: 16, scale: 1.1, autoAlpha: .3, ease: 'none', scrollTrigger: { ...heroST } });
+
+  // Every reveal plays when its block scrolls into view and rolls back when the visitor scrolls above it again.
+  const RT = (trigger, start, more = {}) => ({ trigger, start, toggleActions: 'play none none reverse', ...more });
+  const countRules = () => $$('.rules [data-to]').forEach(el => {
+    const o = { v: 0 }; gsap.to(o, { v: +el.dataset.to, duration: 1.8, ease: E, onUpdate: () => { el.textContent = fmt(Math.round(o.v), 0); } });
+  });
+
+  $$('.sec-head').forEach(h => gsap.from(h.children, { y: 34, autoAlpha: 0, duration: 1.1, stagger: .09, ease: E, scrollTrigger: RT(h, 'top 86%') }));
+
+  const board = $('#boardCard');
+  gsap.from(board, { y: 80, autoAlpha: 0, scale: .96, duration: 1.4, ease: E, scrollTrigger: RT(board, 'top 88%') });
+  gsap.from('#boardCard [data-reveal]', { y: 34, autoAlpha: 0, duration: 1.1, stagger: .06, ease: E, delay: .2,
+    scrollTrigger: RT(board, 'top 80%', { onEnter: boardIn, onLeaveBack: boardOut }) });
+  if ($('#apply')) gsap.from('#apply', { y: 50, autoAlpha: 0, duration: 1.2, ease: E, scrollTrigger: RT('#apply', 'top 92%') });
+
+  gsap.fromTo('.monitor', { rotateX: 24, scale: .86, y: 70, transformPerspective: 1500 },
+    { rotateX: 0, scale: 1, y: 0, ease: 'none', scrollTrigger: { trigger: '.monitor', start: 'top 98%', end: 'top 28%', scrub: .8 } });
+  gsap.from('.studio-cta .btn', { y: 24, autoAlpha: 0, stagger: .08, duration: .9, ease: E, scrollTrigger: RT('.studio-cta', 'top 95%') });
+
+  gsap.from('.stage', { autoAlpha: 0, scale: .94, duration: 1.3, ease: E, scrollTrigger: RT('.how', 'top 82%') });
+  steps.forEach(st => gsap.from(st.children, { y: 34, autoAlpha: 0, stagger: .07, duration: 1, ease: E, scrollTrigger: RT(st, 'top 78%') }));
+
+  gsap.from('.rule', { y: 56, autoAlpha: 0, rotateX: -16, transformPerspective: 900, transformOrigin: '50% 0%', duration: 1.2, stagger: .08, ease: E,
+    scrollTrigger: RT('.rules', 'top 84%', { onEnter: countRules }) });
+  gsap.from('.src', { autoAlpha: 0, y: 16, duration: .9, ease: E, scrollTrigger: RT('.src', 'top 95%') });
+  gsap.from('.ladder-head > div > *', { y: 34, autoAlpha: 0, duration: 1.1, stagger: .09, ease: E, scrollTrigger: RT('.ladder-head', 'top 86%') });
+  gsap.from('.now-eq', { autoAlpha: 0, x: 30, duration: 1, ease: E, scrollTrigger: RT('.ladder-head', 'top 85%') });
+  gsap.from('#ladder .item', { y: 36, autoAlpha: 0, scale: .95, duration: 1, stagger: { each: .06, grid: 'auto' }, ease: E,
+    scrollTrigger: RT('#ladder', 'top 86%', { onEnter: () => { seen.ladder = true; setTimeout(bars, 500); }, onLeaveBack: () => { seen.ladder = false; bars(); } }) });
+
+  if ($('.tgc')) gsap.from('.tgc', { y: 60, autoAlpha: 0, scale: .97, duration: 1.3, ease: E, scrollTrigger: RT('.tgc', 'top 90%') });
+  if ($('.ref')) gsap.from('.ref', { y: 50, autoAlpha: 0, duration: 1.2, ease: E, scrollTrigger: RT('.ref', 'top 90%') });
+  $$('[data-rise]').forEach(el => gsap.from(el, { y: 44, autoAlpha: 0, duration: 1.1, ease: E, scrollTrigger: RT(el, 'top 90%') }));
+
+  document.fonts?.ready.then(() => ScrollTrigger.refresh());
+  addEventListener('load', () => ScrollTrigger.refresh());
+}
+
+initMotion();
+await poll();
+setInterval(poll, 15000);
+pollRich(); pollChat();
+setInterval(pollRich, 20000);
+setInterval(pollChat, 8000);
+</script>
+</body>
+</html>
